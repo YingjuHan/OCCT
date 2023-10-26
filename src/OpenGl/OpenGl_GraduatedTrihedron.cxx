@@ -646,7 +646,7 @@ void OpenGl_GraduatedTrihedron::Render (const Handle(OpenGl_Workspace)& theWorks
 
     if (anAxesState & OOZ_XOZ)
     {
-      renderLine (myAxes[0].Line, theWorkspace, aModelMatrix, myMin.z(), myMin.y(), myMax.z());
+      renderLine (myAxes[0].Line, theWorkspace, aModelMatrix, myMin.x(), myMin.y(), myMax.z());
     }
 
     if (anAxesState & OOZ_OYZ)
