@@ -30,6 +30,7 @@
 #if defined(_WIN32)
   //
 #elif defined(HAVE_XLIB)
+  #include <Xw_DisplayConnection.hxx>
   #include <Xw_Window.hxx>
   #include <X11/Xlib.h>
   #include <X11/Xutil.h>
@@ -853,29 +854,32 @@ void ViewerTest_EventManager::SetupWindowCallbacks (const Handle(Aspect_Window)&
 #ifdef _WIN32
   (void )theWin;
 #elif defined(HAVE_XLIB)
-  // X11
-  Window anXWin = (Window )theWin->NativeHandle();
-  Display* anXDisplay = (Display* )theWin->DisplayConnection()->GetDisplayAspect();
-  XSynchronize (anXDisplay, 1);
+  if (Handle(Xw_DisplayConnection) anXDispCon = Handle(Xw_DisplayConnection)::DownCast(theWin->DisplayConnection()))
+  {
+    // X11
+    Window anXWin = (Window )theWin->NativeHandle();
+    Display* anXDisplay = (Display* )anXDispCon->GetDisplayAspect();
+    XSynchronize (anXDisplay, 1);
 
-  // X11 : For keyboard on SUN
-  XWMHints aWmHints;
-  memset (&aWmHints, 0, sizeof(aWmHints));
-  aWmHints.flags = InputHint;
-  aWmHints.input = 1;
-  XSetWMHints (anXDisplay, anXWin, &aWmHints);
+    // X11 : For keyboard on SUN
+    XWMHints aWmHints;
+    memset (&aWmHints, 0, sizeof(aWmHints));
+    aWmHints.flags = InputHint;
+    aWmHints.input = 1;
+    XSetWMHints (anXDisplay, anXWin, &aWmHints);
 
-  XSelectInput (anXDisplay, anXWin,
-                ExposureMask | KeyPressMask | KeyReleaseMask
-              | ButtonPressMask | ButtonReleaseMask
-              | StructureNotifyMask
-              | PointerMotionMask
-              | Button1MotionMask | Button2MotionMask
-              | Button3MotionMask | FocusChangeMask);
-  Atom aDeleteWindowAtom = theWin->DisplayConnection()->GetAtom (Aspect_XA_DELETE_WINDOW);
-  XSetWMProtocols (anXDisplay, anXWin, &aDeleteWindowAtom, 1);
+    XSelectInput (anXDisplay, anXWin,
+                  ExposureMask | KeyPressMask | KeyReleaseMask
+                | ButtonPressMask | ButtonReleaseMask
+                | StructureNotifyMask
+                | PointerMotionMask
+                | Button1MotionMask | Button2MotionMask
+                | Button3MotionMask | FocusChangeMask);
+    Atom aDeleteWindowAtom = anXDispCon->GetAtom (Aspect_XA_DELETE_WINDOW);
+    XSetWMProtocols (anXDisplay, anXWin, &aDeleteWindowAtom, 1);
 
-  XSynchronize (anXDisplay, 0);
+    XSynchronize (anXDisplay, 0);
+  }
 #elif defined(__EMSCRIPTEN__)
   Handle(Wasm_Window) aWindow = Handle(Wasm_Window)::DownCast (theWin);
   if (aWindow->CanvasId().IsEmpty()

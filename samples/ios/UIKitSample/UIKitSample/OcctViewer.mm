@@ -97,8 +97,7 @@ bool OcctViewer::InitViewer (UIView* theWin)
     return true;
   }
 
-  Handle(Aspect_DisplayConnection) aDisplayConnection = new Aspect_DisplayConnection();
-  Handle(Graphic3d_GraphicDriver) aGraphicDriver = new OpenGl_GraphicDriver (aDisplayConnection);
+  Handle(Graphic3d_GraphicDriver) aGraphicDriver = new OpenGl_GraphicDriver (Handle(Aspect_DisplayConnection)());
 
   // Create Viewer
   myViewer = new V3d_Viewer (aGraphicDriver);

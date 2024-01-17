@@ -47,6 +47,7 @@
 #ifdef _WIN32
   #include <WNT_Window.hxx>
 #elif defined(HAVE_XLIB)
+  #include <Xw_DisplayConnection.hxx>
   #include <Xw_Window.hxx>
 #elif defined(__APPLE__)
   #include <Cocoa_Window.hxx>
@@ -111,7 +112,8 @@ void View_Widget::Init()
   Handle(Aspect_Window) aWnd = new WNT_Window (aWindowHandle);
 #elif defined (HAVE_XLIB)
   Aspect_Drawable aWindowHandle = (Aspect_Drawable )winId();
-  Handle(Aspect_DisplayConnection) aDispConnection = myViewer->GetContext()->CurrentViewer()->Driver()->GetDisplayConnection();
+  Handle(Xw_DisplayConnection) aDispConnection =
+    Handle(Xw_DisplayConnection)::DownCast(myViewer->GetContext()->CurrentViewer()->Driver()->GetDisplayConnection());
   Handle(Aspect_Window) aWnd = new Xw_Window (aDispConnection, aWindowHandle);
 #elif defined (__APPLE__)
   NSView* aViewHandle = (NSView*)winId();

@@ -33,6 +33,7 @@ IMPLEMENT_STANDARD_RTTIEXT(OpenGl_GraphicDriver,Graphic3d_GraphicDriver)
 #if defined(_WIN32)
   #include <WNT_Window.hxx>
 #elif defined(HAVE_XLIB)
+  #include <Xw_DisplayConnection.hxx>
   #include <Xw_Window.hxx>
 #elif defined(__APPLE__)
   #include <Cocoa_Window.hxx>
@@ -190,16 +191,20 @@ OpenGl_GraphicDriver::OpenGl_GraphicDriver (const Handle(Aspect_DisplayConnectio
 #endif
 
 #if defined(HAVE_XLIB)
-  if (myDisplayConnection.IsNull())
+  if (Xw_DisplayConnection* anXDispConn = dynamic_cast<Xw_DisplayConnection*>(myDisplayConnection.get()))
   {
-    //throw Aspect_GraphicDeviceDefinitionError("OpenGl_GraphicDriver: cannot connect to X server!");
-    return;
-  }
+    Display* aDisplay = (Display*)anXDispConn->GetDisplayAspect();
+    if (aDisplay == nullptr)
+    {
+      if (theToInitialize)
+        throw Aspect_GraphicDeviceDefinitionError("OpenGl_GraphicDriver: cannot connect to X server!");
 
-  Display* aDisplay = (Display* )myDisplayConnection->GetDisplayAspect();
-  Bool toSync = ::getenv ("CSF_GraphicSync") != NULL
-             || ::getenv ("CALL_SYNCHRO_X")  != NULL;
-  XSynchronize (aDisplay, toSync);
+      return;
+    }
+    Bool toSync = ::getenv ("CSF_GraphicSync") != NULL
+               || ::getenv ("CALL_SYNCHRO_X")  != NULL;
+    XSynchronize (aDisplay, toSync);
+  }
 #endif
   if (theToInitialize
   && !InitContext())
@@ -315,17 +320,17 @@ Standard_Boolean OpenGl_GraphicDriver::InitContext()
 {
   ReleaseContext();
 #if defined(HAVE_EGL)
-
+  EGLNativeDisplayType aDisplay = !myDisplayConnection.IsNull()
+                                ? (EGLNativeDisplayType)myDisplayConnection->GetDisplayAspect()
+                                : EGL_DEFAULT_DISPLAY;
 #if defined(HAVE_XLIB)
-  if (myDisplayConnection.IsNull())
+  if (aDisplay == EGL_DEFAULT_DISPLAY)
   {
+    ::Message::SendFail("Error: no connection to X11 display");
     return Standard_False;
   }
-  Display* aDisplay = (Display* )myDisplayConnection->GetDisplayAspect();
-  myEglDisplay = (Aspect_Display )eglGetDisplay (aDisplay);
-#else
-  myEglDisplay = (Aspect_Display )eglGetDisplay (EGL_DEFAULT_DISPLAY);
 #endif
+  myEglDisplay = (Aspect_Display)eglGetDisplay(aDisplay);
   if ((EGLDisplay )myEglDisplay == EGL_NO_DISPLAY)
   {
     ::Message::SendFail ("Error: no EGL display");
@@ -440,13 +445,6 @@ Standard_Boolean OpenGl_GraphicDriver::InitEglContext (Aspect_Display          t
 {
   ReleaseContext();
 #if defined(HAVE_EGL)
-#if defined(HAVE_XLIB)
-  if (myDisplayConnection.IsNull())
-  {
-    return Standard_False;
-  }
-#endif
-
   if ((EGLDisplay )theEglDisplay == EGL_NO_DISPLAY
    || (EGLContext )theEglContext == EGL_NO_CONTEXT)
   {
@@ -486,8 +484,11 @@ void OpenGl_GraphicDriver::chooseVisualInfo()
   }
 
 #if defined(HAVE_XLIB)
-  Display* aDisp = (Display* )myDisplayConnection->GetDisplayAspect();
+  Xw_DisplayConnection* anXDispConn = dynamic_cast<Xw_DisplayConnection*>(myDisplayConnection.get());
+  if (anXDispConn == nullptr)
+    return;
 
+  Display* aDisp = (Display* )anXDispConn->GetDisplayAspect();
   XVisualInfo* aVisInfo = NULL;
   Aspect_FBConfig anFBConfig = NULL;
 #if defined(HAVE_EGL)
@@ -545,7 +546,7 @@ void OpenGl_GraphicDriver::chooseVisualInfo()
 #endif
   if (aVisInfo != NULL)
   {
-    myDisplayConnection->SetDefaultVisualInfo ((Aspect_XVisualInfo* )aVisInfo, anFBConfig);
+    anXDispConn->SetDefaultVisualInfo ((Aspect_XVisualInfo* )aVisInfo, anFBConfig);
   }
   else
   {
