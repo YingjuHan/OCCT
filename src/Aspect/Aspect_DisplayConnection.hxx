@@ -21,6 +21,7 @@
 #include <TCollection_AsciiString.hxx>
 #include <NCollection_DataMap.hxx>
 
+class Aspect_Window;
 struct Aspect_XDisplay;
 struct Aspect_XVisualInfo;
 

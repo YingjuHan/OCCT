@@ -217,6 +217,7 @@ n StdPrs
 n StdSelect
 n V3d
 n Wasm
+n Wayland
 n WNT
 n Xw
 n Cocoa

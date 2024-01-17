@@ -30,6 +30,7 @@
 
 class AIS_InteractiveContext;
 class AIS_InteractiveObject;
+class Aspect_Window;
 class Image_PixMap;
 class V3d_View;
 class V3d_Viewer;
@@ -46,12 +47,11 @@ struct ViewerTest_VinitParams
   Handle(V3d_View) ParentView;
   Graphic3d_Vec2d  Offset;
   Graphic3d_Vec2d  Size;
-  Aspect_TypeOfTriedronPosition Corner;
+  Aspect_TypeOfTriedronPosition Corner = Aspect_TOTP_LEFT_UPPER;
   Graphic3d_Vec2i  SubviewMargins;
-  Standard_Boolean IsVirtual;
-  Standard_Boolean IsComposer;
-
-  ViewerTest_VinitParams() : Corner (Aspect_TOTP_LEFT_UPPER), IsVirtual (false), IsComposer (false) {}
+  Standard_Boolean IsVirtual = false;
+  Standard_Boolean IsComposer = false;
+  Standard_Boolean ToPreferWayland = false;
 };
 
 class ViewerTest
@@ -108,6 +108,10 @@ public:
   Standard_EXPORT static void ActivateView (const Handle(V3d_View)& theView,
                                             Standard_Boolean theToUpdate);
 
+  //! Make the view for specified window active.
+  Standard_EXPORT static void ActivateView (const Aspect_Window& theWin,
+                                            Standard_Boolean theToUpdate);
+
   //! Removes view and clear all maps
   //! with information about its resources if necessary
   Standard_EXPORT static void RemoveView (const TCollection_AsciiString& theViewName,
@@ -116,6 +120,10 @@ public:
   //! Removes view and clear all maps
   //! with information about its resources if necessary
   Standard_EXPORT static void RemoveView (const Handle(V3d_View)& theView,
+                                          const Standard_Boolean  theToRemoveContext = Standard_True);
+
+  //! Removes view for specified window.
+  Standard_EXPORT static void RemoveView (const Aspect_Window& theWin,
                                           const Standard_Boolean  theToRemoveContext = Standard_True);
 
   //! Display AIS object in active Viewer and register it in the map of Interactive Objects with specified name.

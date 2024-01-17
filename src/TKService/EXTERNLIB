@@ -7,8 +7,7 @@ CSF_advapi32
 CSF_gdi32
 CSF_ole32
 CSF_XwLibs
-CSF_dpsLibs
-CSF_XmuLibs
+CSF_wayland
 CSF_fontconfig
 CSF_objc
 CSF_Appkit

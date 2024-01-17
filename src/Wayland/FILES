@@ -1,0 +1,6 @@
+Wayland_DisplayConnection.cxx
+Wayland_DisplayConnection.hxx
+Wayland_Window.cxx
+Wayland_Window.hxx
+xdg-shell-client-protocol.pxx
+xdg-shell-client-protocol-impl.pxx

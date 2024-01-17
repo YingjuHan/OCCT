@@ -60,6 +60,11 @@ void ViewerTest_EventManager::onWasmRedrawView (void* )
 }
 #endif
 
+#if defined(HAVE_WAYLAND)
+#include <Wayland_DisplayConnection.hxx>
+#include <Wayland_Window.hxx>
+#endif
+
 Standard_IMPORT Standard_Boolean Draw_Interprete (const char* theCommand);
 
 IMPLEMENT_STANDARD_RTTIEXT(ViewerTest_EventManager,Standard_Transient)
@@ -335,6 +340,11 @@ void ViewerTest_EventManager::ProcessConfigure (bool theIsResized)
     aChildIter->Invalidate();
   }
 
+#if defined(HAVE_WAYLAND)
+  if (dynamic_cast<Wayland_Window*>(aParent->Window().get()) != nullptr)
+    return;
+#endif
+
   FlushViewEvents (myCtx, myView, true);
 }
 
@@ -375,9 +385,14 @@ void ViewerTest_EventManager::OnSubviewChanged (const Handle(AIS_InteractiveCont
 void ViewerTest_EventManager::ProcessInput()
 {
   if (myView.IsNull())
-  {
     return;
-  }
+
+#if defined(HAVE_WAYLAND)
+  // handled after processing all pending events
+  const V3d_View* aParent = !myView->IsSubview() ? myView.get() : myView->ParentView();
+  if (dynamic_cast<Wayland_Window*>(aParent->Window().get()) != nullptr)
+    return;
+#endif
 
 #if defined(__EMSCRIPTEN__)
   // Queue onWasmRedrawView() callback to redraw canvas after all user input is flushed by browser.
@@ -393,6 +408,28 @@ void ViewerTest_EventManager::ProcessInput()
   // handle synchronously
   ProcessExpose();
 #endif
+}
+
+// =======================================================================
+// function : ProcessClose
+// purpose  :
+// =======================================================================
+void ViewerTest_EventManager::ProcessClose()
+{
+  ViewerTest::RemoveView(!myView->IsSubview() ? myView : myView->ParentView());
+}
+
+// =======================================================================
+// function : ProcessFocus
+// purpose  :
+// =======================================================================
+void ViewerTest_EventManager::ProcessFocus(bool theIsActivated)
+{
+  if (!theIsActivated)
+    ResetViewInput();
+
+  if (theIsActivated)
+    ViewerTest::ActivateView(!myView->IsSubview() ? myView : myView->ParentView(), false);
 }
 
 // =======================================================================

@@ -428,6 +428,11 @@ static Standard_Integer dversion(Draw_Interpretor& di, Standard_Integer, const c
 #elif !defined(_WIN32)
   di << "Xlib disabled\n";
 #endif
+#ifdef HAVE_WAYLAND
+  di << "Wayland enabled (HAVE_WAYLAND)\n";
+#elif !defined(_WIN32)
+  di << "Wayland disabled\n";
+#endif
 #ifdef HAVE_TBB
   di << "TBB enabled (HAVE_TBB)\n";
 #else 
