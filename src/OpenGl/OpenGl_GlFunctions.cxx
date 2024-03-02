@@ -1457,13 +1457,14 @@ bool OpenGl_GlFunctions::debugPrintError (const char* theName)
 // purpose  :
 // =======================================================================
 void OpenGl_GlFunctions::readGlVersion (Standard_Integer& theGlVerMajor,
-                                        Standard_Integer& theGlVerMinor)
+                                        Standard_Integer& theGlVerMinor,
+                                        Standard_Boolean theToCheckVer3)
 {
   // reset values
   theGlVerMajor = 0;
   theGlVerMinor = 0;
 
-  bool toCheckVer3 = true;
+  bool toCheckVer3 = theToCheckVer3;
 #if defined(__EMSCRIPTEN__)
   // WebGL 1.0 prints annoying invalid enumeration warnings to console.
   toCheckVer3 = false;
@@ -1482,13 +1483,19 @@ void OpenGl_GlFunctions::readGlVersion (Standard_Integer& theGlVerMajor,
   {
     GLint aMajor = 0, aMinor = 0;
     ::glGetIntegerv (GL_MAJOR_VERSION, &aMajor);
-    ::glGetIntegerv (GL_MINOR_VERSION, &aMinor);
+    GLenum aVerErr = ::glGetError();
+    if (aVerErr == GL_NO_ERROR)
+    {
+      ::glGetIntegerv (GL_MINOR_VERSION, &aMinor);
+      aVerErr = ::glGetError();
+    }
+
     // glGetError() sometimes does not report an error here even if
     // GL does not know GL_MAJOR_VERSION and GL_MINOR_VERSION constants.
     // This happens on some renderers like e.g. Cygwin MESA.
     // Thus checking additionally if GL has put anything to
     // the output variables.
-    if (::glGetError() == GL_NO_ERROR && aMajor != 0 && aMinor != 0)
+    if (aVerErr == GL_NO_ERROR && aMajor != 0 && aMinor != 0)
     {
       theGlVerMajor = aMajor;
       theGlVerMinor = aMinor;

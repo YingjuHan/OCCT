@@ -72,7 +72,8 @@ struct OpenGl_GlFunctions
 
   //! Read OpenGL version.
   Standard_EXPORT static void readGlVersion (Standard_Integer& theGlVerMajor,
-                                             Standard_Integer& theGlVerMinor);
+                                             Standard_Integer& theGlVerMinor,
+                                             Standard_Boolean theToCheckVer3 = true);
 
   //! Load functions.
   Standard_EXPORT void load (OpenGl_Context& theCtx,

@@ -1934,7 +1934,7 @@ void OpenGl_Context::DiagnosticInformation (TColStd_IndexedDataMapOfStringString
   if ((theFlags & Graphic3d_DiagnosticInfo_Device) != 0)
   {
     Standard_Integer aDriverVer[2] = {};
-    OpenGl_GlFunctions::readGlVersion (aDriverVer[0], aDriverVer[1]);
+    OpenGl_GlFunctions::readGlVersion (aDriverVer[0], aDriverVer[1], myGlVerMajor >= 3);
     addInfo (theDict, "GLvendor",    (const char*)core11fwd->glGetString (GL_VENDOR));
     addInfo (theDict, "GLdevice",    (const char*)core11fwd->glGetString (GL_RENDERER));
   #ifdef __EMSCRIPTEN__
