@@ -503,11 +503,15 @@ Font_FontMgr::Font_FontMgr()
 #endif
 
   // default CJK (Chinese/Japanese/Korean) fonts
-  aCJK   ->Append (Font_FontAlias ("simsun"));        // Windows
+  // sans-serif
+  aCJK   ->Append (Font_FontAlias ("microsoft yahei"));     // introduced by Windows Vista
   aCJK   ->Append (Font_FontAlias ("droid sans fallback")); // Android, Linux
-  aCJK   ->Append (Font_FontAlias ("noto sans sc"));  // Android
+  aCJK   ->Append (Font_FontAlias ("noto sans sc"));        // Android
   aCJK   ->Append (Font_FontAlias ("noto sans cjk jp"));
+  // legacy, serif
+  aCJK   ->Append (Font_FontAlias ("simsun")); // Windows 2000+
 
+  // sans-serif
 #if defined(_WIN32)
   aKorean->Append (Font_FontAlias ("malgun gothic")); // introduced since Vista
   aKorean->Append (Font_FontAlias ("gulim"));         // used on older systems (Windows XP)
@@ -517,10 +521,11 @@ Font_FontMgr::Font_FontMgr()
 #endif
   aKorean->Append (Font_FontAlias ("nanumgothic"));   // Android, Linux
   aKorean->Append (Font_FontAlias ("noto sans kr"));  // Android
-  aKorean->Append (Font_FontAlias ("nanummyeongjo")); // Linux
-  aKorean->Append (Font_FontAlias ("noto serif cjk jp")); // Linux
   aKorean->Append (Font_FontAlias ("noto sans cjk jp")); // Linux
   aKorean->Append (Font_FontAlias ("droid sans fallback")); // Linux
+  // serif
+  aKorean->Append (Font_FontAlias ("nanummyeongjo")); // Linux
+  aKorean->Append (Font_FontAlias ("noto serif cjk jp")); // Linux
 
 #if defined(_WIN32)
   anArab->Append (Font_FontAlias ("times new roman"));
