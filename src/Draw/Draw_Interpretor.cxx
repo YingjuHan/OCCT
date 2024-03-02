@@ -313,12 +313,17 @@ void Draw_Interpretor::add (const Standard_CString          theCommandName,
 {
   Standard_ASSERT_RAISE (myInterp != NULL, "Attempt to add command to Null interpretor");
 
+  const Standard_Boolean hasDesc = Tcl_GetVar2 (myInterp, "Draw_Helps", theCommandName, TCL_GLOBAL_ONLY) != NULL;
+
   Tcl_CreateCommand (myInterp, theCommandName, CommandCmd, (ClientData )theCallback, CommandDelete);
 
   // add the help
   Tcl_SetVar2 (myInterp, "Draw_Helps",  theCommandName,  theHelp, TCL_GLOBAL_ONLY);
-  Tcl_SetVar2 (myInterp, "Draw_Groups", theGroup, theCommandName,
-	             TCL_GLOBAL_ONLY | TCL_APPEND_VALUE | TCL_LIST_ELEMENT);
+  if (!hasDesc)
+  {
+    Tcl_SetVar2 (myInterp, "Draw_Groups", theGroup, theCommandName,
+	               TCL_GLOBAL_ONLY | TCL_APPEND_VALUE | TCL_LIST_ELEMENT);
+  }
 
   // add path to source file (keep not more than two last subdirectories)
   if (theFileName  == NULL
