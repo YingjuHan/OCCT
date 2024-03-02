@@ -1985,8 +1985,9 @@ struct ViewerTest_AspectsChangeSet
     }
     if (ToSetFaceBoundaryDraw != 0)
     {
-      if (ToSetFaceBoundaryDraw != -1
-       || theDrawer->HasOwnFaceBoundaryDraw())
+      if (theDrawer->HasOwnFaceBoundaryDraw()
+       || !theDrawer->HasLink()
+       || (ToSetFaceBoundaryDraw == 1) != theDrawer->Link()->FaceBoundaryDraw())
       {
         toRecompute = true;
         theDrawer->SetFaceBoundaryDraw (ToSetFaceBoundaryDraw == 1);
