@@ -291,6 +291,11 @@ Standard_Boolean OSD_Thread::Wait (const Standard_Integer theTimeMs,
     long   aMicroseconds = (theTimeMs - aSeconds * 1000) * 1000;
     aTimeout.tv_sec  += aSeconds;
     aTimeout.tv_nsec += aMicroseconds * 1000;
+    if (aTimeout.tv_nsec >= 1000000000)
+    {
+      aTimeout.tv_sec += 1;
+      aTimeout.tv_nsec -= 1000000000;
+    }
 
     if (pthread_timedjoin_np (myThread, &theResult, &aTimeout) != 0)
     {
