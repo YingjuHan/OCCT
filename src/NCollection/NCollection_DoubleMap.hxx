@@ -365,7 +365,7 @@ public:
       {
         // remove from the data2
         if (q2)
-          q2->Next() = p2->Next();
+          q2->Next2() = p2->Next2();
         else
           myData2[iK2] = (DoubleMapNode*) p2->Next2();
         Standard_Integer iK1 = Hasher1::HashCode (p2->Key1(), NbBuckets());
