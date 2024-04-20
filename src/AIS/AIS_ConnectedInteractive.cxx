@@ -148,7 +148,7 @@ void AIS_ConnectedInteractive::computeHLR (const Handle(Graphic3d_Camera)& thePr
   if (hasTrsf)
   {
     const TopLoc_Location& aLocation = myShape.Location();
-    TopoDS_Shape aShape = myShape.Located (TopLoc_Location (theTransformation->Trsf()) * aLocation);
+    TopoDS_Shape aShape = myShape.Located (TopLoc_Location (theTransformation->Trsf()) * aLocation, Standard_False);
     AIS_Shape::computeHlrPresentation (theProjector, thePresentation, aShape, myDrawer);
   }
   else
