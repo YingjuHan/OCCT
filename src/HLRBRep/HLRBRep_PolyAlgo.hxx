@@ -344,7 +344,6 @@ private:
   Standard_Real myTolEnd;
   Standard_Real myTolAngular;
   Handle(Geom_Surface) myGSurf;
-  BRepAdaptor_Surface myBSurf;
   BRepAdaptor_Curve myBCurv;
   BRepAdaptor_Curve2d myPC;
 

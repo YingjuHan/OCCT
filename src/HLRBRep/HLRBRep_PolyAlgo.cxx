@@ -19,6 +19,7 @@
 #include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
 #include <BRepLib_MakeEdge.hxx>
+#include <BRepLib_ToolTriangulatedShape.hxx>
 #include <CSLib.hxx>
 #include <CSLib_DerivativeStatus.hxx>
 #include <CSLib_NormalStatus.hxx>
@@ -490,7 +491,11 @@ void HLRBRep_PolyAlgo::StoreShell (const TopoDS_Shape& theShape,
           if (aTr->HasUVNodes())
           {
             const bool hasSurf = BRep_Tool::IsGeometric (aFace);
-            myBSurf.Initialize (aFace, Standard_False);
+            if (!aTr->HasNormals() && hasSurf)
+            {
+              BRepLib_ToolTriangulatedShape::ComputeNormals (aFace, aTr);
+            }
+
             for (Standard_Integer aNodeIter = 1; aNodeIter <= aNbNodes; ++aNodeIter)
             {
               const Handle(HLRAlgo_PolyInternalNode)& aPolyINode   = aPINod.ChangeValue (aNodeIter);
@@ -502,12 +507,10 @@ void HLRBRep_PolyAlgo::StoreShell (const TopoDS_Shape& theShape,
               }
               if (aTr->HasNormals())
               {
-                aNod1RValues.Normal = aTr->Normal (aNodeIter).XYZ();
+                aNod1RValues.Normal = aTr->Normal (aNodeIter).Transformed (aLoc.Transformation()).XYZ();
               }
-
-              if ((aTr->HasNormals()
-              || (hasSurf && aTr->HasUVNodes()))
-              && Normal (aNodeIter, aNodIndices, aNod1RValues, aTData, aPISeg, aPINod, Standard_False))
+              if (aTr->HasNormals()
+               && Normal (aNodeIter, aNodIndices, aNod1RValues, aTData, aPISeg, aPINod, Standard_False))
               {
                 aNodIndices.Flag |=  NMsk_Norm;
               }
@@ -621,26 +624,7 @@ Standard_Boolean HLRBRep_PolyAlgo::Normal (const Standard_Integer theNodeIndex,
 {
   if (theNod1RValues.Normal.SquareModulus() < Precision::Confusion())
   {
-    gp_Vec aD1U, aD1V;
-    gp_Pnt aPnt;
-    CSLib_DerivativeStatus aStatus = CSLib_D1IsNull;
-    myBSurf.D1 (theNod1RValues.UV.X(), theNod1RValues.UV.Y(), aPnt, aD1U, aD1V);
-    gp_Dir aNorm;
-    CSLib::Normal (aD1U, aD1V, Precision::Angular(), aStatus, aNorm);
-    if (aStatus != CSLib_Done)
-    {
-      gp_Vec aD2U, aD2V, aD2UV;
-      bool isOK = false;
-      CSLib_NormalStatus aNromStatus;
-      myBSurf.D2 (theNod1RValues.UV.X(), theNod1RValues.UV.Y(), aPnt, aD1U, aD1V, aD2U, aD2V, aD2UV);
-      CSLib::Normal (aD1U, aD1V, aD2U, aD2V, aD2UV,
-                     Precision::Angular(), isOK, aNromStatus, aNorm);
-      if (!isOK)
-      {
-        return false;
-      }
-    }
-    theNod1RValues.Normal = aNorm.XYZ();
+    return false;
   }
 
   TMultiply (theNod1RValues.Normal, myProj.Perspective());
@@ -2106,7 +2090,6 @@ void HLRBRep_PolyAlgo::InsertOnOutLine (NCollection_Array1<Handle(HLRAlgo_PolyIn
     HLRAlgo_Array1OfPINod* aPINod1 = &aPid->PINod();
     TopoDS_Shape aLocalShape = myFMap (aFaceIter);
     const TopoDS_Face& aFace = TopoDS::Face (aLocalShape);
-    myBSurf.Initialize (aFace, Standard_False);
     myGSurf = BRep_Tool::Surface (aFace, aLoc);
     {
       gp_Trsf aTT = aLoc.Transformation();
