@@ -32,6 +32,15 @@ Select3D_SensitiveEntity::Select3D_SensitiveEntity (const Handle(SelectMgr_Entit
 }
 
 //=======================================================================
+//function : Priority
+//purpose  :
+//=======================================================================
+Standard_Integer Select3D_SensitiveEntity::Priority() const
+{
+  return !myOwnerId.IsNull() ? myOwnerId->Priority() : 0;
+}
+
+//=======================================================================
 //function : DumpJson
 //purpose  :
 //=======================================================================

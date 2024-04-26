@@ -40,6 +40,8 @@ public:
   //! Saves camera definition and passes it to builder
   Standard_EXPORT virtual void SetCamera (const Handle(Graphic3d_Camera)& theCamera) Standard_OVERRIDE;
 
+  virtual Standard_Integer PixelTolerance() const Standard_OVERRIDE { return myPixelTolerance; }
+
   Standard_EXPORT virtual void SetPixelTolerance (const Standard_Integer theTol) Standard_OVERRIDE;
 
   Standard_EXPORT virtual void SetWindowSize (const Standard_Integer theWidth,

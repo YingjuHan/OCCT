@@ -369,9 +369,10 @@ Handle(SelectMgr_BaseIntersector) SelectMgr_RectangularFrustum::ScaleAndTransfor
     "Error! Pixel tolerance for selection should not be negative");
 
   Handle(SelectMgr_RectangularFrustum) aRes = new SelectMgr_RectangularFrustum();
+  aRes->myPixelTolerance = myPixelTolerance;
+
   const Standard_Boolean isToScale = theScaleFactor != 1;
   const Standard_Boolean isToTrsf  = theTrsf.Form() != gp_Identity;
-
   if (!isToScale && !isToTrsf)
   {
     aRes->SetBuilder (theBuilder);
@@ -383,6 +384,7 @@ Handle(SelectMgr_BaseIntersector) SelectMgr_RectangularFrustum::ScaleAndTransfor
 
   if (isToScale)
   {
+    aRes->myPixelTolerance = theScaleFactor;
     aRes->myNearPickedPnt = myNearPickedPnt;
     aRes->myFarPickedPnt  = myFarPickedPnt;
     aRes->myViewRayDir    = myViewRayDir;

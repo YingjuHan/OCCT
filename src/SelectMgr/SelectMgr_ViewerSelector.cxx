@@ -68,8 +68,6 @@ namespace
     const SelectMgr_IndexedDataMapOfOwnerCriterion* myMapOfCriterion;
     bool myToPreferClosest;
   };
-
-  static const Graphic3d_Mat4d SelectMgr_ViewerSelector_THE_IDENTITY_MAT;
 }
 
 //=======================================================================
@@ -274,7 +272,7 @@ void SelectMgr_ViewerSelector::checkOverlap (const Handle(Select3D_SensitiveEnti
   SelectMgr_SortCriterion aCriterion;
   myZLayerOrderMap.Find (!aSelectable.IsNull() ? aSelectable->ZLayer() : Graphic3d_ZLayerId_Default, aCriterion.ZLayerPosition);
   aCriterion.Entity    = theEntity;
-  aCriterion.Priority  = anOwner->Priority();
+  aCriterion.Priority  = theEntity->Priority();
   aCriterion.Depth     = aPickResult.Depth();
   aCriterion.MinDist   = aPickResult.DistToGeomCenter();
 

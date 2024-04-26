@@ -55,6 +55,9 @@ public:
   //! Checks if it is possible to scale this intersector.
   virtual Standard_Boolean IsScalable() const = 0;
 
+  //! Return pixel tolerance.
+  virtual Standard_Integer PixelTolerance() const { return 0; }
+
   //! Sets pixel tolerance.
   //! It makes sense only for scalable intersectors (built on a single point).
   //! This method does nothing for the base class.

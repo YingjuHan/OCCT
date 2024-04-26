@@ -50,6 +50,9 @@ public:
     mySFactor = theNewSens;
   }
 
+  //! Returns picking priority (default implementation returns SelectMgr_EntityOwner::Priority()).
+  Standard_EXPORT Standard_Integer Priority() const;
+
   //! Originally this method intended to return sensitive entity with new location aLocation,
   //! but currently sensitive entities do not hold a location,
   //! instead HasLocation() and Location() methods call corresponding entity owner's methods.

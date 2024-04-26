@@ -34,6 +34,15 @@ SelectMgr_SelectingVolumeManager::SelectMgr_SelectingVolumeManager()
 }
 
 //=======================================================================
+// function : ~SelectMgr_SelectingVolumeManager
+// purpose  :
+//=======================================================================
+SelectMgr_SelectingVolumeManager::~SelectMgr_SelectingVolumeManager()
+{
+  //
+}
+
+//=======================================================================
 // function : ScaleAndTransform
 // purpose  : IMPORTANT: Scaling makes sense only for frustum built on a single point!
 //            Note that this method does not perform any checks on type of the frustum.
@@ -68,19 +77,6 @@ SelectMgr_SelectingVolumeManager SelectMgr_SelectingVolumeManager::ScaleAndTrans
 }
 
 //=======================================================================
-// function : GetActiveSelectionType
-// purpose  :
-//=======================================================================
-Standard_Integer SelectMgr_SelectingVolumeManager::GetActiveSelectionType() const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return SelectMgr_SelectionType_Unknown;
-  }
-  return myActiveSelectingVolume->GetSelectionType();
-}
-
-//=======================================================================
 // function : Camera
 // purpose  :
 //=======================================================================
@@ -103,19 +99,6 @@ void SelectMgr_SelectingVolumeManager::SetCamera (const Handle(Graphic3d_Camera)
   Standard_ASSERT_RAISE(!myActiveSelectingVolume.IsNull(),
     "SelectMgr_SelectingVolumeManager::SetCamera() should be called after initialization of selection volume ");
   myActiveSelectingVolume->SetCamera (theCamera);
-}
-
-//=======================================================================
-// function : WindowSize
-// purpose  :
-//=======================================================================
-void SelectMgr_SelectingVolumeManager::WindowSize (Standard_Integer& theWidth, Standard_Integer& theHeight) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return;
-  }
-  myActiveSelectingVolume->WindowSize (theWidth, theHeight);
 }
 
 //=======================================================================
@@ -218,15 +201,6 @@ void SelectMgr_SelectingVolumeManager::InitAxisSelectingVolume (const gp_Ax1& th
 }
 
 //=======================================================================
-// function : InitSelectingVolume
-// purpose  :
-//=======================================================================
-void SelectMgr_SelectingVolumeManager::InitSelectingVolume(const Handle(SelectMgr_BaseIntersector)& theVolume)
-{
-  myActiveSelectingVolume = theVolume;
-}
-
-//=======================================================================
 // function : BuildSelectingVolume
 // purpose  :
 //=======================================================================
@@ -235,271 +209,6 @@ void SelectMgr_SelectingVolumeManager::BuildSelectingVolume()
   Standard_ASSERT_RAISE (!myActiveSelectingVolume.IsNull(),
     "SelectMgr_SelectingVolumeManager::BuildSelectingVolume() should be called after initialization of active selection volume.");
   myActiveSelectingVolume->Build();
-}
-
-//=======================================================================
-// function : BuildSelectingVolume
-// purpose  :
-//=======================================================================
-void SelectMgr_SelectingVolumeManager::BuildSelectingVolume (const gp_Pnt2d& thePoint)
-{
-  InitPointSelectingVolume (thePoint);
-  myActiveSelectingVolume->Build();
-}
-
-//=======================================================================
-// function : BuildSelectingVolume
-// purpose  :
-//=======================================================================
-void SelectMgr_SelectingVolumeManager::BuildSelectingVolume (const gp_Pnt2d& theMinPt,
-                                                             const gp_Pnt2d& theMaxPt)
-{
-  InitBoxSelectingVolume (theMinPt, theMaxPt);
-  myActiveSelectingVolume->Build();
-}
-
-//=======================================================================
-// function : BuildSelectingVolume
-// purpose  :
-//=======================================================================
-void SelectMgr_SelectingVolumeManager::BuildSelectingVolume (const TColgp_Array1OfPnt2d& thePoints)
-{
-  InitPolylineSelectingVolume (thePoints);
-  myActiveSelectingVolume->Build();
-}
-
-//=======================================================================
-// function : OverlapsBox
-// purpose  : SAT intersection test between defined volume and
-//            given axis-aligned box
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsBox (const SelectMgr_Vec3& theBoxMin,
-                                                                const SelectMgr_Vec3& theBoxMax,
-                                                                SelectBasics_PickResult& thePickResult) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return Standard_False;
-  }
-
-  return myActiveSelectingVolume->OverlapsBox (theBoxMin, theBoxMax, myViewClipRange, thePickResult);
-}
-
-//=======================================================================
-// function : OverlapsBox
-// purpose  : Intersection test between defined volume and given point
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsBox (const SelectMgr_Vec3& theBoxMin,
-                                                                const SelectMgr_Vec3& theBoxMax,
-                                                                Standard_Boolean*     theInside) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return Standard_False;
-  }
-
-  return myActiveSelectingVolume->OverlapsBox (theBoxMin, theBoxMax, theInside);
-}
-
-//=======================================================================
-// function : OverlapsPoint
-// purpose  : Intersection test between defined volume and given point
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsPoint (const gp_Pnt& thePnt,
-                                                                  SelectBasics_PickResult& thePickResult) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return Standard_False;
-  }
-
-  return myActiveSelectingVolume->OverlapsPoint (thePnt, myViewClipRange, thePickResult);
-}
-
-//=======================================================================
-// function : OverlapsPoint
-// purpose  : Intersection test between defined volume and given point
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsPoint (const gp_Pnt& thePnt) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return Standard_False;
-  }
-
-  return myActiveSelectingVolume->OverlapsPoint (thePnt);
-}
-
-//=======================================================================
-// function : OverlapsPolygon
-// purpose  : SAT intersection test between defined volume and given
-//            ordered set of points, representing line segments. The test
-//            may be considered of interior part or boundary line defined
-//            by segments depending on given sensitivity type
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsPolygon (const TColgp_Array1OfPnt& theArrayOfPnts,
-                                                                    Standard_Integer theSensType,
-                                                                    SelectBasics_PickResult& thePickResult) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return Standard_False;
-  }
-
-  return myActiveSelectingVolume->OverlapsPolygon (theArrayOfPnts, (Select3D_TypeOfSensitivity)theSensType,
-                                                   myViewClipRange, thePickResult);
-}
-
-//=======================================================================
-// function : OverlapsSegment
-// purpose  : Checks if line segment overlaps selecting volume
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsSegment (const gp_Pnt& thePt1,
-                                                                    const gp_Pnt& thePt2,
-                                                                    SelectBasics_PickResult& thePickResult) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return Standard_False;
-  }
-
-  return myActiveSelectingVolume->OverlapsSegment (thePt1, thePt2, myViewClipRange, thePickResult);
-}
-
-//=======================================================================
-// function : OverlapsTriangle
-// purpose  : SAT intersection test between defined volume and given
-//            triangle. The test may be considered of interior part or
-//            boundary line defined by triangle vertices depending on
-//            given sensitivity type
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsTriangle (const gp_Pnt& thePt1,
-                                                                     const gp_Pnt& thePt2,
-                                                                     const gp_Pnt& thePt3,
-                                                                     Standard_Integer theSensType,
-                                                                     SelectBasics_PickResult& thePickResult) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return Standard_False;
-  }
-
-  return myActiveSelectingVolume->OverlapsTriangle (thePt1, thePt2, thePt3, (Select3D_TypeOfSensitivity)theSensType,
-                                                    myViewClipRange, thePickResult);
-}
-
-//=======================================================================
-// function : OverlapsSphere
-// purpose  :
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsSphere (const gp_Pnt& theCenter,
-                                                                   const Standard_Real theRadius,
-                                                                   SelectBasics_PickResult& thePickResult) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return Standard_False;
-  }
-  return myActiveSelectingVolume->OverlapsSphere (theCenter, theRadius, myViewClipRange, thePickResult);
-}
-
-//=======================================================================
-// function : OverlapsSphere
-// purpose  :
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsSphere (const gp_Pnt& theCenter,
-                                                                   const Standard_Real theRadius,
-                                                                   Standard_Boolean* theInside) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return Standard_False;
-  }
-  return myActiveSelectingVolume->OverlapsSphere (theCenter, theRadius, theInside);
-}
-
-//=======================================================================
-// function : OverlapsCylinder
-// purpose  :
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsCylinder (const Standard_Real theBottomRad,
-                                                                     const Standard_Real theTopRad,
-                                                                     const Standard_Real theHeight,
-                                                                     const gp_Trsf& theTrsf,
-                                                                     const Standard_Boolean theIsHollow,
-                                                                     SelectBasics_PickResult& thePickResult) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return false;
-  }
-  return myActiveSelectingVolume->OverlapsCylinder (theBottomRad, theTopRad, theHeight, theTrsf,
-                                                    theIsHollow, myViewClipRange, thePickResult);
-}
-
-//=======================================================================
-// function : OverlapsCylinder
-// purpose  :
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsCylinder (const Standard_Real theBottomRad,
-                                                                     const Standard_Real theTopRad,
-                                                                     const Standard_Real theHeight,
-                                                                     const gp_Trsf& theTrsf,
-                                                                     const Standard_Boolean theIsHollow,
-                                                                     Standard_Boolean* theInside) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return false;
-  }
-  return myActiveSelectingVolume->OverlapsCylinder (theBottomRad, theTopRad, theHeight,
-                                                    theTrsf, theIsHollow, theInside);
-}
-
-//=======================================================================
-// function : OverlapsCircle
-// purpose  :
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsCircle (const Standard_Real theRadius,
-                                                                   const gp_Trsf& theTrsf,
-                                                                   const Standard_Boolean theIsFilled,
-                                                                   SelectBasics_PickResult& thePickResult) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return false;
-  }
-  return myActiveSelectingVolume->OverlapsCircle (theRadius, theTrsf, theIsFilled, myViewClipRange, thePickResult);
-}
-
-//=======================================================================
-// function : OverlapsCircle
-// purpose  :
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::OverlapsCircle (const Standard_Real theRadius,
-                                                                   const gp_Trsf& theTrsf,
-                                                                   const Standard_Boolean theIsFilled,
-                                                                   Standard_Boolean* theInside) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return false;
-  }
-  return myActiveSelectingVolume->OverlapsCircle (theRadius, theTrsf, theIsFilled, theInside);
-}
-
-//=======================================================================
-// function : DistToGeometryCenter
-// purpose  : Measures distance between 3d projection of user-picked
-//            screen point and given point theCOG
-//=======================================================================
-Standard_Real SelectMgr_SelectingVolumeManager::DistToGeometryCenter (const gp_Pnt& theCOG) const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return RealLast();
-  }
-  return myActiveSelectingVolume->DistToGeometryCenter (theCOG);
 }
 
 // =======================================================================
@@ -513,26 +222,6 @@ gp_Pnt SelectMgr_SelectingVolumeManager::DetectedPoint (const Standard_Real theD
   Standard_ASSERT_RAISE(!myActiveSelectingVolume.IsNull(),
     "SelectMgr_SelectingVolumeManager::DetectedPoint() should be called after initialization of selection volume");
   return myActiveSelectingVolume->DetectedPoint (theDepth);
-}
-
-//=======================================================================
-// function : AllowOverlapDetection
-// purpose  : If theIsToAllow is false, only fully included sensitives will
-//            be detected, otherwise the algorithm will mark both included
-//            and overlapped entities as matched
-//=======================================================================
-void SelectMgr_SelectingVolumeManager::AllowOverlapDetection (const Standard_Boolean theIsToAllow)
-{
-  myToAllowOverlap = theIsToAllow;
-}
-
-//=======================================================================
-// function : IsOverlapAllowed
-// purpose  :
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::IsOverlapAllowed() const
-{
-  return myToAllowOverlap || GetActiveSelectionType() == SelectMgr_SelectionType_Point;
 }
 
 //=======================================================================
@@ -552,71 +241,6 @@ const gp_Pnt* SelectMgr_SelectingVolumeManager::GetVertices() const
     return NULL;
   }
   return aRectFrustum->GetVertices();
-}
-
-//=======================================================================
-// function : GetNearPickedPnt
-// purpose  :
-//=======================================================================
-gp_Pnt SelectMgr_SelectingVolumeManager::GetNearPickedPnt() const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return gp_Pnt();
-  }
-  return myActiveSelectingVolume->GetNearPnt();
-}
-
-//=======================================================================
-// function : GetFarPickedPnt
-// purpose  :
-//=======================================================================
-gp_Pnt SelectMgr_SelectingVolumeManager::GetFarPickedPnt() const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return gp_Pnt(RealLast(), RealLast(), RealLast());
-  }
-  return myActiveSelectingVolume->GetFarPnt();
-}
-
-//=======================================================================
-// function : GetViewRayDirection
-// purpose  :
-//=======================================================================
-gp_Dir SelectMgr_SelectingVolumeManager::GetViewRayDirection() const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return gp_Dir();
-  }
-  return myActiveSelectingVolume->GetViewRayDirection();
-}
-
-//=======================================================================
-// function : IsScalableActiveVolume
-// purpose  :
-//=======================================================================
-Standard_Boolean SelectMgr_SelectingVolumeManager::IsScalableActiveVolume() const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return Standard_False;
-  }
-  return myActiveSelectingVolume->IsScalable();
-}
-
-//=======================================================================
-// function : GetMousePosition
-// purpose  :
-//=======================================================================
-gp_Pnt2d SelectMgr_SelectingVolumeManager::GetMousePosition() const
-{
-  if (myActiveSelectingVolume.IsNull())
-  {
-    return gp_Pnt2d(RealLast(), RealLast());
-  }
-  return myActiveSelectingVolume->GetMousePosition();
 }
 
 //=======================================================================
