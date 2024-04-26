@@ -152,6 +152,7 @@ Standard_Boolean Select3D_SensitiveGroup::IsIn (const Handle(Select3D_SensitiveE
 
 void Select3D_SensitiveGroup::Clear()
 {
+  base_type::Clear();
   myEntities.Clear();
   myBndBox.Clear();
   myCenter = gp_Pnt (0.0, 0.0, 0.0);

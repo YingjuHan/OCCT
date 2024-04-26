@@ -92,9 +92,6 @@ public:
   //! This method should be redefined in Select3D_SensitiveSet descendants
   Standard_EXPORT virtual gp_Pnt CenterOfGeometry() const Standard_OVERRIDE;
 
-  //! Destroys cross-reference to avoid memory leak
-  Standard_EXPORT virtual void Clear() Standard_OVERRIDE;
-
   //! Returns a number of nodes in 1 BVH leaf
   Standard_Integer GetLeafNodeSize() const { return myContent.Builder()->LeafNodeSize(); }
 
