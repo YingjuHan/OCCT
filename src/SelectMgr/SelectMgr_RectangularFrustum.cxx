@@ -503,12 +503,12 @@ Standard_Boolean SelectMgr_RectangularFrustum::OverlapsBox (const SelectMgr_Vec3
     aNearestPnt.SetY (Max (Min (myNearPickedPnt.Y(), theBoxMax.y()), theBoxMin.y()));
     aNearestPnt.SetZ (Max (Min (myNearPickedPnt.Z(), theBoxMax.z()), theBoxMin.z()));
 
-    aDepth = aNearestPnt.Distance (myNearPickedPnt);
+    aDepth = aNearestPnt.Distance (myNearPickedPnt) * myScale;
     thePickResult.SetDepth (aDepth);
     return !theClipRange.IsClipped (thePickResult.Depth());
   }
 
-  Bnd_Range aRange(Max (aTimeEnter, 0.0), aTimeLeave);
+  Bnd_Range aRange(Max (aTimeEnter * myScale, 0.0), aTimeLeave * myScale);
   aRange.GetMin (aDepth);
 
   if (!theClipRange.GetNearestDepth (aRange, aDepth))
