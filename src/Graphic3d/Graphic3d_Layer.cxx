@@ -241,7 +241,10 @@ Bnd_Box Graphic3d_Layer::BoundingBox (Standard_Integer theViewId,
             if (!aGroup->TransformPersistence().IsNull()
               && aGroup->TransformPersistence()->IsZoomOrRotate())
             {
-              const gp_Pnt anAnchor = aGroup->TransformPersistence()->AnchorPoint();
+              gp_Pnt anAnchor = aGroup->TransformPersistence()->AnchorPoint();
+              if (!aStructure->Transformation().IsNull())
+                anAnchor.Transform (aStructure->Transformation()->Trsf());
+
               myBoundingBox[aBoxId].Add (anAnchor);
             }
           }
@@ -290,6 +293,10 @@ Bnd_Box Graphic3d_Layer::BoundingBox (Standard_Integer theViewId,
     // handle per-group transformation persistence specifically
     if (aStructure->HasGroupTransformPersistence())
     {
+      BVH_Mat4d aStructMat4;
+      if (!aStructure->Transformation().IsNull())
+        aStructure->Transformation()->Trsf().GetMat4 (aStructMat4);
+
       for (Graphic3d_SequenceOfGroup::Iterator aGroupIter (aStructure->Groups()); aGroupIter.More(); aGroupIter.Next())
       {
         const Handle(Graphic3d_Group)& aGroup = aGroupIter.Value();
@@ -303,6 +310,9 @@ Bnd_Box Graphic3d_Layer::BoundingBox (Standard_Integer theViewId,
         Graphic3d_BndBox3d aBoxCopy (Graphic3d_Vec3d (aBoxF.CornerMin().xyz()),
                                      Graphic3d_Vec3d (aBoxF.CornerMax().xyz()));
         aGroup->TransformPersistence()->Apply (theCamera, aProjectionMat, aWorldViewMat, theWindowWidth, theWindowHeight, aBoxCopy);
+        if (aBoxCopy.IsValid())
+          aBoxCopy.Transform (aStructMat4);
+
         addBox3dToBndBox (aResBox, aBoxCopy);
       }
     }

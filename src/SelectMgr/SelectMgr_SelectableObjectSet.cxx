@@ -159,6 +159,9 @@ namespace
                                                    theProjectionMat, theWorldViewMat,
                                                    theWinSize.x(), theWinSize.y(),
                                                    aGroupBox);
+            if (!aGroupBox.IsVoid() && anObject->HasTransformation())
+              aGroupBox = aGroupBox.Transformed (anObject->Transformation());
+
             aBoundingBox.Add (aGroupBox);
           }
         }
