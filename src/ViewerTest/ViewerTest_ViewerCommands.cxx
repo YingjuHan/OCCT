@@ -113,6 +113,7 @@
 //==============================================================================
 
 Standard_IMPORT Standard_Boolean Draw_VirtualWindows;
+Standard_IMPORT Standard_Integer Draw_DpiAware;
 Standard_IMPORT Standard_Boolean Draw_Interprete (const char* theCommand);
 
 Standard_EXPORT int ViewerMainLoop(Standard_Integer , const char** argv);
@@ -474,16 +475,25 @@ TCollection_AsciiString ViewerTest::GetCurrentViewName ()
 
 TCollection_AsciiString ViewerTest::ViewerInit (const ViewerTest_VinitParams& theParams)
 {
+  const Standard_Boolean isVirtual = Draw_VirtualWindows || theParams.IsVirtual;
+
+  Standard_Real aDpiScale = 1.0;
+  if (!isVirtual && Draw_DpiAware == 1)
+  {
+  #ifdef _WIN32
+    aDpiScale = WNT_Window::GetScreenDevicePixelRatio();
+  #endif
+  }
+
   // Default position and dimension of the viewer window.
   // Note that left top corner is set to be sufficiently small to have
   // window fit in the small screens (actual for remote desktops, see #23003).
   // The position corresponds to the window's client area, thus some
   // gap is added for window frame to be visible.
-  Graphic3d_Vec2d aPxTopLeft (20, 40);
-  Graphic3d_Vec2d aPxSize (409, 409);
+  Graphic3d_Vec2d aPxTopLeft = Graphic3d_Vec2d(20, 40) * aDpiScale;
+  Graphic3d_Vec2d aPxSize = Graphic3d_Vec2d(409, 409) * aDpiScale;
   Standard_Boolean isDefViewSize = Standard_True;
   Standard_Boolean toCreateViewer = Standard_False;
-  const Standard_Boolean isVirtual = Draw_VirtualWindows || theParams.IsVirtual;
   if (!theParams.ViewToClone.IsNull())
   {
     Graphic3d_Vec2i aCloneSize;
@@ -707,6 +717,10 @@ TCollection_AsciiString ViewerTest::ViewerInit (const ViewerTest_VinitParams& th
                                      (int )aPxSize.x(), (int )aPxSize.y(),
                                      Quantity_NOC_BLACK);
     VT_GetWindow()->RegisterRawInputDevices (WNT_Window::RawInputMask_SpaceMouse);
+    if (Draw_DpiAware == 0)
+    {
+      VT_GetWindow()->SetIgnoreDpi(true);
+    }
   #elif defined(HAVE_XLIB)
     VT_GetWindow() = new Xw_Window (aGraphicDriver->GetDisplayConnection(),
                                     aTitle.ToCString(),
@@ -1160,31 +1174,7 @@ static int VInit (Draw_Interpretor& theDi, Standard_Integer theArgsNb, const cha
 #if defined(_WIN32)
   if (aDpiAware != -1)
   {
-    typedef void* (WINAPI *SetThreadDpiAwarenessContext_t)(void*);
-    if (HMODULE aUser32Module = GetModuleHandleW (L"User32"))
-    {
-      SetThreadDpiAwarenessContext_t aSetDpiAware = (SetThreadDpiAwarenessContext_t )GetProcAddress (aUser32Module, "SetThreadDpiAwarenessContext");
-      if (aDpiAware == 1)
-      {
-        // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
-        if (aSetDpiAware ((void* )-4) == NULL)
-        {
-          // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE for older systems
-          if (aSetDpiAware ((void* )-3) == NULL)
-          {
-            Message::SendFail() << "Error: unable to enable DPI awareness";
-          }
-        }
-      }
-      else
-      {
-        // DPI_AWARENESS_CONTEXT_UNAWARE
-        if (aSetDpiAware ((void* )-1) == NULL)
-        {
-          Message::SendFail() << "Error: unable to disable DPI awareness";
-        }
-      }
-    }
+    WNT_Window::SetThreadDpiAware(aDpiAware == 1);
   }
 #else
   (void )aDpiAware;

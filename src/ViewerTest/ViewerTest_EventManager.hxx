@@ -112,6 +112,9 @@ public:
   //! Resize View.
   Standard_EXPORT virtual void ProcessConfigure (bool theIsResized = true) Standard_OVERRIDE;
 
+  //! Handle window movement to screen with new pixel density.
+  Standard_EXPORT virtual void ProcessDpiChange() Standard_OVERRIDE;
+
   //! Handle window input event immediately (flush input buffer).
   Standard_EXPORT virtual void ProcessInput() Standard_OVERRIDE;
 

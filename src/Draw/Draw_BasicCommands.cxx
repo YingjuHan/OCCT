@@ -1263,6 +1263,49 @@ static int ddebugtraces (Draw_Interpretor& theDI, Standard_Integer theArgNb, con
   return 0;
 }
 
+extern Standard_Integer Draw_DpiAware;
+
+//==============================================================================
+//function : dpiaware
+//purpose  :
+//==============================================================================
+static int dpiaware(Draw_Interpretor& theDI,
+                    Standard_Integer theArgNb,
+                    const char** theArgVec)
+{
+  if (theArgNb < 2)
+  {
+    theDI << Draw_DpiAware;
+    return 0;
+  }
+  else if (theArgNb != 2)
+  {
+    theDI << "Syntax error: wrong number of arguments";
+    return 1;
+  }
+
+  TCollection_AsciiString aVal(theArgVec[1]);
+  aVal.LowerCase();
+  if (aVal == "0" || aVal == "off")
+  {
+    Draw_DpiAware = 0;
+  }
+  else if (aVal == "1" || aVal == "on")
+  {
+    Draw_DpiAware = 1;
+  }
+  else if (aVal == "-1" || aVal == "auto")
+  {
+    Draw_DpiAware = -1;
+  }
+  else
+  {
+    theDI << "Syntax error at '" << theArgVec[1] << "'";
+    return 1;
+  }
+  return 0;
+}
+
 //==============================================================================
 //function : dputs
 //purpose  :
@@ -1450,6 +1493,9 @@ void Draw::BasicCommands(Draw_Interpretor& theCommands)
     "\n\t\t: Sets the number of lines for the stack trace within Standard_Failure constructor."
     "\n\t\t: Intended for debug purposes.",
     __FILE__, ddebugtraces, g);
+  theCommands.Add("dpiaware", "dpiaware [{0|1|-1}]"
+                  "\n\t\t: Manages default DPI awareness flag used for creating 3D viewer",
+                  __FILE__, dpiaware, g);
 
   theCommands.Add("dbreak", "raises Tcl exception if user has pressed Control-Break key",
 		  __FILE__,dbreak,g);

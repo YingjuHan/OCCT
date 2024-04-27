@@ -47,6 +47,7 @@ Standard_EXPORT Standard_Boolean Draw_Batch = Standard_False;
 Standard_EXPORT Standard_Boolean Draw_Spying = Standard_False;
 Standard_EXPORT Standard_Boolean Draw_Chrono = Standard_False;
 Standard_EXPORT Standard_Boolean Draw_VirtualWindows = Standard_False;
+Standard_EXPORT Standard_Integer Draw_DpiAware = 1;
 Standard_EXPORT Standard_Boolean ErrorMessages = Standard_True;
 
 static const char* ColorNames[MAXCOLOR] = {
@@ -304,6 +305,7 @@ void Draw_Appli(int argc, char** argv, const FDraw_InitAppli Draw_InitAppli)
       std::cout << "Options:\n";
       std::cout << "  -b: batch mode (no GUI, no viewers)\n";
       std::cout << "  -v: no GUI, use virtual (off-screen) windows for viewers\n";
+      std::cout << "  -dpiAware {0|1|-1}: DPI awareness of 3D viewer\n";
       std::cout << "  -i: interactive mode\n";
       std::cout << "  -f file: execute script from file\n";
       std::cout << "  -c command args...: execute command (with optional arguments)\n\n";
@@ -322,6 +324,27 @@ void Draw_Appli(int argc, char** argv, const FDraw_InitAppli Draw_InitAppli)
     {
       // force virtual windows
       Draw_VirtualWindows = Standard_True;
+    }
+    else if (anArg == "-dpiaware" || anArg == "-dpiunaware")
+    {
+      Draw_DpiAware = anArg == "-dpiaware" ? 1 : 0;
+      TCollection_AsciiString aVal = (anArgIter + 1 < argc) ? TCollection_AsciiString(argv[anArgIter + 1]) : TCollection_AsciiString();
+      aVal.LowerCase();
+      if (aVal == "0" || aVal == "off")
+      {
+        ++anArgIter;
+        Draw_DpiAware = anArg == "-dpiaware" ? 0 : 1;
+      }
+      else if (aVal == "1" || aVal == "on")
+      {
+        ++anArgIter;
+        Draw_DpiAware = anArg == "-dpiaware" ? 1 : 0;
+      }
+      else if (aVal == "-1" || aVal == "auto")
+      {
+        ++anArgIter;
+        Draw_DpiAware = -1;
+      }
     }
     else if (anArg == "-i")
     {

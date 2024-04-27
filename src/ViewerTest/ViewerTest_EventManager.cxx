@@ -316,6 +316,25 @@ void ViewerTest_EventManager::ProcessConfigure (bool theIsResized)
 //function : OnSubviewChanged
 //purpose  :
 //==============================================================================
+void ViewerTest_EventManager::ProcessDpiChange()
+{
+  if (myView.IsNull())
+    return;
+
+  Handle(V3d_View) aParent = !myView->IsSubview() ? myView : myView->ParentView();
+  aParent->ChangeRenderingParams().Resolution =
+    (unsigned int)Round(Standard_Real(aParent->RenderingParams().BaseResolution) * aParent->Window()->DevicePixelRatio());
+  for (const Handle(V3d_View)& aChildIter : aParent->Subviews())
+  {
+    aChildIter->ChangeRenderingParams().Resolution = aParent->RenderingParams().Resolution;
+  }
+  ProcessConfigure(true);
+}
+
+//==============================================================================
+//function : OnSubviewChanged
+//purpose  :
+//==============================================================================
 void ViewerTest_EventManager::OnSubviewChanged (const Handle(AIS_InteractiveContext)& ,
                                                 const Handle(V3d_View)& ,
                                                 const Handle(V3d_View)& theNewView)

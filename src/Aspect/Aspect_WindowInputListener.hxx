@@ -40,6 +40,9 @@ public:
   //! Handle window resize event.
   virtual void ProcessConfigure (bool theIsResized) = 0;
 
+  //! Handle window movement to screen with new pixel density.
+  virtual void ProcessDpiChange() = 0;
+
   //! Handle window input event immediately (flush input buffer or ignore).
   virtual void ProcessInput() = 0;
 

@@ -434,6 +434,13 @@ public: //! @name resize events
     (void )theIsResized;
   }
 
+  //! Handle window movement to screen with new pixel density.
+  //! Default implementation redirects to resize.
+  virtual void ProcessDpiChange() Standard_OVERRIDE
+  {
+    ProcessConfigure (true);
+  }
+
   //! Handle window input event immediately.
   //! Default implementation does nothing - input events are accumulated in internal buffer until explicit FlushViewEvents() call.
   virtual void ProcessInput() Standard_OVERRIDE {}

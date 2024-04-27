@@ -4,7 +4,7 @@ CSF_user32
 CSF_advapi32
 CSF_OpenVR
 CSF_advapi32
-CSF_user32
+CSF_gdi32
 CSF_XwLibs
 CSF_dpsLibs
 CSF_XmuLibs

@@ -37,6 +37,10 @@ class WNT_Window : public Aspect_Window
 {
   DEFINE_STANDARD_RTTIEXT(WNT_Window, Aspect_Window)
 public:
+  //! 96 is 100% on Windows.
+  static constexpr int DEFAULT_DPI = 96;
+
+public:
 
   //! Convert WInAPI virtual key (VK_ enumeration) into Aspect_VKey.
   Standard_EXPORT static Aspect_VKey VirtualKeyFromNative (Standard_Integer theKey);
@@ -52,6 +56,17 @@ public:
 
   //! Use GetAsyncKeyState() to fetch actual mouse buttons state regardless of event loop.
   Standard_EXPORT static Aspect_VKeyMouse MouseButtonsAsync();
+
+  //! Call SetProcessDpiAwarenessContext() to set DPI awareness (Win10+ 1703).
+  //! Normally, applications should embed this information into executable's  manifest.
+  //! The function should be called once.
+  Standard_EXPORT static bool SetProcessDpiAware (bool theIsAware);
+
+  //! Call SetThreadDpiAwarenessContext() to set DPI awareness (Win10+ 1607).
+  Standard_EXPORT static bool SetThreadDpiAware (bool theIsAware);
+
+  //! Return scale factor.
+  Standard_EXPORT static Standard_Real GetScreenDevicePixelRatio (const Graphic3d_Vec2i& thePnt = Graphic3d_Vec2i());
 
 public:
 
@@ -110,7 +125,16 @@ public:
   
   //! Returns The Window SIZE in PIXEL
   Standard_EXPORT virtual void Size (Standard_Integer& Width, Standard_Integer& Height) const Standard_OVERRIDE;
-  
+
+  //! Return device pixel ratio.
+  Standard_EXPORT virtual Standard_Real DevicePixelRatio() const Standard_OVERRIDE;
+
+  //! Return flag to ignore DPI within DevicePixelRatio(); FALSE by default.
+  bool ToIgnoreDpi() const { return myIsDpiUnaware; }
+
+  //! Set flag to ignore DPI within DevicePixelRatio().
+  void SetIgnoreDpi(bool theToIgnore) { myIsDpiUnaware = theToIgnore; }
+
   //! Returns native Window handle (HWND)
   virtual Aspect_Drawable NativeHandle() const Standard_OVERRIDE { return (Aspect_Drawable )myHWindow; }
   
@@ -156,6 +180,7 @@ public:
 
 private:
 
+  class DpiAwareHelper;
   class TouchInputHelper;
 
 protected:
@@ -169,6 +194,7 @@ protected:
   Standard_Integer myXRight;
   Standard_Integer myYBottom;
   Standard_Boolean myIsForeign;
+  Standard_Boolean myIsDpiUnaware;
 
 };
 

@@ -34,6 +34,115 @@
 
 IMPLEMENT_STANDARD_RTTIEXT(WNT_Window, Aspect_Window)
 
+//! Auxiliary tool for handling DPI awareness.
+//! Dynamically loads functions from User32 available since Win10 and later.
+class WNT_Window::DpiAwareHelper : public Standard_Transient
+{
+public:
+
+  //! DPI_AWARENESS_CONTEXT.
+  enum class DpiAwareContext
+  {
+    UNAWARE = -1, // DPI_AWARENESS_CONTEXT_UNAWARE
+    SYSTEM_AWARE = -2,
+    PER_MONITOR_AWARE = -3,
+    PER_MONITOR_AWARE_V2 = -4,
+    UNAWARE_GDISCALED = -5,
+  };
+
+  // Win8.1+
+  typedef HRESULT (WINAPI *GetDpiForMonitor_t)(HMONITOR hmonitor, int dpiType, UINT* dpiX, UINT* dpiY);
+  // Win10+ 1607
+  typedef UINT  (WINAPI *GetDpiForWindow_t)(HWND hwnd);
+  typedef void* (WINAPI *SetThreadDpiAwarenessContext_t)(void* dpiContext);
+  // Win10+ 1703
+  typedef BOOL (WINAPI *SetProcessDpiAwarenessContext_t)(void* value);
+
+public:
+
+  //! Return global instance.
+  static const Handle(DpiAwareHelper)& Instance()
+  {
+    static const Handle(DpiAwareHelper) aHelper = new DpiAwareHelper();
+    return aHelper;
+  }
+
+public:
+
+  //! Wrapper for SetProcessDpiAwarenessContext().
+  bool SetProcessDpiAware (bool theIsAware)
+  {
+    if (this->SetProcessDpiAwarenessContext == nullptr)
+      return false;
+
+    if (!theIsAware)
+    {
+      if (!this->SetProcessDpiAwarenessContext ((void*)DpiAwareContext::UNAWARE))
+      {
+        Message::SendFail() << "Error: unable to disable process DPI awareness";
+        return false;
+      }
+      return true;
+    }
+
+    if (this->SetProcessDpiAwarenessContext ((void*)DpiAwareContext::PER_MONITOR_AWARE_V2))
+      return true;
+    else if (this->SetProcessDpiAwarenessContext ((void*)DpiAwareContext::PER_MONITOR_AWARE))
+      return true;
+
+    Message::SendFail() << "Error: unable to enable process DPI awareness";
+    return false;
+  }
+
+  //! Wrapper for SetThreadDpiAwarenessContext().
+  bool SetThreadDpiAware (bool theIsAware)
+  {
+    if (this->SetThreadDpiAwarenessContext == nullptr)
+      return false;
+
+    if (!theIsAware)
+    {
+      if (this->SetThreadDpiAwarenessContext ((void*)DpiAwareContext::UNAWARE) == NULL)
+      {
+        Message::SendFail() << "Error: unable to disable thread DPI awareness";
+        return false;
+      }
+      return true;
+    }
+
+    if (this->SetThreadDpiAwarenessContext ((void*)DpiAwareContext::PER_MONITOR_AWARE_V2) != NULL)
+      return true;
+    else if (this->SetThreadDpiAwarenessContext ((void*)DpiAwareContext::PER_MONITOR_AWARE) != NULL)
+      return true;
+
+    Message::SendFail() << "Error: unable to enable thread DPI awareness";
+    return false;
+  }
+
+private:
+
+  //! Constructor.
+  DpiAwareHelper()
+  {
+    if (const HMODULE aModUser32 = GetModuleHandleW(L"User32"))
+    {
+      this->GetDpiForWindow = (GetDpiForWindow_t)GetProcAddress(aModUser32, "GetDpiForWindow");
+      this->SetThreadDpiAwarenessContext = (SetThreadDpiAwarenessContext_t)GetProcAddress(aModUser32, "SetThreadDpiAwarenessContext");
+      this->SetProcessDpiAwarenessContext = (SetProcessDpiAwarenessContext_t)GetProcAddress(aModUser32, "SetProcessDpiAwarenessContext");
+    }
+    if (const HMODULE aModSchcore = GetModuleHandleW(L"Shcore"))
+    {
+      this->GetDpiForMonitor = (GetDpiForMonitor_t)GetProcAddress(aModSchcore, "GetDpiForMonitor");
+    }
+  }
+
+public:
+  GetDpiForMonitor_t              GetDpiForMonitor = nullptr;
+  GetDpiForWindow_t               GetDpiForWindow = nullptr;
+  SetThreadDpiAwarenessContext_t  SetThreadDpiAwarenessContext = nullptr;
+  SetProcessDpiAwarenessContext_t SetProcessDpiAwarenessContext = nullptr;
+};
+
 #ifndef MOUSEEVENTF_FROMTOUCH
 #define MOUSEEVENTF_FROMTOUCH 0xFF515700
 #endif
@@ -143,6 +252,24 @@ private:
 };
 
 // =======================================================================
+// function : SetProcessDpiAware
+// purpose  :
+// =======================================================================
+bool WNT_Window::SetProcessDpiAware (bool theIsAware)
+{
+  return DpiAwareHelper::Instance()->SetProcessDpiAware(theIsAware);
+}
+
+// =======================================================================
+// function : SetThreadDpiAware
+// purpose  :
+// =======================================================================
+bool WNT_Window::SetThreadDpiAware (bool theIsAware)
+{
+  return DpiAwareHelper::Instance()->SetThreadDpiAware(theIsAware);
+}
+
+// =======================================================================
 // function : WNT_Window
 // purpose  :
 // =======================================================================
@@ -165,7 +292,8 @@ WNT_Window::WNT_Window (const Standard_CString           theTitle,
   myYTop  (thePxTop),
   myXRight (thePxLeft + thePxWidth),
   myYBottom (thePxTop + thePxHeight),
-  myIsForeign (Standard_False)
+  myIsForeign (Standard_False),
+  myIsDpiUnaware(Standard_False)
 {
   if (thePxWidth <= 0 || thePxHeight <= 0)
   {
@@ -447,6 +575,55 @@ void WNT_Window::SetPos (const Standard_Integer theX,  const Standard_Integer th
   myYTop    = theY;
   myXRight  = theX1;
   myYBottom = theY1;
+}
+
+// =======================================================================
+// function : GetScreenDevicePixelRatio
+// purpose  :
+// =======================================================================
+Standard_Real WNT_Window::GetScreenDevicePixelRatio(const Graphic3d_Vec2i& thePnt)
+{
+  Standard_Real aDefScale = 1.0;
+  HDC aDesktop = ::GetDC(NULL);
+  if (aDesktop != NULL)
+  {
+    const int aDpiX = ::GetDeviceCaps(aDesktop, LOGPIXELSX);
+    ::ReleaseDC(NULL, aDesktop);
+    aDefScale = Standard_Real(aDpiX) / Standard_Real(WNT_Window::DEFAULT_DPI);
+  }
+
+  const Handle(DpiAwareHelper)& aHelper = DpiAwareHelper::Instance();
+  if (aHelper->GetDpiForMonitor == nullptr)
+    return aDefScale;
+
+  POINT aPnt;
+  aPnt.x = thePnt.x();
+  aPnt.y = thePnt.y();
+  HMONITOR aMon = ::MonitorFromPoint(aPnt, MONITOR_DEFAULTTONULL);
+  if (aMon == NULL)
+    return aDefScale;
+
+  UINT aDpiX = WNT_Window::DEFAULT_DPI;
+  UINT aDpiY = WNT_Window::DEFAULT_DPI;
+  aHelper->GetDpiForMonitor(aMon, 0, &aDpiX, &aDpiY);
+  return Standard_Real(aDpiX) / Standard_Real(WNT_Window::DEFAULT_DPI);
+}
+
+// =======================================================================
+// function : DevicePixelRatio
+// purpose  :
+// =======================================================================
+Standard_Real WNT_Window::DevicePixelRatio() const
+{
+  if (myIsDpiUnaware || IsVirtual())
+    return 1.0;
+
+  const Handle(DpiAwareHelper)& aHelper = DpiAwareHelper::Instance();
+  if (aHelper->GetDpiForWindow == nullptr)
+    return GetScreenDevicePixelRatio();
+
+  const UINT aDpi = aHelper->GetDpiForWindow ((HWND)myHWindow);
+  return Standard_Real(aDpi) / Standard_Real(WNT_Window::DEFAULT_DPI);
 }
 
 // =======================================================================
@@ -841,6 +1018,18 @@ bool WNT_Window::ProcessMessage (Aspect_WindowInputListener& theListener,
     {
       theListener.ProcessConfigure (theMsg.message == WM_SIZE);
       return true;
+    }
+    case 0x02E0: // WM_DPICHANGED
+    {
+      if (myIsDpiUnaware || myHParentWindow != NULL)
+        break;
+
+      RECT* aNewRect = (RECT*)theMsg.lParam;
+      ::SetWindowPos(theMsg.hwnd, NULL,
+                     aNewRect->left, aNewRect->top, aNewRect->right - aNewRect->left, aNewRect->bottom - aNewRect->top,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+      theListener.ProcessDpiChange();
+      break;
     }
     case WM_KEYUP:
     case WM_KEYDOWN:
