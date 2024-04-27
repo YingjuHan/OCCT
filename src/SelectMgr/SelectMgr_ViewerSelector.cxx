@@ -402,6 +402,7 @@ void SelectMgr_ViewerSelector::traverseObject (const Handle(SelectMgr_Selectable
                                                                                theWinSize.x(), theWinSize.y());
       gp_GTrsf aTPers;
       aTPers.SetMat4 (aMat);
+      // legacy math applying local transformation relative to transform persistence (to match rendering)
       aInversedTrsf = (aTPers * gp_GTrsf (theObject->Transformation())).Inverted();
     }
   }
@@ -580,7 +581,9 @@ void SelectMgr_ViewerSelector::traverseObject (const Handle(SelectMgr_Selectable
                                                                                  theWinSize.x(), theWinSize.y());
             gp_GTrsf aTPers;
             aTPers.SetMat4 (aMat);
-            aInvSensTrsf = (aTPers * gp_GTrsf(theObject->Transformation())).Inverted();
+            // the multiplication order for entity is intentionally swapped (compared to object's transform persistence)
+            // to match rendering behavior
+            aInvSensTrsf = (gp_GTrsf(theObject->Transformation()) * aTPers).Inverted();
           }
 
           computeFrustum (anEnt, theMgr, aMgr, aInvSensTrsf, aScaledTrnsfFrustums, aTmpMgr);
