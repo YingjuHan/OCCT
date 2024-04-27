@@ -505,6 +505,27 @@ void Graphic3d_TransformPers::Apply (const Handle(Graphic3d_Camera)& theCamera,
       Standard_Real aScale = persistentScale (theCamera, theViewportWidth, theViewportHeight);
       Graphic3d_TransformUtils::Scale (aWorldView, aScale, aScale, aScale);
     }
+
+    if ((myMode & Graphic3d_TMF_ZoomRotatePers) != 0)
+    {
+      // avoid interpolation artifacts by aligning to integer pixels
+      const NCollection_Mat4<Standard_Real> aProjMat (theProjection);
+      const Standard_Integer aViewport[4] = { 0, 0, theViewportWidth, theViewportHeight };
+
+      Graphic3d_Vec3d aWinXYZ;
+      Graphic3d_TransformUtils::Project (0.0, 0.0, 0.0,
+                                         aWorldView, aProjMat, aViewport,
+                                         aWinXYZ.x(), aWinXYZ.y(), aWinXYZ.z());
+      aWinXYZ.x() = Round (aWinXYZ.x());
+      aWinXYZ.y() = Round (aWinXYZ.y());
+
+      Graphic3d_Vec3d anObjXYZ;
+      Graphic3d_TransformUtils::UnProject (aWinXYZ.x(), aWinXYZ.y(), aWinXYZ.z(),
+                                           aWorldView, aProjMat, aViewport,
+                                           anObjXYZ.x(), anObjXYZ.y(), anObjXYZ.z());
+      Graphic3d_TransformUtils::Translate (aWorldView, anObjXYZ.x(), anObjXYZ.y(), anObjXYZ.z());
+    }
+
     theWorldView.ConvertFrom (aWorldView);
     return;
   }

@@ -419,8 +419,8 @@ void OpenGl_Text::setupMatrix (const Handle(OpenGl_Context)& theCtx,
       // Note that for better readability we could also try aligning freely rotated in 3D text (myHasPlane),
       // when camera orientation co-aligned with horizontal text orientation,
       // but this might look awkward while rotating camera.
-      aWinXYZ.x() = Floor (aWinXYZ.x());
-      aWinXYZ.y() = Floor (aWinXYZ.y());
+      aWinXYZ.x() = Round (aWinXYZ.x());
+      aWinXYZ.y() = Round (aWinXYZ.y());
     }
     Graphic3d_TransformUtils::UnProject<Standard_Real> (aWinXYZ.x(), aWinXYZ.y(), aWinXYZ.z(),
                                                         THE_IDENTITY_MATRIX, aProjectMat, theCtx->Viewport(),
