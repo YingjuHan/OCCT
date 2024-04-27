@@ -443,7 +443,7 @@ void Graphic3d_TransformPers::Apply (const Handle(Graphic3d_Camera)& theCamera,
     // scale factor to pixels
     const gp_XYZ        aViewDim = theCamera->ViewDimensions (aFocus);
     const Standard_Real aScale   = Abs(aViewDim.Y()) / Standard_Real(aVPSizeY);
-    gp_XYZ aCenter (0.0, 0.0, -aFocus);
+    gp_XYZ aCenter (aJitterComp * aScale, aJitterComp * aScale, -aFocus);
     if ((myParams.Params2d.Corner & (Aspect_TOTP_LEFT | Aspect_TOTP_RIGHT)) != 0)
     {
       aCenter.SetX (-aViewDim.X() * theCamera->NDC2dOffsetX() + (Standard_Real(myParams.Params2d.OffsetX) + aJitterComp) * aScale);
