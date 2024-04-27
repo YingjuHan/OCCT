@@ -830,7 +830,7 @@ void AIS_Manipulator::updateTransformation()
   if (myIsZoomPersistentMode)
   {
     if (TransformPersistence().IsNull()
-    ||  TransformPersistence()->Mode() != Graphic3d_TMF_ZoomPers
+    ||  (TransformPersistence()->Mode() & Graphic3d_TMF_ZoomPers) == 0
     || !TransformPersistence()->AnchorPoint().IsEqual (myPosition.Location(), 0.0))
     {
       setTransformPersistence (new Graphic3d_TransformPers (Graphic3d_TMF_ZoomPers, myPosition.Location()));

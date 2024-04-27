@@ -96,7 +96,8 @@ public:
 
 public:
 
-  Standard_EXPORT void TextSize (const Handle(Graphic3d_CView)& theView,
+  Standard_DEPRECATED("Deprecated method, Font_FTFont should be used instead")
+  Standard_EXPORT void textSize (const Handle(Graphic3d_CView)& theView,
                                  const Standard_CString         theText,
                                  const Standard_ShortReal       theHeight,
                                  Standard_ShortReal&            theWidth,

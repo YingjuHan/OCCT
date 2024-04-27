@@ -1477,6 +1477,7 @@ void Graphic3d_CView::SetupXRPosedCamera()
 {
   if (!myPosedXRCamera.IsNull())
   {
+    myCamera->SetResolutionRatio (myRenderParams.ResolutionRatio());
     myCamera = myPosedXRCamera;
     if (myPosedXRCameraCopy.IsNull())
     {

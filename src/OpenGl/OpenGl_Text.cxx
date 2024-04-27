@@ -460,9 +460,10 @@ void OpenGl_Text::setupMatrix (const Handle(OpenGl_Context)& theCtx,
     {
       Graphic3d_TransformUtils::Scale<GLdouble> (aModViewMat, myScaleHeight, myScaleHeight, myScaleHeight);
     }
-    else if (theCtx->HasRenderScale())
+    else
     {
-      Graphic3d_TransformUtils::Scale<GLdouble> (aModViewMat, theCtx->RenderScaleInv(), theCtx->RenderScaleInv(), theCtx->RenderScaleInv());
+      const double anInvScale = 1.0 / (theCtx->ResolutionRatio() * theCtx->RenderScale());
+      Graphic3d_TransformUtils::Scale<GLdouble> (aModViewMat, anInvScale, anInvScale, anInvScale);
     }
   }
 

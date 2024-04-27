@@ -283,7 +283,7 @@ void AIS_TextLabel::Compute (const Handle(PrsMgr_PresentationManager)& ,
       }
       else if (isTextZoomable
             || TransformPersistence().IsNull()
-            || TransformPersistence()->Mode() != Graphic3d_TMF_2d)
+            || (TransformPersistence()->Mode() & Graphic3d_TMF_2d) == 0)
       {
         Handle(Graphic3d_TransformPers) aTrsfPers =
           new Graphic3d_TransformPers (isTextZoomable ? Graphic3d_TMF_RotatePers : Graphic3d_TMF_ZoomRotatePers, aPosition);
@@ -357,7 +357,7 @@ void AIS_TextLabel::ComputeSelection (const Handle(SelectMgr_Selection)& theSele
       Handle(SelectMgr_EntityOwner) anEntityOwner   = new SelectMgr_EntityOwner (this, 10);
 
       gp_Pnt aPosition = Position();
-      if (!TransformPersistence().IsNull() && TransformPersistence()->Mode() != Graphic3d_TMF_2d)
+      if (!TransformPersistence().IsNull() && (TransformPersistence()->Mode() & Graphic3d_TMF_2d) == 0)
       {
         aPosition = gp::Origin();
       }
@@ -402,12 +402,17 @@ Standard_Boolean AIS_TextLabel::calculateLabelParams (const gp_Pnt& thePosition,
                                                       Standard_Real& theWidth,
                                                       Standard_Real& theHeight) const
 {
+  if (!HasInteractiveContext())
+    return Standard_False;
+
   // Get width and height of text
   Handle(Prs3d_TextAspect) anAsp = myDrawer->TextAspect();
   const Graphic3d_RenderingParams& aRendParams = GetContext()->CurrentViewer()->DefaultRenderingParams();
   Font_FTFontParams aFontParams;
   aFontParams.PointSize = (unsigned int) anAsp->Height();
-  aFontParams.Resolution = aRendParams.Resolution;
+  aFontParams.Resolution = !myTransformPersistence.IsNull() && myTransformPersistence->IsDensityIndependent()
+                         ? aRendParams.BaseResolution
+                         : aRendParams.Resolution;
   aFontParams.FontHinting = aRendParams.FontHinting;
 
   Handle(Font_FTFont) aFont = Font_FTFont::FindAndCreate (anAsp->Aspect()->Font(),

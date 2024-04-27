@@ -203,6 +203,7 @@ void V3d_View::SetWindow (const Handle(Aspect_Window)&  theWindow,
 
   // method V3d_View::SetWindow() should assign the field MyWindow before calling Redraw()
   MyWindow = theWindow;
+  myView->ChangeRenderingParams().Resolution = static_cast<unsigned int>(Round(double(myView->RenderingParams().BaseResolution) * theWindow->DevicePixelRatio()));
   myView->SetWindow (Handle(Graphic3d_CView)(), theWindow, theContext);
   MyViewer->SetViewOn (this);
   SetRatio();
@@ -250,6 +251,8 @@ void V3d_View::SetWindow (const Handle(V3d_View)& theParentView,
   myView->SetSubviewMargins (theMargins);
 
   MyWindow = aWindow;
+  myView->ChangeRenderingParams().BaseResolution = aParentView->View()->RenderingParams().BaseResolution;
+  myView->ChangeRenderingParams().Resolution = aParentView->View()->RenderingParams().Resolution;
   myView->SetWindow (aParentView->View(), aWindow, 0);
   MyViewer->SetViewOn (this);
   SetRatio();
@@ -363,6 +366,8 @@ void V3d_View::Update() const
   }
 
   myIsInvalidatedImmediate = Standard_False;
+  Camera()->SetResolutionRatio (RenderingParams().ResolutionRatio());
+
   myView->Update();
   myView->Compute();
   AutoZFit();
@@ -382,6 +387,8 @@ void V3d_View::Redraw() const
   }
 
   myIsInvalidatedImmediate = Standard_False;
+  Camera()->SetResolutionRatio(RenderingParams().ResolutionRatio());
+
   Handle(Graphic3d_StructureManager) aStructureMgr  = MyViewer->StructureManager();
   for (Standard_Integer aRetryIter = 0; aRetryIter < 2; ++aRetryIter)
   {

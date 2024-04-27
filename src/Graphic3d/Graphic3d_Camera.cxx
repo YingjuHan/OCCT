@@ -79,6 +79,7 @@ Graphic3d_Camera::Graphic3d_Camera()
   myEye (0.0, 0.0, -1500.0),
   myDistance (1500.0),
   myAxialScale (1.0, 1.0, 1.0),
+  myResolRatio (1.0),
   myProjType (Projection_Orthographic),
   myFOVy (45.0),
   myFOVx (45.0),
@@ -112,6 +113,7 @@ Graphic3d_Camera::Graphic3d_Camera (const Handle(Graphic3d_Camera)& theOther)
   myEye (0.0, 0.0, -1500.0),
   myDistance (1500.0),
   myAxialScale (1.0, 1.0, 1.0),
+  myResolRatio (1.0),
   myProjType (Projection_Orthographic),
   myFOVy (45.0),
   myFOVx (45.0),
@@ -151,6 +153,7 @@ void Graphic3d_Camera::CopyMappingData (const Handle(Graphic3d_Camera)& theOther
   SetZFocus         (theOtherCamera->ZFocusType(), theOtherCamera->ZFocus());
   SetIOD            (theOtherCamera->GetIODType(), theOtherCamera->IOD());
   SetTile           (theOtherCamera->myTile);
+  SetResolutionRatio(theOtherCamera->myResolRatio);
 
   ResetCustomProjection();
   if (theOtherCamera->IsCustomStereoProjection())

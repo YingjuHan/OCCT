@@ -1167,7 +1167,10 @@ void SelectMgr_ViewerSelector::Pick (const Standard_Integer theXPix,
   mySelectingVolumeMgr.InitPointSelectingVolume (aMousePos);
 
   mySelectingVolumeMgr.SetPixelTolerance (myTolerances.Tolerance());
+
+  theView->Camera()->SetResolutionRatio (theView->RenderingParams().ResolutionRatio());
   mySelectingVolumeMgr.SetCamera (theView->Camera());
+
   Standard_Integer aWidth = 0, aHeight = 0;
   theView->Window()->Size (aWidth, aHeight);
   mySelectingVolumeMgr.SetWindowSize (aWidth, aHeight);
@@ -1197,7 +1200,9 @@ void SelectMgr_ViewerSelector::Pick (const Standard_Integer theXPMin,
   mySelectingVolumeMgr.InitBoxSelectingVolume (aMinMousePos,
                                                aMaxMousePos);
 
+  theView->Camera()->SetResolutionRatio(theView->RenderingParams().ResolutionRatio());
   mySelectingVolumeMgr.SetCamera (theView->Camera());
+
   Standard_Integer aWidth = 0, aHeight = 0;
   theView->Window()->Size (aWidth, aHeight);
   mySelectingVolumeMgr.SetWindowSize (aWidth, aHeight);
@@ -1217,7 +1222,10 @@ void SelectMgr_ViewerSelector::Pick (const TColgp_Array1OfPnt2d& thePolyline,
   updateZLayers (theView);
 
   mySelectingVolumeMgr.InitPolylineSelectingVolume (thePolyline);
+
+  theView->Camera()->SetResolutionRatio(theView->RenderingParams().ResolutionRatio());
   mySelectingVolumeMgr.SetCamera (theView->Camera());
+
   Standard_Integer aWidth = 0, aHeight = 0;
   theView->Window()->Size (aWidth, aHeight);
   mySelectingVolumeMgr.SetWindowSize (aWidth, aHeight);

@@ -155,6 +155,9 @@ protected:
   //! @return true if array of triangles is successfully filled.
   Standard_EXPORT Standard_Boolean fillTriangles();
 
+  //! Setup default ZLayer.
+  Standard_EXPORT void setupDefaultZLayer();
+
 protected:
 
   NCollection_Sequence<Graphic3d_Vec2i> myPoints; //!< Array of screen points

@@ -79,14 +79,17 @@ public:
   virtual Standard_Boolean MemoryInfo (Standard_Size& theFreeBytes, TCollection_AsciiString& theInfo) const = 0;
   
   virtual Standard_ShortReal DefaultTextHeight() const = 0;
-  
-  //! Computes text width.
+
+  Standard_DEPRECATED("Deprecated method, Font_FTFont should be used instead")
   virtual void TextSize (const Handle(Graphic3d_CView)& theView,
                          const Standard_CString         theText,
                          const Standard_ShortReal       theHeight,
                          Standard_ShortReal&            theWidth,
                          Standard_ShortReal&            theAscent,
-                         Standard_ShortReal&            theDescent) const = 0;
+                         Standard_ShortReal&            theDescent) const
+  {
+    textSize(theView, theText, theHeight, theWidth, theAscent, theDescent);
+  }
 
   //! Adds a layer to all views.
   //! To add a structure to desired layer on display it is necessary to set the layer ID for the structure.
@@ -140,6 +143,20 @@ protected:
   
   //! Initializes the Driver
   Standard_EXPORT Graphic3d_GraphicDriver(const Handle(Aspect_DisplayConnection)& theDisp);
+
+  virtual void textSize(const Handle(Graphic3d_CView)& theView,
+                        const Standard_CString         theText,
+                        const Standard_ShortReal       theHeight,
+                        Standard_ShortReal&            theWidth,
+                        Standard_ShortReal&            theAscent,
+                        Standard_ShortReal&            theDescent) const
+  {
+    (void)theView;
+    (void)theText;
+    (void)theHeight;
+    theWidth = 10;
+    theAscent = theDescent = 1;
+  }
 
 protected:
 

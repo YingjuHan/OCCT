@@ -192,7 +192,7 @@ private:
       }
       return SelectMgr_SelectableObjectSet::BVHSubset_3d;
     }
-    else if (theObject->TransformPersistence()->Mode() == Graphic3d_TMF_2d)
+    else if ((theObject->TransformPersistence()->Mode() & Graphic3d_TMF_2d) != 0)
     {
       return SelectMgr_SelectableObjectSet::BVHSubset_2dPersistent;
     }

@@ -264,23 +264,12 @@ void WasmOcctView::initPixelScaleRatio()
   SetTouchToleranceScale (myDevicePixelRatio);
   if (!myView.IsNull())
   {
-    myView->ChangeRenderingParams().Resolution = (unsigned int )(96.0 * myDevicePixelRatio + 0.5);
+    myView->ChangeRenderingParams().Resolution = (unsigned int )Round (myView->RenderingParams().BaseResolution * myDevicePixelRatio);
+    myView->Camera()->SetResolutionRatio (myView->RenderingParams().ResolutionRatio());
   }
   if (!myContext.IsNull())
   {
     myContext->SetPixelTolerance (int(myDevicePixelRatio * 6.0));
-    if (!myViewCube.IsNull())
-    {
-      static const double THE_CUBE_SIZE = 60.0;
-      myViewCube->SetSize (myDevicePixelRatio * THE_CUBE_SIZE, false);
-      myViewCube->SetBoxFacetExtension (myViewCube->Size() * 0.15);
-      myViewCube->SetAxesPadding (myViewCube->Size() * 0.10);
-      myViewCube->SetFontHeight  (THE_CUBE_SIZE * 0.16);
-      if (myViewCube->HasInteractiveContext())
-      {
-        myContext->Redisplay (myViewCube, false);
-      }
-    }
   }
 }
 
@@ -344,7 +333,8 @@ bool WasmOcctView::initViewer()
   myView->Camera()->SetProjectionType (Graphic3d_Camera::Projection_Perspective);
   myView->SetImmediateUpdate (false);
   myView->ChangeRenderingParams().IsShadowEnabled = false;
-  myView->ChangeRenderingParams().Resolution = (unsigned int )(96.0 * myDevicePixelRatio + 0.5);
+  myView->ChangeRenderingParams().BaseResolution = 96;
+  myView->ChangeRenderingParams().Resolution = (unsigned int )Round (myView->RenderingParams().BaseResolution * myDevicePixelRatio);
   myView->ChangeRenderingParams().ToShowStats = true;
   myView->ChangeRenderingParams().StatsTextAspect = myTextStyle->Aspect();
   myView->ChangeRenderingParams().StatsTextHeight = (int )myTextStyle->Height();
@@ -367,9 +357,12 @@ void WasmOcctView::initDemoScene()
     return;
   }
 
-  //myView->TriedronDisplay (Aspect_TOTP_LEFT_LOWER, Quantity_NOC_GOLD, 0.08, V3d_WIREFRAME);
-
   myViewCube = new AIS_ViewCube();
+  myViewCube->SetSize (60.0, false);
+  myViewCube->SetBoxFacetExtension (myViewCube->Size() * 0.15);
+  myViewCube->SetAxesPadding (myViewCube->Size() * 0.10);
+  myViewCube->SetFontHeight (9.6);
+
   // presentation parameters
   initPixelScaleRatio();
   myViewCube->SetTransformPersistence (new Graphic3d_TransformPers (Graphic3d_TMF_TriedronPers, Aspect_TOTP_RIGHT_LOWER, Graphic3d_Vec2i (100, 100)));

@@ -99,6 +99,7 @@ public:
   : Method                      (Graphic3d_RM_RASTERIZATION),
     ShadingModel                (Graphic3d_TypeOfShadingModel_Phong),
     TransparencyMethod          (Graphic3d_RTM_BLEND_UNORDERED),
+    BaseResolution              (THE_DEFAULT_RESOLUTION),
     Resolution                  (THE_DEFAULT_RESOLUTION),
     FontHinting                 (Font_Hinting_Off),
     LineFeather                 (1.0f),
@@ -179,10 +180,10 @@ public:
     StatsTextAspect->SetTextFontAspect (Font_FA_Regular);
   }
 
-  //! Returns resolution ratio.
+  //! Returns Resolution/BaseResolution ratio; 1.0 by default.
   Standard_ShortReal ResolutionRatio() const
   {
-    return Resolution / static_cast<Standard_ShortReal> (THE_DEFAULT_RESOLUTION);
+    return Resolution / static_cast<Standard_ShortReal> (BaseResolution);
   }
 
   //! Dumps the content of me into the stream
@@ -193,6 +194,7 @@ public: //! @name general parameters
   Graphic3d_RenderingMode           Method;                      //!< specifies rendering mode, Graphic3d_RM_RASTERIZATION by default
   Graphic3d_TypeOfShadingModel      ShadingModel;                //!< specified default shading model, Graphic3d_TypeOfShadingModel_Phong by default
   Graphic3d_RenderTransparentMethod TransparencyMethod;          //!< specifies rendering method for transparent graphics
+  unsigned int                      BaseResolution;              //!< Base pixels density (PPI) corresponding to 100% scale factor; 72 is default value.
   unsigned int                      Resolution;                  //!< Pixels density (PPI), defines scaling factor for parameters like text size
                                                                  //!  (when defined in screen-space units rather than in 3D) to be properly displayed
                                                                  //!  on device (screen / printer). 72 is default value.

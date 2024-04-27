@@ -110,6 +110,18 @@ public:
   //! Return true for Graphic3d_TMF_TriedronPers and Graphic3d_TMF_2d modes.
   Standard_Boolean IsTrihedronOr2d() const { return IsTrihedronOr2d (myMode); }
 
+  Standard_Boolean IsDensityIndependent() const { return (myMode & Graphic3d_TMF_DensityDependent) == 0; }
+
+  void SetDensityIndependent(Standard_Boolean theIsOn)
+  {
+    if (myMode == Graphic3d_TMF_None)
+      throw Standard_ProgramError("Graphic3d_TransformPers::SetDensityIndependent() called for empty persistence");
+
+    myMode = theIsOn
+           ? Graphic3d_TransModeFlags(myMode & ~Graphic3d_TMF_DensityDependent)
+           : Graphic3d_TransModeFlags(myMode | Graphic3d_TMF_DensityDependent);
+  }
+
   //! Transformation persistence mode flags.
   Graphic3d_TransModeFlags Mode() const { return myMode; }
 
@@ -231,14 +243,17 @@ public:
                                          const Standard_Integer theViewportHeight) const
   {
     (void )theViewportWidth;
+    const Standard_Real aResRatio = IsDensityIndependent()
+                                  ? 1.0 / Standard_Real(theCamera->ResolutionRatio())
+                                  : 1.0;
     // use total size when tiling is active
-    const Standard_Integer aVPSizeY = theCamera->Tile().IsValid() ? theCamera->Tile().TotalSize.y() : theViewportHeight;
+    const Standard_Real aVPSizeY = (theCamera->Tile().IsValid() ? theCamera->Tile().TotalSize.y() : theViewportHeight) * aResRatio;
 
     gp_Vec aVecToEye (theCamera->Direction());
     gp_Vec aVecToObj (theCamera->Eye(), gp_Pnt (myParams.Params3d.PntX, myParams.Params3d.PntY, myParams.Params3d.PntZ));
     const Standard_Real aFocus = aVecToObj.Dot (aVecToEye);
     const gp_XYZ aViewDim = theCamera->ViewDimensions (aFocus);
-    return Abs(aViewDim.Y()) / Standard_Real(aVPSizeY);
+    return Abs(aViewDim.Y()) / aVPSizeY;
   }
 
   //! Apply transformation to bounding box of presentation.
@@ -360,13 +375,16 @@ void Graphic3d_TransformPers::Apply (const Handle(Graphic3d_Camera)& theCamera,
     return;
   }
 
+  const Standard_Real aResRatio = IsDensityIndependent()
+                                ? 1.0 / Standard_Real(theCamera->ResolutionRatio())
+                                : 1.0;
   // use total size when tiling is active
-  const Standard_Integer aVPSizeY = theCamera->Tile().IsValid() ? theCamera->Tile().TotalSize.y() : theViewportHeight;
+  const Standard_Real aVPSizeY = (theCamera->Tile().IsValid() ? theCamera->Tile().TotalSize.y() : theViewportHeight) * aResRatio;
 
   // a small enough jitter compensation offset
   // to avoid image dragging within single pixel in corner cases
   const Standard_Real aJitterComp = 0.001;
-  if (myMode == Graphic3d_TMF_TriedronPers)
+  if ((myMode & Graphic3d_TMF_TriedronPers) != 0)
   {
     // reset Z focus for trihedron persistence
     const Standard_Real aFocus = theCamera->IsOrthographic()
@@ -414,7 +432,7 @@ void Graphic3d_TransformPers::Apply (const Handle(Graphic3d_Camera)& theCamera,
     theWorldView.ConvertFrom (aWorldView);
     return;
   }
-  else if (myMode == Graphic3d_TMF_2d)
+  else if ((myMode & Graphic3d_TMF_2d) != 0)
   {
     const Standard_Real aFocus = theCamera->IsOrthographic()
                                ? theCamera->Distance()

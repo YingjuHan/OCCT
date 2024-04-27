@@ -665,10 +665,10 @@ void OpenGl_GraphicDriver::SetBuffersNoSwap (const Standard_Boolean theIsNoSwap)
 }
 
 // =======================================================================
-// function : TextSize
+// function : textSize
 // purpose  :
 // =======================================================================
-void OpenGl_GraphicDriver::TextSize (const Handle(Graphic3d_CView)& theView,
+void OpenGl_GraphicDriver::textSize (const Handle(Graphic3d_CView)& theView,
                                      const Standard_CString         theText,
                                      const Standard_ShortReal       theHeight,
                                      Standard_ShortReal&            theWidth,

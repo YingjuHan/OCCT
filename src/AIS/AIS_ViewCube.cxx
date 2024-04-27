@@ -196,7 +196,7 @@ void AIS_ViewCube::setDefaultAttributes()
   myDrawer->TextAspect()->SetColor (Quantity_NOC_BLACK);
   myDrawer->TextAspect()->SetFont (Font_NOF_SANS_SERIF);
   myDrawer->TextAspect()->SetHeight (16.0);
-  myDrawer->TextAspect()->Aspect()->SetTextZoomable (true); // the whole object is drawn within transformation-persistence
+  myDrawer->TextAspect()->Aspect()->SetTextZoomable (false);
   // this should be forced back-face culling regardless Closed flag
   myDrawer->TextAspect()->Aspect()->SetFaceCulling (Graphic3d_TypeOfBackfacingModel_BackCulled);
 
@@ -323,7 +323,7 @@ void AIS_ViewCube::SetSize (Standard_Real theValue,
     {
       SetAxesPadding (mySize * 0.1);
     }
-    SetFontHeight (mySize * 0.16);
+    SetFontHeight (mySize * 0.17);
   }
   if (isNewSize)
   {
@@ -727,7 +727,6 @@ void AIS_ViewCube::Compute (const Handle(PrsMgr_PresentationManager)& ,
       Handle(Graphic3d_Text) aText = new Graphic3d_Text ((Standard_ShortReal)myDrawer->TextAspect()->Height());
       aText->SetText (aLabel);
       aText->SetOrientation (aPosition);
-      aText->SetOwnAnchorPoint (false);
       aText->SetHorizontalAlignment(myDrawer->TextAspect()->HorizontalJustification());
       aText->SetVerticalAlignment  (myDrawer->TextAspect()->VerticalJustification());
       aTextGroup->AddText (aText);

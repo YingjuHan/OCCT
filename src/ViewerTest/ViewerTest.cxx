@@ -4782,22 +4782,34 @@ Standard_Integer VTexture (Draw_Interpretor& theDi, Standard_Integer theArgsNb, 
 inline Standard_Boolean parseTrsfPersFlag (const TCollection_AsciiString& theFlagString,
                                            Graphic3d_TransModeFlags&      theFlags)
 {
-  if (theFlagString == "zoom")
+  if (theFlagString == "zoom"
+   || theFlagString == "zoompx"
+   || theFlagString == "zoomdp"
+   || theFlagString == "zoomdip")
   {
-    theFlags = Graphic3d_TMF_ZoomPers;
+    theFlags = theFlagString.EndsWith("px") ? Graphic3d_TMF_ZoomPersPx : Graphic3d_TMF_ZoomPersDip;
   }
   else if (theFlagString == "rotate")
   {
     theFlags = Graphic3d_TMF_RotatePers;
   }
-  else if (theFlagString == "zoomrotate")
+  else if (theFlagString == "zoomrotate"
+        || theFlagString == "zoomrotatepx"
+        || theFlagString == "zoomrotatedp"
+        || theFlagString == "zoomrotatedip")
   {
-    theFlags = Graphic3d_TMF_ZoomRotatePers;
+    theFlags = theFlagString.EndsWith("px") ? Graphic3d_TMF_ZoomRotatePersPx : Graphic3d_TMF_ZoomRotatePers;
   }
   else if (theFlagString == "trihedron"
-        || theFlagString == "triedron")
+        || theFlagString == "trihedronpx"
+        || theFlagString == "trihedrondp"
+        || theFlagString == "trihedrondip"
+        || theFlagString == "triedron"
+        || theFlagString == "triedronpx"
+        || theFlagString == "triedrondp"
+        || theFlagString == "triedrondip")
   {
-    theFlags = Graphic3d_TMF_TriedronPers;
+    theFlags = theFlagString.EndsWith("px") ? Graphic3d_TMF_TriedronPersPx : Graphic3d_TMF_TriedronPers;
   }
   else if (theFlagString == "none")
   {
@@ -5001,11 +5013,21 @@ static int VDisplay2 (Draw_Interpretor& theDI,
       aTrsfPers.Nullify();
     }
     else if (aNameCase == "-2d"
+          || aNameCase == "-2dpx"
+          || aNameCase == "-2ddp"
+          || aNameCase == "-2ddip"
           || aNameCase == "-trihedron"
-          || aNameCase == "-triedron")
+          || aNameCase == "-trihedronpx"
+          || aNameCase == "-trihedrondp"
+          || aNameCase == "-trihedrondip"
+          || aNameCase == "-triedron"
+          || aNameCase == "-triedronpx"
+          || aNameCase == "-triedrondp"
+          || aNameCase == "-triedrondip")
     {
       toSetTrsfPers  = Standard_True;
-      aTrsfPers = new Graphic3d_TransformPers (aNameCase == "-2d" ? Graphic3d_TMF_2d : Graphic3d_TMF_TriedronPers, Aspect_TOTP_LEFT_LOWER);
+      aTrsfPers = new Graphic3d_TransformPers (aNameCase.StartsWith("-2d") ? Graphic3d_TMF_2d : Graphic3d_TMF_TriedronPers, Aspect_TOTP_LEFT_LOWER);
+      aTrsfPers->SetDensityIndependent (!aNameCase.EndsWith("px"));
 
       if (anArgIter + 1 < theArgNb)
       {
@@ -5049,9 +5071,9 @@ static int VDisplay2 (Draw_Interpretor& theDI,
         return 1;
       }
 
-      if (aTrsfPersFlags == Graphic3d_TMF_TriedronPers)
+      if ((aTrsfPersFlags & Graphic3d_TMF_TriedronPers) != 0)
       {
-        aTrsfPers = new Graphic3d_TransformPers (Graphic3d_TMF_TriedronPers, Aspect_TOTP_LEFT_LOWER);
+        aTrsfPers = new Graphic3d_TransformPers (aTrsfPersFlags, Aspect_TOTP_LEFT_LOWER);
       }
       else if (aTrsfPersFlags != Graphic3d_TMF_None)
       {

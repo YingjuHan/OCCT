@@ -17,6 +17,9 @@
 #include <AIS_InteractiveContext.hxx>
 #include <Aspect_TypeOfColorScaleData.hxx>
 #include <Aspect_TypeOfColorScalePosition.hxx>
+#include <Font_FTFont.hxx>
+#include <Font_FontMgr.hxx>
+#include <Font_Rect.hxx>
 #include <Geom_Line.hxx>
 #include <GeomAdaptor_Curve.hxx>
 #include <Graphic3d_ArrayOfPolylines.hxx>
@@ -385,10 +388,12 @@ void AIS_ColorScale::SizeHint (Standard_Integer& theWidth, Standard_Integer& the
   Standard_Integer aTextWidth = 0;
   if (myLabelPos != Aspect_TOCSP_NONE)
   {
+    TCollection_ExtendedString aLabLines;
     for (Standard_Integer aLabIter = (myIsLabelAtBorder ? 0 : 1); aLabIter <= myNbIntervals; ++aLabIter)
     {
-      aTextWidth = Max (aTextWidth, TextWidth (GetLabel (aLabIter)));
+      aLabLines += GetLabel (aLabIter) + "\n";
     }
+    aTextWidth = TextWidth (aLabLines);
   }
 
   const Standard_Integer aScaleWidth  = aColorWidth + aTextWidth + (aTextWidth ? 3 : 2) * mySpacing;
@@ -398,8 +403,11 @@ void AIS_ColorScale::SizeHint (Standard_Integer& theWidth, Standard_Integer& the
   Standard_Integer aTitleHeight = 0;
   if (!myTitle.IsEmpty())
   {
-    aTitleHeight = TextHeight (myTitle) + mySpacing;
-    aTitleWidth =  TextWidth  (myTitle) + mySpacing * 2;
+    Standard_Integer aWidth = 0, anAscent = 0, aDescent = 0;
+    TextSize (myTitle, myTextHeight, aWidth, anAscent, aDescent);
+
+    aTitleHeight = anAscent + aDescent + mySpacing;
+    aTitleWidth  = aWidth + mySpacing * 2;
   }
 
   theWidth  = Max (aTitleWidth, aScaleWidth);
@@ -500,15 +508,15 @@ Standard_Boolean AIS_ColorScale::FindColor (const Standard_Real theValue,
 //=======================================================================
 Standard_Integer AIS_ColorScale::computeMaxLabelWidth (const TColStd_SequenceOfExtendedString& theLabels) const
 {
-  Standard_Integer aWidthMax = 0;
+  TCollection_ExtendedString aLabLines;
   for (TColStd_SequenceOfExtendedString::Iterator aLabIter (theLabels); aLabIter.More(); aLabIter.Next())
   {
     if (!aLabIter.Value().IsEmpty())
     {
-      aWidthMax = Max (aWidthMax, TextWidth (aLabIter.Value()));
+      aLabLines += aLabIter.Value() + "\n";
     }
   }
-  return aWidthMax;
+  return !aLabLines.IsEmpty() ? TextWidth (aLabLines) : 0;
 }
 
 //=======================================================================
@@ -530,7 +538,7 @@ void AIS_ColorScale::updateTextAspect()
   anAspect->SetHeight (myTextHeight);
   anAspect->SetHorizontalJustification (Graphic3d_HTA_LEFT);
   anAspect->SetVerticalJustification (Graphic3d_VTA_BOTTOM);
-  anAspect->Aspect()->SetTextZoomable (Standard_True);
+  anAspect->Aspect()->SetTextZoomable (Standard_False);
 }
 
 //=======================================================================
@@ -893,9 +901,9 @@ void AIS_ColorScale::drawText (const Handle(Graphic3d_Group)& theGroup,
 
   Handle(Graphic3d_Text) aText = new Graphic3d_Text ((Standard_ShortReal)anAspect->Height());
   aText->SetText (theText.ToExtString());
-  aText->SetOrientation (gp_Ax2 (gp_Pnt (theX, theY, 0.0), gp::DZ()));
-  aText->SetOwnAnchorPoint (Standard_False);
+  aText->SetPosition (gp_Pnt (theX, theY, 0.0));
   aText->SetVerticalAlignment (theVertAlignment);
+  aText->SetHorizontalAlignment (anAspect->HorizontalJustification());
 
   theGroup->AddText (aText);
 }
@@ -932,15 +940,27 @@ void AIS_ColorScale::TextSize (const TCollection_ExtendedString& theText,
                                Standard_Integer& theAscent,
                                Standard_Integer& theDescent) const
 {
-  Standard_ShortReal aWidth = 10.0f, anAscent = 1.0f, aDescent = 1.0f;
-  if (HasInteractiveContext())
-  {
-    const TCollection_AsciiString aText (theText);
-    const Handle(V3d_Viewer)&      aViewer = GetContext()->CurrentViewer();
-    const Handle(Graphic3d_CView)& aView   = aViewer->ActiveViewIterator().Value()->View();
-    aViewer->Driver()->TextSize (aView, aText.ToCString(), (Standard_ShortReal)theHeight, aWidth, anAscent, aDescent);
-  }
-  theWidth   = (Standard_Integer)aWidth;
-  theAscent  = (Standard_Integer)anAscent;
-  theDescent = (Standard_Integer)aDescent;
+  theWidth = 10;
+  theAscent = theDescent = 1;
+  if (!HasInteractiveContext())
+    return;
+
+  const Handle(Prs3d_TextAspect)&  anAsp       = myDrawer->TextAspect();
+  const Graphic3d_RenderingParams& aRendParams = InteractiveContext()->CurrentViewer()->DefaultRenderingParams();
+
+  Font_FTFontParams aFontParams;
+  aFontParams.FontHinting = aRendParams.FontHinting;
+  aFontParams.PointSize   = static_cast<unsigned int>(theHeight);
+  aFontParams.Resolution  = !myTransformPersistence.IsNull() && myTransformPersistence->IsDensityIndependent()
+                          ? aRendParams.BaseResolution
+                          : aRendParams.Resolution;
+
+  Handle(Font_FTFont) aFont = Font_FTFont::FindAndCreate (anAsp->Aspect()->Font(), anAsp->Aspect()->GetTextFontAspect(), aFontParams);
+  if (aFont.IsNull())
+    return;
+
+  const Font_Rect aBox = aFont->BoundingBox (NCollection_String (theText.ToExtString()), anAsp->HorizontalJustification(), anAsp->VerticalJustification());
+  theWidth   = static_cast<Standard_Integer>(Round (Abs (aBox.Width())));
+  theAscent  = static_cast<Standard_Integer>(Round (aFont->Ascender()));
+  theDescent = static_cast<Standard_Integer>(Round (aFont->Descender()));
 }

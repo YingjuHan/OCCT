@@ -30,6 +30,18 @@
 #define MEMORY_BLOCK_SIZE 512 * 7
 
 IMPLEMENT_STANDARD_RTTIEXT(AIS_RubberBand, AIS_InteractiveObject)
+
+//=======================================================================
+//function : setupDefaultZLayer
+//purpose  :
+//=======================================================================
+void AIS_RubberBand::setupDefaultZLayer()
+{
+  // special case - size is defined in rendered pixel units, not in device-independent units
+  SetTransformPersistence (new Graphic3d_TransformPers(Graphic3d_TMF_2dPx, Aspect_TOTP_LEFT_LOWER));
+  SetZLayer (Graphic3d_ZLayerId_TopOSD);
+}
+
 //=======================================================================
 //function : Constructor
 //purpose  :
@@ -46,8 +58,7 @@ AIS_RubberBand::AIS_RubberBand()
   myDrawer->ShadingAspect()->SetTransparency (1.0);
   myDrawer->ShadingAspect()->SetColor (Quantity_NOC_WHITE);
 
-  SetTransformPersistence (new Graphic3d_TransformPers (Graphic3d_TMF_2d, Aspect_TOTP_LEFT_LOWER));
-  SetZLayer (Graphic3d_ZLayerId_TopOSD);
+  setupDefaultZLayer();
 }
 
 //=======================================================================
@@ -69,8 +80,7 @@ AIS_RubberBand::AIS_RubberBand (const Quantity_Color& theLineColor,
   myDrawer->ShadingAspect()->SetTransparency (1.0);
   myDrawer->ShadingAspect()->SetColor (Quantity_NOC_WHITE);
 
-  SetTransformPersistence (new Graphic3d_TransformPers (Graphic3d_TMF_2d, Aspect_TOTP_LEFT_LOWER));
-  SetZLayer (Graphic3d_ZLayerId_TopOSD);
+  setupDefaultZLayer();
 }
 
 //=======================================================================
@@ -94,8 +104,7 @@ AIS_RubberBand::AIS_RubberBand (const Quantity_Color& theLineColor,
   myDrawer->ShadingAspect()->Aspect()->SetAlphaMode (Graphic3d_AlphaMode_Blend);
   myDrawer->ShadingAspect()->SetTransparency (theTransparency);
 
-  SetTransformPersistence (new Graphic3d_TransformPers (Graphic3d_TMF_2d, Aspect_TOTP_LEFT_LOWER));
-  SetZLayer (Graphic3d_ZLayerId_TopOSD);
+  setupDefaultZLayer();
 }
 
 //=======================================================================

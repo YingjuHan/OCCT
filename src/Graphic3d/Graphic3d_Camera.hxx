@@ -283,6 +283,20 @@ public:
   //! @param[in] theDistance  the distance.
   Standard_EXPORT void SetDistance (const Standard_Real theDistance);
 
+  //! Return camera resolution ratio - scale factor of high-density screen; 1.0 by default.
+  //! Currently this field is used to pass rendering parameters to selection algorithm.
+  Standard_Real ResolutionRatio() const { return myResolRatio; }
+
+  //! Set camera resolution ratio.
+  void SetResolutionRatio (const Standard_Real theRatio)
+  {
+    if (myResolRatio != theRatio)
+    {
+      myResolRatio = theRatio;
+      InvalidateProjection();
+    }
+  }
+
   //! Get camera scale.
   //! @return camera scale factor.
   Standard_EXPORT Standard_Real Scale() const;
@@ -841,7 +855,8 @@ private:
   gp_Pnt        myEye;      //!< Camera eye position
   Standard_Real myDistance; //!< distance from Eye to Center
 
-  gp_XYZ myAxialScale; //!< World axial scale.
+  gp_XYZ        myAxialScale; //!< World axial scale.
+  Standard_Real myResolRatio; //!< resolution scale ratio
 
   Projection    myProjType; //!< Projection type used for rendering.
   Standard_Real myFOVy;     //!< Field Of View in y axis.
