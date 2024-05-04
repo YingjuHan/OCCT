@@ -2738,11 +2738,6 @@ void AIS_ViewController::OnObjectDragged (const Handle(AIS_InteractiveContext)& 
         return;
       }
 
-      if (Handle(SelectMgr_EntityOwner) aGlobOwner = myDragObject->GlobalSelOwner())
-      {
-        theCtx->SetSelectedState (aGlobOwner, true);
-      }
-
       myDragObject->ProcessDragging (theCtx, theView, myDragOwner, myGL.Dragging.PointStart,
                                      myGL.Dragging.PointTo, theAction);
       theView->Invalidate();
@@ -2767,11 +2762,6 @@ void AIS_ViewController::OnObjectDragged (const Handle(AIS_InteractiveContext)& 
       if (myDragObject.IsNull())
       {
         return;
-      }
-
-      if (Handle(SelectMgr_EntityOwner) aGlobOwner = myDragObject->GlobalSelOwner())
-      {
-        theCtx->SetSelectedState (aGlobOwner, false);
       }
 
       myDragObject->ProcessDragging (theCtx, theView, myDragOwner, myGL.Dragging.PointStart,
