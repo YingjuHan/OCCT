@@ -149,6 +149,14 @@ protected:
                                                     unsigned int theModifNew,
                                                     double       theTimeStamp);
 
+  //! Handle mouse click event on detected owner.
+  Standard_EXPORT virtual bool handleMouseClick(const Handle(AIS_InteractiveContext)& theCtx,
+                                                const Handle(V3d_View)& theView,
+                                                const Graphic3d_Vec2i& thePnt,
+                                                const Aspect_VKeyMouse theButton,
+                                                const Aspect_VKeyFlags theModifiers,
+                                                const bool theIsDoubleClick) Standard_OVERRIDE;
+
 private:
 
 #if defined(__EMSCRIPTEN__)

@@ -713,7 +713,12 @@ public:
                                              Aspect_VKeyFlags theModifiers,
                                              bool theIsDoubleClick) Standard_OVERRIDE
   {
-    (void )thePoint; (void )theButton; (void )theModifiers; (void )theIsDoubleClick;
+    (void )thePoint;
+    if (theButton != Aspect_VKeyMouse_LeftButton || theModifiers != Aspect_VKeyFlags_NONE || theIsDoubleClick)
+    {
+      return Standard_False;
+    }
+
     AIS_ViewCube* aCubePrs = dynamic_cast<AIS_ViewCube* >(mySelectable);
     aCubePrs->HandleClick (this);
     return Standard_True;

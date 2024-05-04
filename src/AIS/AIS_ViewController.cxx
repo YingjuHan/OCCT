@@ -286,10 +286,12 @@ void AIS_ViewController::flushBuffers (const Handle(AIS_InteractiveContext)& ,
     myGL.Selection.Tool   = myUI.Selection.Tool;
     myGL.Selection.Scheme = myUI.Selection.Scheme;
     myGL.Selection.Points = myUI.Selection.Points;
+    myGL.Selection.MouseParams = myUI.Selection.MouseParams;
     //myGL.Selection.Scheme = AIS_SelectionScheme_UNKNOWN; // no need
     if (myUI.Selection.Tool == AIS_ViewSelectionTool_Picking)
     {
       myUI.Selection.Points.Clear();
+      myUI.Selection.MouseParams.Clear();
     }
   }
 
@@ -298,6 +300,7 @@ void AIS_ViewController::flushBuffers (const Handle(AIS_InteractiveContext)& ,
     myGL.Selection.ToApplyTool = true;
     myUI.Selection.ToApplyTool = false;
     myUI.Selection.Points.Clear();
+    myUI.Selection.MouseParams.Clear();
   }
 
   if (myUI.Panning.ToStart)
@@ -544,16 +547,26 @@ void AIS_ViewController::UpdateViewOrientation (V3d_TypeOfOrientation theOrienta
 // purpose  :
 // =======================================================================
 void AIS_ViewController::SelectInViewer (const Graphic3d_Vec2i& thePnt,
-                                         const AIS_SelectionScheme theScheme)
+                                         const AIS_SelectionScheme theScheme,
+                                         const Aspect_VKeyMouse theButton,
+                                         const Aspect_VKeyFlags theModifiers,
+                                         const bool theIsDoubleClick)
 {
   if (myUI.Selection.Tool != AIS_ViewSelectionTool_Picking)
   {
     myUI.Selection.Tool = AIS_ViewSelectionTool_Picking;
     myUI.Selection.Points.Clear();
+    myUI.Selection.MouseParams.Clear();
   }
+
+  AIS_ViewInputBuffer::MouseClickParams aParams;
+  aParams.Button = theButton;
+  aParams.Modifiers = theModifiers;
+  aParams.IsDoubleClick = theIsDoubleClick;
 
   myUI.Selection.Scheme = theScheme;
   myUI.Selection.Points.Append (thePnt);
+  myUI.Selection.MouseParams.Append (aParams);
 }
 
 // =======================================================================
@@ -565,6 +578,7 @@ void AIS_ViewController::SelectInViewer (const NCollection_Sequence<Graphic3d_Ve
 {
   myUI.Selection.Scheme = theScheme;
   myUI.Selection.Points = thePnts;
+  myUI.Selection.MouseParams.Clear();
   myUI.Selection.ToApplyTool = true;
   if (thePnts.Length() == 1)
   {
@@ -589,6 +603,7 @@ void AIS_ViewController::UpdateRubberBand (const Graphic3d_Vec2i& thePntFrom,
 {
   myUI.Selection.Tool = AIS_ViewSelectionTool_RubberBand;
   myUI.Selection.Points.Clear();
+  myUI.Selection.MouseParams.Clear();
   myUI.Selection.Points.Append (thePntFrom);
   myUI.Selection.Points.Append (thePntTo);
 }
@@ -604,6 +619,7 @@ void AIS_ViewController::UpdatePolySelection (const Graphic3d_Vec2i& thePnt,
   {
     myUI.Selection.Tool = AIS_ViewSelectionTool_Polygon;
     myUI.Selection.Points.Clear();
+    myUI.Selection.MouseParams.Clear();
   }
 
   if (myUI.Selection.Points.IsEmpty())
@@ -682,8 +698,6 @@ bool AIS_ViewController::UpdateMouseClick (const Graphic3d_Vec2i& thePoint,
                                            Aspect_VKeyFlags theModifiers,
                                            bool theIsDoubleClick)
 {
-  (void )theIsDoubleClick;
-
   if (myToPauseObjAnimation
   && !myObjAnimation.IsNull()
   && !myObjAnimation->IsStopped())
@@ -694,10 +708,13 @@ bool AIS_ViewController::UpdateMouseClick (const Graphic3d_Vec2i& thePoint,
   AIS_SelectionScheme aScheme = AIS_SelectionScheme_UNKNOWN;
   if (myMouseSelectionSchemes.Find (theButton | theModifiers, aScheme))
   {
-    SelectInViewer (thePoint, aScheme);
+    SelectInViewer (thePoint, aScheme, theButton, theModifiers, theIsDoubleClick);
     return true;
   }
-  return false;
+
+  // propagate as UNKNWON scheme
+  SelectInViewer (thePoint, AIS_SelectionScheme_UNKNOWN, theButton, theModifiers, theIsDoubleClick);
+  return true;
 }
 
 // =======================================================================
@@ -2831,6 +2848,21 @@ void AIS_ViewController::contextLazyMoveTo (const Handle(AIS_InteractiveContext)
 }
 
 // =======================================================================
+// function : handleMouseClick
+// purpose  :
+// =======================================================================
+bool AIS_ViewController::handleMouseClick (const Handle(AIS_InteractiveContext)& theCtx,
+                                           const Handle(V3d_View)& ,
+                                           const Graphic3d_Vec2i& thePnt,
+                                           const Aspect_VKeyMouse theButton,
+                                           const Aspect_VKeyFlags theModifiers,
+                                           const bool theIsDoubleClick)
+{
+  return !theCtx->DetectedOwner().IsNull()
+       && theCtx->DetectedOwner()->HandleMouseClick (thePnt, theButton, theModifiers, theIsDoubleClick);
+}
+
+// =======================================================================
 // function : handleSelectionPick
 // purpose  :
 // =======================================================================
@@ -2840,6 +2872,7 @@ void AIS_ViewController::handleSelectionPick (const Handle(AIS_InteractiveContex
   if (myGL.Selection.Tool == AIS_ViewSelectionTool_Picking
   && !myGL.Selection.Points.IsEmpty())
   {
+    NCollection_Sequence<AIS_ViewInputBuffer::MouseClickParams>::Iterator aParamIter (myGL.Selection.MouseParams);
     for (NCollection_Sequence<Graphic3d_Vec2i>::Iterator aPntIter (myGL.Selection.Points); aPntIter.More(); aPntIter.Next())
     {
       const bool hadPrevMoveTo = HasPreviousMoveTo();
@@ -2849,7 +2882,23 @@ void AIS_ViewController::handleSelectionPick (const Handle(AIS_InteractiveContex
         ResetPreviousMoveTo();
       }
 
-      theCtx->SelectDetected (myGL.Selection.Scheme);
+      AIS_ViewInputBuffer::MouseClickParams aParams;
+      if (myGL.Selection.Points.Size() == myGL.Selection.MouseParams.Size())
+      {
+        aParams = aParamIter.Value();
+        aParamIter.Next();
+      }
+      else
+      {
+        aParams.Button = Aspect_VKeyMouse_LeftButton;
+      }
+
+      bool isClicked = (myGL.Selection.Scheme == AIS_SelectionScheme_Replace || myGL.Selection.Scheme == AIS_SelectionScheme_UNKNOWN)
+                     && handleMouseClick (theCtx, theView, aPntIter.Value(), aParams.Button, aParams.Modifiers, aParams.IsDoubleClick);
+      if (!isClicked && myGL.Selection.Scheme != AIS_SelectionScheme_UNKNOWN)
+      {
+        theCtx->SelectDetected (myGL.Selection.Scheme, false);
+      }
 
       // selection affects all Views
       theView->Viewer()->Invalidate();
@@ -2858,6 +2907,7 @@ void AIS_ViewController::handleSelectionPick (const Handle(AIS_InteractiveContex
     }
 
     myGL.Selection.Points.Clear();
+    myGL.Selection.MouseParams.Clear();
   }
 }
 

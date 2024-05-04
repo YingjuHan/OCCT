@@ -63,12 +63,22 @@ public:
     _highlighting() : ToHilight (false) {}
   } MoveTo;
 
+  //! Mouse clicking details.
+  struct MouseClickParams
+  {
+    Aspect_VKeyMouse Button        = Aspect_VKeyMouse_NONE;
+    Aspect_VKeyFlags Modifiers     = Aspect_VKeyFlags_NONE;
+    bool             IsDoubleClick = false;
+  };
+
   struct _selection
   {
     AIS_ViewSelectionTool Tool;          //!< perform selection
     AIS_SelectionScheme   Scheme;        //!< selection scheme
     NCollection_Sequence<Graphic3d_Vec2i>
                           Points;        //!< the points for selection
+    NCollection_Sequence<MouseClickParams>
+                          MouseParams;
     bool                  ToApplyTool;   //!< apply rubber-band selection tool
 
     _selection() : Tool (AIS_ViewSelectionTool_Picking), Scheme (AIS_SelectionScheme_UNKNOWN), ToApplyTool (false) {}

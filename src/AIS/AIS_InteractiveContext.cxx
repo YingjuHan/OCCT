@@ -2916,9 +2916,10 @@ AIS_StatusOfPick AIS_InteractiveContext::SelectPoint (const Graphic3d_Vec2i&    
 //function : SelectDetected
 //purpose  :
 //=======================================================================
-AIS_StatusOfPick AIS_InteractiveContext::SelectDetected (const AIS_SelectionScheme theSelScheme)
+AIS_StatusOfPick AIS_InteractiveContext::SelectDetected (const AIS_SelectionScheme theSelScheme,
+                                                         const bool theToHandleClick)
 {
-  if (theSelScheme == AIS_SelectionScheme_Replace && !myLastPicked.IsNull())
+  if (theSelScheme == AIS_SelectionScheme_Replace && !myLastPicked.IsNull() && theToHandleClick)
   {
     Graphic3d_Vec2i aMousePos (-1, -1);
     gp_Pnt2d aMouseRealPos = MainSelector()->GetManager().GetMousePosition();

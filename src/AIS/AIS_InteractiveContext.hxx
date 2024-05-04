@@ -495,12 +495,14 @@ public: //! @name Selection management
   //! Select and hilights the previous detected via AIS_InteractiveContext::MoveTo() method;
   //! unhilights the previous picked.
   //! Viewer should be explicitly redrawn after selection.
-  //! @param[in] theSelScheme  selection scheme
+  //! @param[in] theSelScheme selection scheme
+  //! @param[in] theToHandleClick when true, redirects to SelectMgr_EntityOwner::HandleMouseClick()
   //! @return picking status
   //!
   //! @sa HighlightStyle() defining default highlight styles of selected owners (Prs3d_TypeOfHighlight_Selected and Prs3d_TypeOfHighlight_LocalSelected)
   //! @sa PrsMgr_PresentableObject::HilightAttributes() defining per-object highlight style of selected owners (overrides defaults)
-  Standard_EXPORT AIS_StatusOfPick SelectDetected (const AIS_SelectionScheme theSelScheme = AIS_SelectionScheme_Replace);
+  Standard_EXPORT AIS_StatusOfPick SelectDetected (const AIS_SelectionScheme theSelScheme = AIS_SelectionScheme_Replace,
+                                                   const bool theToHandleClick = true);
 
   //! Returns bounding box of selected objects.
   Standard_EXPORT Bnd_Box BoundingBoxOfSelection (const Handle(V3d_View)& theView) const;

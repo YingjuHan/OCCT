@@ -292,8 +292,14 @@ public: //! @name mouse input
   //! This method is expected to be called from UI thread.
   //! @param thePnt picking point
   //! @param theScheme selection scheme
+  //! @param theButton pressed mouse button
+  //! @param theModifiers keyboard modifiers
+  //! @param theIsDoubleClick double click flag
   Standard_EXPORT virtual void SelectInViewer (const Graphic3d_Vec2i& thePnt,
-                                               const AIS_SelectionScheme theScheme = AIS_SelectionScheme_Replace);
+                                               const AIS_SelectionScheme theScheme = AIS_SelectionScheme_Replace,
+                                               const Aspect_VKeyMouse theButton = Aspect_VKeyMouse_LeftButton,
+                                               const Aspect_VKeyFlags theModifiers = Aspect_VKeyFlags_NONE,
+                                               const bool theIsDoubleClick = false);
 
   //! Perform selection in 3D viewer.
   //! This method is expected to be called from UI thread.
@@ -684,6 +690,14 @@ protected:
     myLastEventsTime = EventTime();
     theCurrTime = myLastEventsTime;
   }
+
+  //! Handle mouse click event on detected owner.
+  Standard_EXPORT virtual bool handleMouseClick (const Handle(AIS_InteractiveContext)& theCtx,
+                                                 const Handle(V3d_View)& theView,
+                                                 const Graphic3d_Vec2i& thePnt,
+                                                 const Aspect_VKeyMouse theButton,
+                                                 const Aspect_VKeyFlags theModifiers,
+                                                 const bool theIsDoubleClick);
 
   //! Perform selection via mouse click.
   //! This method is expected to be called from rendering thread.

@@ -142,16 +142,41 @@ ViewerTest_EventManager::~ViewerTest_EventManager()
 // function : UpdateMouseClick
 // purpose  :
 // =======================================================================
+bool ViewerTest_EventManager::handleMouseClick (const Handle(AIS_InteractiveContext)& theCtx,
+                                                const Handle(V3d_View)& theView,
+                                                const Graphic3d_Vec2i& thePnt,
+                                                const Aspect_VKeyMouse theButton,
+                                                const Aspect_VKeyFlags theModifiers,
+                                                const bool theIsDoubleClick)
+{
+  if (AIS_ViewController::handleMouseClick (theCtx, theView, thePnt, theButton, theModifiers, theIsDoubleClick))
+  {
+    return true;
+  }
+
+  if (theIsDoubleClick)
+  {
+    if (!myViewAnimation.IsNull() && myViewAnimation->View() == theView)
+    {
+      myViewAnimation->Stop();
+      myViewAnimation->SetView (nullptr);
+    }
+    FitAllAuto (theCtx, theView);
+    return true;
+  }
+
+  return false;
+}
+
+// =======================================================================
+// function : UpdateMouseClick
+// purpose  :
+// =======================================================================
 bool ViewerTest_EventManager::UpdateMouseClick (const Graphic3d_Vec2i& thePoint,
                                                 Aspect_VKeyMouse theButton,
                                                 Aspect_VKeyFlags theModifiers,
                                                 bool theIsDoubleClick)
 {
-  if (theIsDoubleClick && !myView.IsNull() && !myCtx.IsNull())
-  {
-    FitAllAuto (myCtx, myView);
-    return true;
-  }
   return AIS_ViewController::UpdateMouseClick (thePoint, theButton, theModifiers, theIsDoubleClick);
 }
 
