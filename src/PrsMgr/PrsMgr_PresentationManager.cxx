@@ -640,8 +640,21 @@ void PrsMgr_PresentationManager::Color (const Handle(PrsMgr_PresentableObject)& 
 
   if (myImmediateModeOn > 0)
   {
+    Graphic3d_ZLayerId aLayer = theImmediateStructLayerId;
+    if (aLayer == Graphic3d_ZLayerId_Topmost
+     && aPrs->GetZLayer() == Graphic3d_ZLayerId_TopOSD)
+    {
+      aLayer = aPrs->GetZLayer();
+    }
+    else if (aLayer == Graphic3d_ZLayerId_Top
+          && aPrs->GetZLayer() >= Graphic3d_ZLayerId_TopOSD
+          && aPrs->GetZLayer() <= Graphic3d_ZLayerId_Topmost)
+    {
+      aLayer = aPrs->GetZLayer();
+    }
+
     Handle(Prs3d_PresentationShadow) aShadow = new Prs3d_PresentationShadow (myStructureManager, aPrs);
-    aShadow->SetZLayer (theImmediateStructLayerId);
+    aShadow->SetZLayer (aLayer);
     aShadow->SetClipPlanes (aPrs->ClipPlanes());
     aShadow->CStructure()->IsForHighlight = 1;
     aShadow->Highlight (theStyle);
