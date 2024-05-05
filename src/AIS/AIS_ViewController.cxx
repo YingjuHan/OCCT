@@ -1579,7 +1579,22 @@ void AIS_ViewController::handleZoom (const Handle(V3d_View)& theView,
   const Handle(Graphic3d_Camera)& aCam = theView->Camera();
   if (thePnt != NULL)
   {
-    const double aViewDist = Max (myMinCamDistance, (thePnt->XYZ() - aCam->Eye().XYZ()).Modulus());
+    double aViewDist = (thePnt->XYZ() - aCam->Eye().XYZ()).Modulus();
+    if (aViewDist < myMinCamDistance)
+    {
+      // fall through the surface instead of zooming closer to it
+      Standard_Real aMinDist = myMinCamDistance;
+      const Bnd_Box aViewBox = theView->View()->MinMaxValues (false);
+      if (!aViewBox.IsVoid())
+      {
+        // workaround for too small scenes
+        static constexpr Standard_Real THE_VIEW_BOX_MIN_LIMIT = 0.01;
+        const Standard_Real aViewMin = Sqrt (aViewBox.SquareExtent()) * THE_VIEW_BOX_MIN_LIMIT;
+        aMinDist = Min (aViewMin, myMinCamDistance);
+      }
+      aViewDist = Max (aViewDist, aMinDist);
+    }
+
     aCam->SetCenter (aCam->Eye().XYZ() + aCam->Direction().XYZ() * aViewDist);
   }
 
