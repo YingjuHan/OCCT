@@ -447,6 +447,10 @@ void AIS_InteractiveContext::Display (const Handle(AIS_InteractiveObject)& theIO
       {
         mgrSelector->Load (theIObj);
       }
+      else
+      {
+        mgrSelector->UpdateSelection (theIObj);
+      }
       mgrSelector->Activate (theIObj, theSelectionMode);
     }
   }
@@ -481,6 +485,10 @@ void AIS_InteractiveContext::Display (const Handle(AIS_InteractiveObject)& theIO
       if (!mgrSelector->Contains (anObj))
       {
         mgrSelector->Load (theIObj);
+      }
+      else
+      {
+        mgrSelector->UpdateSelection (theIObj);
       }
       if (!mgrSelector->IsActivated (theIObj, theSelectionMode))
       {
@@ -523,6 +531,10 @@ void AIS_InteractiveContext::Load (const Handle(AIS_InteractiveObject)& theIObj,
   if (!mgrSelector->Contains (anObj))
   {
     mgrSelector->Load (theIObj);
+  }
+  else
+  {
+    mgrSelector->UpdateSelection (theIObj);
   }
 }
 
