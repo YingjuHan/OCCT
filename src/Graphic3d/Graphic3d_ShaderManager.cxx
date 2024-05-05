@@ -810,7 +810,7 @@ TCollection_AsciiString Graphic3d_ShaderManager::pointSpriteShadingSrc (const TC
       EOL"vec4 getColor(void)"
       EOL"{"
       EOL"  vec4 aColor = " + theBaseColorSrc + ";"
-      EOL"  aColor.a = getAlpha();"
+      EOL"  aColor.a *= getAlpha();"
       EOL"  if (aColor.a <= 0.1) discard;"
       EOL"  return aColor;"
       EOL"}";
@@ -940,9 +940,11 @@ Handle(Graphic3d_ShaderProgram) Graphic3d_ShaderManager::getStdProgramUnlit (Sta
 
     if ((theBits & Graphic3d_ShaderFlags_PointSprite) != 0)
     {
+      bool toModulate = true; // modulate with base color, when possible
       aUniforms.Append (Graphic3d_ShaderObject::ShaderVariable ("sampler2D occSamplerPointSprite", Graphic3d_TOS_FRAGMENT));
       if ((theBits & Graphic3d_ShaderFlags_PointSpriteA) != Graphic3d_ShaderFlags_PointSpriteA)
       {
+        toModulate = false; // replace alpha
         aSrcFragGetColor =
           EOL"vec4 getColor(void) { return occTexture2D(occSamplerPointSprite, " THE_VEC2_glPointCoord "); }";
       }
@@ -959,10 +961,10 @@ Handle(Graphic3d_ShaderProgram) Graphic3d_ShaderManager::getStdProgramUnlit (Sta
       }
 
       aSrcGetAlpha = pointSpriteAlphaSrc (theBits);
-      aSrcFragMainGetColor =
-        EOL"  vec4 aColor = getColor();"
-        EOL"  aColor.a = getAlpha();"
-        EOL"  if (aColor.a <= 0.1) discard;"
+      aSrcFragMainGetColor = TCollection_AsciiString()
+      + EOL"  vec4 aColor = getColor();" + (toModulate
+      ? EOL"  aColor.a *= getAlpha();" : EOL"  aColor.a = getAlpha();")
+      + EOL"  if (aColor.a <= 0.1) discard;"
         EOL"  occSetFragColor (aColor);";
     }
     else
