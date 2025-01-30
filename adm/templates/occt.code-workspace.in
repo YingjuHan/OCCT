@@ -1,0 +1,23 @@
+{
+    "folders": [
+        {
+            "name": "@CMAKE_BUILD_TYPE@",
+            "path": "@CMAKE_BINARY_DIR@"
+        },
+        {
+            "name": "OCCT Sources",
+            "path": "@CMAKE_SOURCE_DIR@"
+        }
+    ],
+    "settings": {
+        "makefile.configureOnOpen": false,
+        "makefile.configureOnEdit": false,
+        "makefile.configureAfterCommand": false,
+        "makefile.configurations": [
+            {
+                "name": "Parallel Build",
+                "makeArgs": "-j@VSCODE_PROC_COUNT@",
+            }
+        ]
+    }
+}

@@ -1,0 +1,47 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "@VSCODE_LAUNCH_EXECUTABLE@",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "@CMAKE_BINARY_DIR@",
+            "environment": [
+                {"name": "@VSCODE_LAUNCH_ENV_VAR", "value": "@VSCODE_LAUNCH_PATH@"},
+                {"name": "CASROOT", "value": "@CMAKE_SOURCE_DIR@"}, 
+                {"name": "CSF_LANGUAGE", "value": "us"}, 
+                {"name": "MMGT_CLEAR", "value": "0"}, 
+                {"name": "CSF_SHMessage", "value": "@CMAKE_SOURCE_DIR@/src/SHMessage"}, 
+                {"name": "CSF_MDTVTexturesDirectory", "value": "@CMAKE_SOURCE_DIR@/src/Textures"}, 
+                {"name": "CSF_ShadersDirectory", "value": "@CMAKE_SOURCE_DIR@/src/Shaders"}, 
+                {"name": "CSF_XSMessage", "value": "@CMAKE_SOURCE_DIR@/src/XSMessage"},
+                {"name": "CSF_TObjMessage", "value": "@CMAKE_SOURCE_DIR@/src/TObj"},
+                {"name":"CSF_StandardDefaults", "value": "@MAKE_SOURCE_DIR@/src/StdResource"},
+                {"name": "CSF_PluginDefaults", "value": "@CMAKE_SOURCE_DIR@/src/StdResource"}, 
+                {"name": "CSF_XCAFDefaults", "value": "@CMAKE_SOURCE_DIR@/src/StdResource"},
+                {"name": "CSF_TObjDefaults", "value": "@CMAKE_SOURCE_DIR@/src/StdResource"},
+                {"name": "CSF_StandardLiteDefaults", "value": "@CMAKE_SOURCE_DIR@/src/StdResource"},
+                {"name": "CSF_IGESDefaults", "value": "@MAKE_SOURCE_DIR@/src/XSTEPResource"},
+                {"name": "CSF_STEPDefaults", "value": "@CMAKE_SOURCE_DIR@/src/XSTEPResource"},
+                {"name": "CSF_Xml0cafResource", "value": "@CMAKE_SOURCE_DIR@/src/Xml0cafResource"},
+                {"name": "CSF_MIGRATION_TYPES", "value": "@CMAKE_SOURCE_DIR@/src/StdResource/MigrationSheet.txt"},
+                {"name": "DRAWHOME", "value": "@CMAKE_SOURCE_DIR@/src/DrawResources"}, 
+                {"name": "CSF_DrawPluginDefaults", "value": "@CMAKE_SOURCE_DIR@/src/DrawResources"},
+                {"name": "DRAWDEFAULT", "value": "@CMAKE_SOURCE_DIR@/src/DrawResources/DrawDefault"}
+            ],
+            "externalConsole": false,
+            "MIMode": "@@VSCODE_MIMODE",
+            "miDebuggerPath": "@VSCODE_DEBUGGER@",
+            "setupCommands": [ 
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}
