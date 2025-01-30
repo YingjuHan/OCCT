@@ -210,6 +210,12 @@ else()
   set (INSTALL_DIR "${INSTALL_DIR}" CACHE PATH "${INSTALL_DIR_DESCR}" FORCE)
 endif()
 
+if (SINGLE_GENERATOR)
+  if (NOT DEFINED BUILD_USE_VSCODE)
+    set (BUILD_USE_VSCODE OFF CACHE BOOL "${BUILD_USE_VSCODE_DESCR}")
+  endif()
+endif()
+
 # choose a variant of the layout of the install paths
 if (NOT INSTALL_DIR_LAYOUT)
   if (WIN32)
@@ -1130,6 +1136,10 @@ else()
   OCCT_CONFIGURE_AND_INSTALL ("adm/templates/env.install.${SCRIPT_EXT}.in" "${SUB_ENV_BUILD_NAME}" "${SUB_ENV_NAME}" "${INSTALL_DIR_SCRIPT}")
   # env script for draw in building environment
   OCCT_CONFIGURE ("adm/templates/env.build.${SCRIPT_EXT}.in" "env.${SCRIPT_EXT}")
+endif()
+
+if (BUILD_USE_VSCODE)
+  OCCT_INCLUDE_CMAKE_FILE("adm/cmake/vscode")
 endif()
 
 # copy DrawAppliInit from OCCT source to build directory
