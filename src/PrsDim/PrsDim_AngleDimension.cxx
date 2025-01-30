@@ -1468,3 +1468,55 @@ void PrsDim_AngleDimension::FitTextAlignment(
       break;
   }
 }
+
+Standard_Boolean PrsDim_AngleDimension::ComputeTextPos()
+{
+  gp_Pnt aNewTextPos(0, 0, 0);
+  bool   isArrowsExternalNew = true;
+  if (IsDraggedByText())
+  {
+    const gp_Dir aCenterToTextDir = gp_Vec(myCenterPoint, myFixedTextPosition).Normalized();
+    aNewTextPos = ElCLib::Value(myRadius, gp_Lin(myCenterPoint, aCenterToTextDir));
+    CheckPntRelPos(aNewTextPos, isArrowsExternalNew);
+    SetTextPosition(aNewTextPos);
+    SetType(isArrowsExternalNew ? PrsDim_TypeOfAngle_Exterior : PrsDim_TypeOfAngle_Interior);
+    return true;
+  }
+
+  const gp_Lin aCenterToEndDragLin = gce_MakeLin(myCenterPoint, myEndDragAttachedPoint);
+  const gp_Dir aCenterToTextDir    = gce_MakeDir(myCenterPoint, myFixedTextPosition);
+  bool         isArrowsExternalOld = false;
+  CheckPntRelPos(myFixedTextPosition, isArrowsExternalOld);
+  const Standard_Real aNewRadius =
+    Max(ElCLib::Parameter(aCenterToEndDragLin, myEndDragAttachedPoint),
+        myDrawer->DimensionAspect()->ExtensionSize());
+  aNewTextPos = ElCLib::Value(aNewRadius, gp_Lin(myCenterPoint, aCenterToTextDir));
+  CheckPntRelPos(myEndDragAttachedPoint, isArrowsExternalNew);
+  SetType(isArrowsExternalNew ? PrsDim_TypeOfAngle_Exterior : PrsDim_TypeOfAngle_Interior);
+  SetTextPosition(aNewTextPos);
+  return true;
+}
+
+void PrsDim_AngleDimension::CheckPntRelPos(const gp_Pnt& theCheckPnt, bool& theIsArrowsExternal)
+{
+  // Restore the default settings to prevent the FixTextAlignment() from being affected
+  theIsArrowsExternal = true;
+  
+  // construct circle froming the arc
+  const gp_Vec aVecToText = theCheckPnt.XYZ() - myCenterPoint.XYZ();
+  const gce_MakeCirc aConstructCircle(myCenterPoint, myPlane, myRadius);
+  if (!aConstructCircle.IsDone()) {
+    return;
+  }
+  const gp_Dir aPlaneNormal = myPlane.Axis().Direction();
+  const gp_Dir aDirToEnds[2] = {myFirstPoint.XYZ() - mySecondPoint.XYZ(), mySecondPoint.XYZ() - myCenterPoint.XYZ()};
+  if (aDirToEnds[0].AngleWithRef(aVecToText, aPlaneNormal) * aDirToEnds[1].AngleWithRef(aVecToText, aPlaneNormal) < 0.0) {
+    const gp_Vec aFlyoutVec = aDirToEnds[0].XYZ() * myRadius + aDirToEnds[1].XYZ() * myRadius;
+    const Standard_Real aFlyoutVecLen = aFlyoutVec.Magnitude();
+    const Standard_Real aCosThetal = aVecToText.Dot(aVecToText.Normalized()) / (aFlyoutVecLen * myFlyout);
+
+    if (aCosThetal > 0.0) {
+      theIsArrowsExternal = false;
+    }
+  }
+}

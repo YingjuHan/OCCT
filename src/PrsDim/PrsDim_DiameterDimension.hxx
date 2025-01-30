@@ -138,9 +138,10 @@ protected:
                                        const Handle(Prs3d_Presentation)&         thePresentation,
                                        const Standard_Integer theMode) Standard_OVERRIDE;
 
-  Standard_EXPORT virtual void ComputeFlyoutSelection(
-    const Handle(SelectMgr_Selection)&   theSelection,
-    const Handle(SelectMgr_EntityOwner)& theEntityOwner) Standard_OVERRIDE;
+  Standard_EXPORT virtual void ComputeFlyoutSelection (const Handle(SelectMgr_Selection)& theSelection,
+                                                       const Handle(SelectMgr_EntityOwner)& theEntityOwner) Standard_OVERRIDE;
+  
+  Standard_EXPORT virtual Standard_Boolean ComputeTextPos() Standard_OVERRIDE;
 
 protected:
   //! Compute points on the circle sides for the dimension plane.

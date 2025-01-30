@@ -20,6 +20,7 @@
 #include <BRepLib_MakeEdge.hxx>
 #include <ElCLib.hxx>
 #include <gce_MakeDir.hxx>
+#include <gce_MakeLin.hxx>
 
 IMPLEMENT_STANDARD_RTTIEXT(PrsDim_RadiusDimension, PrsDim_Dimension)
 
@@ -190,9 +191,31 @@ void PrsDim_RadiusDimension::Compute(const Handle(PrsMgr_PresentationManager)&,
   DrawLinearDimension(thePresentation, theMode, myAnchorPoint, myCircle.Location(), Standard_True);
 }
 
-//=================================================================================================
+Standard_Boolean PrsDim_RadiusDimension::ComputeTextPos()
+{
+  const gp_Pnt aCircleCenter = myCircle.Location();
+  gp_Pnt       aNewTextPos;
+  if (IsDraggedByText())
+  {
+    const gp_Lin        aDimensionLin = gce_MakeLin(aCircleCenter, myStartDragAttachedPoint);
+    const Standard_Real aPNewTextPos  = ElCLib::Parameter(aDimensionLin, myEndDragAttachedPoint);
+    aNewTextPos                       = ElCLib::Value(aPNewTextPos, aDimensionLin);
+  }
+  else
+  {
+    const Standard_Real aCenterToTextDir = aCircleCenter.Distance(myFixedTextPosition);
+    const gp_Lin        aNewDimensionLin = gce_MakeLin(aCircleCenter, myEndDragAttachedPoint);
+    aNewTextPos                          = ElCLib::Value(aCenterToTextDir, aNewDimensionLin);
+  }
+  SetTextPosition(aNewTextPos);
+  return true;
+}
 
-Standard_Boolean PrsDim_RadiusDimension::IsValidCircle(const gp_Circ& theCircle) const
+//=======================================================================
+//function : IsValidCircle
+//purpose  : 
+//=======================================================================
+Standard_Boolean PrsDim_RadiusDimension::IsValidCircle (const gp_Circ& theCircle) const
 {
   return theCircle.Radius() > Precision::Confusion();
 }

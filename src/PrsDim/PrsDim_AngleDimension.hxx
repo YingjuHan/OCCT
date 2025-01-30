@@ -269,6 +269,8 @@ protected:
     Standard_Integer&                            theLabelPosition,
     Standard_Boolean&                            theIsArrowsExternal) const;
 
+  Standard_EXPORT void CheckPntRelPos(const gp_Pnt& theCheckPnt, bool& theIsArrowsExternal);
+
   //! Adjusts aspect parameters according the text position:
   //! extension size, vertical text alignment and flyout.
   //! @param[in] theTextPos  the user defined 3d point of text position.
@@ -296,6 +298,8 @@ protected:
   Standard_EXPORT virtual void ComputeFlyoutSelection(
     const Handle(SelectMgr_Selection)&   theSelection,
     const Handle(SelectMgr_EntityOwner)& theOwner) Standard_OVERRIDE;
+
+  Standard_EXPORT virtual Standard_Boolean ComputeTextPos() Standard_OVERRIDE;
 
 protected:
   //! Init angular dimension to measure angle between two linear edges.
@@ -349,6 +353,8 @@ private:
   TopoDS_Shape myFirstShape;
   TopoDS_Shape mySecondShape;
   TopoDS_Shape myThirdShape;
+
+  Standard_Real myRadius = RealLast();
 };
 
 #endif // _PrsDim_AngleDimension_HeaderFile

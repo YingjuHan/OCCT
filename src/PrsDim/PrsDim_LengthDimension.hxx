@@ -194,6 +194,8 @@ protected:
     const Handle(SelectMgr_Selection)&   theSelection,
     const Handle(SelectMgr_EntityOwner)& theEntityOwner) Standard_OVERRIDE;
 
+  Standard_EXPORT virtual Standard_Boolean ComputeTextPos() Standard_OVERRIDE;
+
 protected:
   //! Checks that distance between two points is valid.
   //! @param[in] theFirstPoint  the first point.

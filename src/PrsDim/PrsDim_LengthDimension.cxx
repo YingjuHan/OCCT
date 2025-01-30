@@ -27,6 +27,7 @@
 #include <ElSLib.hxx>
 #include <gce_MakeDir.hxx>
 #include <gce_MakePln.hxx>
+#include <gce_MakeLin.hxx>
 #include <Geom_TrimmedCurve.hxx>
 #include <GeomAPI_ExtremaCurveCurve.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
@@ -312,11 +313,34 @@ void PrsDim_LengthDimension::ComputeFlyoutLinePoints(const gp_Pnt& theFirstPoint
   theLineEndPoint = ElCLib::Value(ElCLib::Parameter(aLine2, theSecondPoint) + GetFlyout(), aLine2);
 }
 
-//=================================================================================================
+Standard_Boolean PrsDim_LengthDimension::ComputeTextPos()
+{
+  gp_Pnt       aNewTextPos;
+  const gp_Lin aDimensionLin = gce_MakeLin(myLinearFlyoutPnt[0], myLinearFlyoutPnt[1]);
+  if (IsDraggedByText())
+  {
+    const Standard_Real aPTextPos    = ElCLib::Parameter(aDimensionLin, myStartDragAttachedPoint);
+    const gp_Vec        aMoveTextVec = gp_Vec(myStartDragAttachedPoint, myFixedTextPosition);
+    const Standard_Real aTextMoveLen = aMoveTextVec.Dot(aDimensionLin.Direction());
+    aNewTextPos                      = ElCLib::Value(aPTextPos + aTextMoveLen, aDimensionLin);
+  }
+  else
+  {
+    const gp_Vec        aTextToDragEndVec(myFixedTextPosition, myEndDragAttachedPoint);
+    const Standard_Real aTextMoveLen = aTextToDragEndVec.Dot(aDimensionLin.Direction());
+    const gp_Vec        aTextMoveVec = gp_Vec(aDimensionLin.Direction()) * aTextMoveLen;
+    aNewTextPos = myFixedTextPosition.Translated(aTextToDragEndVec - aTextMoveVec);
+  }
+  SetTextPosition(aNewTextPos);
+  return true;
+}
 
-void PrsDim_LengthDimension::ComputeFlyoutSelection(
-  const Handle(SelectMgr_Selection)&   theSelection,
-  const Handle(SelectMgr_EntityOwner)& theEntityOwner)
+//=======================================================================
+//function : ComputeFlyoutSelection
+//purpose  : 
+//=======================================================================
+void PrsDim_LengthDimension::ComputeFlyoutSelection (const Handle(SelectMgr_Selection)& theSelection,
+                                                     const Handle(SelectMgr_EntityOwner)& theEntityOwner)
 {
   if (!IsValid())
   {

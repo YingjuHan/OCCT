@@ -23,6 +23,7 @@
 #include <Geom_Circle.hxx>
 #include <Geom_Plane.hxx>
 #include <gce_MakeDir.hxx>
+#include <gce_MakeLin.hxx>
 
 IMPLEMENT_STANDARD_RTTIEXT(PrsDim_DiameterDimension, PrsDim_Dimension)
 
@@ -276,11 +277,35 @@ void PrsDim_DiameterDimension::ComputeFlyoutSelection(
   ComputeLinearFlyouts(theSelection, theEntityOwner, aFirstPnt, aSecondPnt);
 }
 
-//=================================================================================================
+Standard_Boolean PrsDim_DiameterDimension::ComputeTextPos()
+{
+  gp_Pnt       aNewTextPos;
+  const gp_Lin aDimensionLin = gce_MakeLin(myLinearFlyoutPnt[0], myLinearFlyoutPnt[1]);
+  if (IsDraggedByText())
+  {
+    const Standard_Real aPTextPos = ElCLib::Parameter(aDimensionLin, myStartDragAttachedPoint);
+    const gp_Vec        aMoveTextVec(myStartDragAttachedPoint, myFixedTextPosition);
+    const Standard_Real aTextMoveLen = aMoveTextVec.Dot(aDimensionLin.Direction());
+    aNewTextPos                      = ElCLib::Value(aPTextPos + aTextMoveLen, aDimensionLin);
+  }
+  else
+  {
+    const gp_Vec        aTextToDragEndVec(myFixedTextPosition, myEndDragAttachedPoint);
+    const Standard_Real aTextToDragEndLen = aTextToDragEndVec.Dot(aDimensionLin.Direction());
+    const gp_Vec        aTextMoveVec      = gp_Vec(aDimensionLin.Direction()) * aTextToDragEndLen;
+    aNewTextPos = myFixedTextPosition.Translated(aTextToDragEndVec - aTextMoveVec);
+  }
+  SetTextPosition(aNewTextPos);
+  return true;
+}
 
-void PrsDim_DiameterDimension::ComputeSidePoints(const gp_Circ& theCircle,
-                                                 gp_Pnt&        theFirstPnt,
-                                                 gp_Pnt&        theSecondPnt)
+//=======================================================================
+//function : ComputeSidePoints
+//purpose  : 
+//=======================================================================
+void PrsDim_DiameterDimension::ComputeSidePoints (const gp_Circ& theCircle,
+                                                  gp_Pnt& theFirstPnt,
+                                                  gp_Pnt& theSecondPnt)
 {
   theFirstPnt = AnchorPoint();
 

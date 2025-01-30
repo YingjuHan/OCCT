@@ -63,6 +63,9 @@
 #include <Units_UnitsDictionary.hxx>
 #include <UnitsAPI.hxx>
 
+#include <IntAna_IntConicQuad.hxx>
+#include <V3d_View.hxx>
+
 IMPLEMENT_STANDARD_RTTIEXT(PrsDim_Dimension, AIS_InteractiveObject)
 
 namespace
@@ -1696,4 +1699,111 @@ void PrsDim_Dimension::UnsetFixedTextPosition()
 {
   myIsTextPositionFixed = Standard_False;
   myFixedTextPosition   = gp::Origin();
+}
+
+Standard_Boolean PrsDim_Dimension::ProcessDragging(const Handle(AIS_InteractiveContext)& theCtx,
+                                                   const Handle(V3d_View)&               theView,
+                                                   const Handle(SelectMgr_EntityOwner)&  theOwner,
+                                                   const Graphic3d_Vec2i& theDragFrom,
+                                                   const Graphic3d_Vec2i& theDragTo,
+                                                   const AIS_DragAction   theAction)
+{
+  (void)theOwner;
+  if (!myIsDraggable)
+  {
+    return false;
+  }
+
+  const gp_Pnt                     aCurTextPos = GetTextPosition();
+  SelectMgr_SelectingVolumeManager aSelMgr(theCtx->MainSelector()->GetManager());
+
+  switch (theAction)
+  {
+    case AIS_DragAction_Abort: {
+      SetTextPosition(myStartDragAttachedPoint);
+      theCtx->ClearDetected();
+      theCtx->RecomputePrsOnly(this, false, false);
+      return true;
+    }
+    case AIS_DragAction_Stop: {
+      theCtx->RecomputeSelectionOnly(this);
+      return true;
+    }
+    case AIS_DragAction_Start: {
+      myIsDraggedByText        = false;
+      myStartDragAttachedPoint = aCurTextPos;
+
+      // Selection manager is already initialized to theDragFrom position at this point
+      const gp_Lin        aPickRay(aSelMgr.GetNearPickedPnt(), aSelMgr.GetViewRayDirection());
+      IntAna_IntConicQuad aIntersector(aPickRay,
+                                       myPlane,
+                                       Precision::Angular(),
+                                       Precision::Intersection());
+      // if (aIntersector.IsDone() || aIntersector.NbPoints() < 1)
+      // {
+      //   return false;
+      // }
+
+      myStartDragAttachedPoint = aIntersector.Point(1);
+
+      // Check whether the text is selected. If the text is selected, the center line is selected.
+      if (myDrawer->DimensionAspect()->IsText3d())
+      {
+        const gp_Vec aPlaneNormal = myPlane.Axis().Direction();
+        const gp_Lin aTextHlin    = gce_MakeLin(aCurTextPos, mySelectionGeom.TextDir);
+        const gp_Lin aTextVlin = gce_MakeLin(aCurTextPos, aPlaneNormal ^ mySelectionGeom.TextDir);
+        const Standard_Real   aCurSelPntHP = ElCLib::Parameter(aTextHlin, myStartDragAttachedPoint);
+        const Standard_Real   aCurSelPntVP = ElCLib::Parameter(aTextVlin, myStartDragAttachedPoint);
+        const Graphic3d_Vec2d aSelTolForText(mySelectionGeom.TextWidth * 0.5,
+                                             mySelectionGeom.TextHeight * 0.5);
+        myIsDraggedByText =
+          (Abs(aCurSelPntHP) < aSelTolForText.x() && Abs(aCurSelPntVP) < aSelTolForText.y());
+      }
+      else
+      {
+        Graphic3d_Vec2i aWinTextPos;
+        theView->Convert(aCurTextPos.X(),
+                         aCurTextPos.Y(),
+                         aCurTextPos.Z(),
+                         aWinTextPos.x(),
+                         aWinTextPos.y());
+        Standard_Real aTextWidth = 0.0;
+        GetValueString(aTextWidth);
+        const Standard_Real   aTextHeight = myDrawer->DimensionAspect()->TextAspect()->Height();
+        const Graphic3d_Vec2d aSelTolForText(aTextWidth * 0.5, aTextHeight * 0.5);
+        myIsDraggedByText = (Abs(aWinTextPos.x() - theDragFrom.x()) < aSelTolForText.x()
+                             && Abs(aWinTextPos.y() - theDragFrom.y()) < aSelTolForText.y());
+      }
+      return true;
+    }
+    case AIS_DragAction_Update: {
+      const int aDeltaPx = (theDragTo - theDragFrom).cwiseAbs().maxComp();
+      if (aDeltaPx <= 2)
+      {
+        return false;
+      }
+      aSelMgr.InitPointSelectingVolume(gp_Pnt2d(theDragTo.x(), theDragTo.y()));
+      aSelMgr.BuildSelectingVolume();
+
+      const gp_Lin        aPickRay(aSelMgr.GetNearPickedPnt(), aSelMgr.GetViewRayDirection());
+      IntAna_IntConicQuad aIntersector(aPickRay,
+                                       myPlane,
+                                       Precision::Angular(),
+                                       Precision::Intersection());
+      if (aIntersector.IsDone() || aIntersector.NbPoints() < 1)
+      {
+        return false;
+      }
+      myEndDragAttachedPoint = aIntersector.Point(1);
+      SetTextPosition(myIsDraggedByText ? myEndDragAttachedPoint : aCurTextPos);
+      if (!ComputeTextPos())
+      {
+        return false;
+      }
+      theCtx->RecomputePrsOnly(this, true, false);
+      return true;
+    }
+    default:
+      return false;
+  }
 }

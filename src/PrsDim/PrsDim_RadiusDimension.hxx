@@ -131,9 +131,11 @@ protected:
 
   Standard_EXPORT virtual Standard_Real ComputeValue() const Standard_OVERRIDE;
 
-  Standard_EXPORT virtual void Compute(const Handle(PrsMgr_PresentationManager)& thePrsMgr,
-                                       const Handle(Prs3d_Presentation)&         thePrs,
-                                       const Standard_Integer theMode) Standard_OVERRIDE;
+  Standard_EXPORT virtual void Compute (const Handle(PrsMgr_PresentationManager)& thePrsMgr,
+                                        const Handle(Prs3d_Presentation)& thePrs,
+                                        const Standard_Integer theMode) Standard_OVERRIDE;
+  
+  Standard_EXPORT virtual Standard_Boolean ComputeTextPos() Standard_OVERRIDE;
 
 protected:
   Standard_EXPORT Standard_Boolean IsValidCircle(const gp_Circ& theCircle) const;

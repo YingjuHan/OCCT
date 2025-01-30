@@ -555,16 +555,35 @@ protected: //! @name Behavior to implement
   //! flyout lines (if the dimension provides it).
   //! This callback is a only a part of base selection
   //! computation routine.
-  virtual void ComputeFlyoutSelection(const Handle(SelectMgr_Selection)&,
-                                      const Handle(SelectMgr_EntityOwner)&)
-  {
-  }
+  virtual void ComputeFlyoutSelection (const Handle(SelectMgr_Selection)&,
+                                       const Handle(SelectMgr_EntityOwner)&) {}
+
+  //! Override this method to introduce custom dimension text label position computation.
+  virtual Standard_Boolean ComputeTextPos () { return Standard_True; }
+
+  bool IsDraggedByText() const { return myIsDraggedByText; }
+
 
   //! Base procedure of computing selection (based on selection geometry data).
   //! @param[in] theSelection  the selection structure to will with primitives.
   //! @param[in] theMode  the selection mode.
   Standard_EXPORT virtual void ComputeSelection(const Handle(SelectMgr_Selection)& theSelection,
                                                 const Standard_Integer theMode) Standard_OVERRIDE;
+
+    //! Drag dimension object in the viewer.
+  //! @param[in] theCtx       interactive context
+  //! @param[in] theView      active View
+  //! @param[in] theOwner     the owner of detected entity
+  //! @param[in] theDragFrom  drag start point
+  //! @param[in] theDragTo    drag end point
+  //! @param[in] theAction    drag action
+  //! @return FALSE if object rejects dragging action (e.g. AIS_DragAction_Start)
+  Standard_EXPORT virtual Standard_Boolean ProcessDragging (const Handle(AIS_InteractiveContext)& theCtx,
+                                                            const Handle(V3d_View)& theView,
+                                                            const Handle(SelectMgr_EntityOwner)& theOwner,
+                                                            const Graphic3d_Vec2i& theDragFrom,
+                                                            const Graphic3d_Vec2i& theDragTo,
+                                                            const AIS_DragAction theAction) Standard_OVERRIDE;
 
 protected: //! @name Selection geometry
   //! Selection geometry of dimension presentation. The structure is filled with data
@@ -644,9 +663,15 @@ protected:                     //! @name Value properties
   TCollection_ExtendedString myCustomStringValue; //!< Value of the dimension (computed or user-defined).
   // clang-format on
 
-protected:                                //! @name Fixed text position properties
-  gp_Pnt           myFixedTextPosition;   //!< Stores text position fixed by user.
-  Standard_Boolean myIsTextPositionFixed; //!< Is the text label position fixed by user.
+protected: //! @name Fixed text position properties
+  gp_Pnt           myFixedTextPosition;           //!< Stores text position fixed by user.
+  Standard_Boolean myIsTextPositionFixed = false; //!< Is the text label position fixed by user.
+  gp_Pnt           myStartDragAttachedPoint;        //!< Start drag attach point.
+  gp_Pnt           myEndDragAttachedPoint;          //!< End drag attach point.
+  Standard_Boolean myIsDraggable     = true;      //!< Is dimension draggable.
+  Standard_Boolean myIsDraggedByText = false;     //!< Is dimension dragged by text.
+  gp_Pnt           myStartDragTextPosition;       //!< Start drag text position.
+  gp_Pnt           myLinearFlyoutPnt[2];          //!< Linear flyout points.
 
 protected:                                            //! @name Units properties
   Standard_ExtCharacter       mySpecialSymbol;        //!< Special symbol.
