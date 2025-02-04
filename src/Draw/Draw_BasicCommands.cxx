@@ -64,6 +64,10 @@ static clock_t CPU_CURRENT; // cpu time already used at last
 
 #endif /* _WIN32 */
 
+#if defined(__EMSCRIPTEN__)
+  #include <emscripten/version.h>
+#endif
+
 extern Standard_Boolean Draw_Batch;
 
 static clock_t CPU_LIMIT;   // Cpu_limit in Sec.
@@ -475,6 +479,12 @@ static Standard_Integer dversion(Draw_Interpretor& di, Standard_Integer, const c
   #endif
   #if defined(__wasm_simd128__)
      << " SIMD128"
+  #endif
+  #if defined(__WASM_EXCEPTIONS__)
+     << " wasm-exceptions"
+  #endif
+  #if defined(__EMSCRIPTEN_PTHREADS__)
+     << " pthreads"
   #endif
      << "\n";
 #else
