@@ -33,6 +33,9 @@
 #if defined(__EMSCRIPTEN__)
   #include <emscripten/heap.h>
 #endif
+#if defined(USE_MIMALLOC)
+  #include <mimalloc.h>
+#endif
 
 // =======================================================================
 // function : OSD_MemInfo
@@ -144,11 +147,41 @@ void OSD_MemInfo::Update()
   }
 
 #elif defined(__EMSCRIPTEN__)
+#if defined(USE_MIMALLOC)
+  // -sMALLOC=mimalloc provides own diagnostics API
+  if (IsActive (MemWorkingSet)
+   || IsActive (MemWorkingSetPeak))
+  {
+    size_t current_rss = 0, peak_rss = 0;
+    mi_process_info(nullptr, nullptr, nullptr, &current_rss, &peak_rss, nullptr, nullptr, nullptr);
+    // workaround negative number returned by mi_process_info() (which mi_stats_print(NULL) prints as such)
+    if (intptr_t(current_rss) < 0) { current_rss = 0; }
+    if (intptr_t(peak_rss) < 0) { peak_rss = 0; }
+    myCounters[MemWorkingSet] = current_rss;
+    myCounters[MemWorkingSetPeak] = peak_rss;
+  }
+  if (IsActive (MemHeapUsage))
+  {
+    struct MiVisitor
+    {
+      static bool visitor(const mi_heap_t* , const mi_heap_area_t* theArea, void*, size_t, void* thePtr)
+      {
+        Standard_Size* aCounter = (Standard_Size*)thePtr;
+        *aCounter += theArea->committed;
+        return true;
+      }
+    };
+
+    myCounters[MemHeapUsage] = 0;
+    const mi_heap_t* aDefHeap = mi_heap_get_default();
+    mi_heap_visit_blocks(aDefHeap, false, &MiVisitor::visitor, &myCounters[MemHeapUsage]);
+  }
+#else
+  // -sMALLOC=dlmalloc provides mallinfo()
   if (IsActive (MemHeapUsage)
    || IsActive (MemWorkingSet)
    || IsActive (MemWorkingSetPeak))
   {
-    // /proc/%d/status is not emulated - get more info from mallinfo()
     const struct mallinfo aMI = mallinfo();
     if (IsActive (MemHeapUsage))
     {
@@ -163,6 +196,7 @@ void OSD_MemInfo::Update()
       myCounters[MemWorkingSetPeak] = aMI.usmblks;
     }
   }
+#endif
   if (IsActive (MemVirtual))
   {
     myCounters[MemVirtual] = emscripten_get_heap_size();
