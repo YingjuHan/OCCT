@@ -37,6 +37,10 @@
   #include <mimalloc.h>
 #endif
 
+#ifndef _WIN32
+  #include <pthread.h>
+#endif
+
 // =======================================================================
 // function : OSD_MemInfo
 // purpose  :
@@ -129,6 +133,15 @@ void OSD_MemInfo::Update()
       myCounters[MemSwapUsagePeak]  = aProcMemCnts.PeakPagefileUsage;
     }
   }
+
+#if (_WIN32_WINNT >= 0x0602)
+  if (IsActive (MemStackSize))
+  {
+    ULONG_PTR aStackLow = 0, aStackUp = 0;
+    GetCurrentThreadStackLimits(&aStackLow, &aStackUp);
+    myCounters[MemStackSize] = Standard_Size(aStackUp - aStackLow);
+  }
+#endif
 
   if (IsActive (MemHeapUsage))
   {
@@ -303,6 +316,42 @@ void OSD_MemInfo::Update()
   }
 #endif
 #endif
+
+#ifndef _WIN32
+  if (IsActive (MemStackSize))
+  {
+    // pthread_attr_init() returns default attributes for creating new threads;
+    // some systems provide non-POSIX extensions to get values of specific thread:
+    // - pthread_getattr_np() on Linux and Android
+    // - pthread_get_stacksize_np() on macOS
+#if defined(__ANDROID__)
+#define HAS_GETATTR_NP
+#elif defined(__GLIBC__) && defined(__GLIBC_PREREQ) && !defined(__EMSCRIPTEN__)
+#if __GLIBC_PREREQ(2,4)
+#define HAS_GETATTR_NP
+#endif
+#endif
+
+#ifdef __APPLE__
+    myCounters[MemStackSize] = pthread_get_stacksize_np(pthread_self());
+#else
+    pthread_attr_t aPAttr;
+#ifdef HAS_GETATTR_NP
+    if (pthread_getattr_np(pthread_self(), &aPAttr) == 0)
+#else
+    if (pthread_attr_init(&aPAttr) == 0)
+#endif
+    {
+      size_t aStackSize = 0;
+      if (pthread_attr_getstacksize(&aPAttr, &aStackSize) == 0)
+      {
+        myCounters[MemStackSize] = aStackSize;
+      }
+      pthread_attr_destroy(&aPAttr);
+    }
+#endif
+  }
+#endif
 }
 
 // =======================================================================
@@ -345,7 +394,20 @@ TCollection_AsciiString OSD_MemInfo::ToString() const
   }
   if (hasValue (MemHeapUsage))
   {
-    anInfo += TCollection_AsciiString("  Heap memory:     ") +  Standard_Integer (ValueMiB (MemHeapUsage)) + " MiB\n";
+    anInfo += TCollection_AsciiString("  Heap memory:        ") +  Standard_Integer (ValueMiB (MemHeapUsage)) + " MiB\n";
+  }
+  if (hasValue (MemStackSize))
+  {
+    anInfo += TCollection_AsciiString("  Thread stack size:  ");
+    const Standard_Size aValMiB = ValueMiB(MemStackSize);
+    if (aValMiB != 0)
+    {
+      anInfo += TCollection_AsciiString(Standard_Integer(aValMiB)) + " MiB\n";
+    }
+    else
+    {
+      anInfo += TCollection_AsciiString(Standard_Integer(Value(MemStackSize) / 1024)) + " KiB\n";
+    }
   }
   return anInfo;
 }

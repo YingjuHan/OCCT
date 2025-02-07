@@ -62,6 +62,7 @@ public:
     MemSwapUsage,      //!< Space allocated for the pagefile
     MemSwapUsagePeak,  //!< Peak space allocated for the pagefile
     MemHeapUsage,      //!< Total space allocated from the heap
+    MemStackSize,      //!< Stack size within current thread
     MemCounter_NB      //!< Indicates total counters number
   };
 
