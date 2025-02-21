@@ -69,6 +69,17 @@ void DDF_Data::Dump(Standard_OStream& S) const
   TDF_Tool::DeepDump(S,myDF);
 }
 
+//=======================================================================
+//function : DumpJson
+//purpose  :
+//=======================================================================
+void DDF_Data::DumpJson(Standard_OStream& theOStream, Standard_Integer theDepth) const
+{
+  if (!myDF.IsNull())
+  {
+    myDF->DumpJson(theOStream, theDepth);
+  }
+}
 
 //=======================================================================
 //function : DataFramework

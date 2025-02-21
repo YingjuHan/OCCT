@@ -102,4 +102,15 @@ void DDocStd_DrawDocument::Whatis(Draw_Interpretor& I) const
   I << myDocument->DynamicType()->Name();
 }
 
-
+//=======================================================================
+//function : DumpJson
+//purpose  :
+//=======================================================================
+void DDocStd_DrawDocument::DumpJson(Standard_OStream& theOStream,
+                                    Standard_Integer theDepth) const
+{
+  if (!myDocument.IsNull())
+  {
+    myDocument->DumpJson(theOStream, theDepth);
+  }
+}

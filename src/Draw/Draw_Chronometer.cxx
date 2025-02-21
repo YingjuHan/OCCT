@@ -17,6 +17,7 @@
 #include <Draw_Chronometer.hxx>
 
 #include <Draw_Display.hxx>
+#include <Standard_Dump.hxx>
 
 IMPLEMENT_STANDARD_RTTIEXT(Draw_Chronometer, Draw_Drawable3D)
 
@@ -68,4 +69,18 @@ void  Draw_Chronometer::Whatis(Draw_Interpretor& i)const
   i << "chronometer";
 }
 
+//=======================================================================
+//function : DumpJson
+//purpose  :
+//=======================================================================
+void Draw_Chronometer::DumpJson(Standard_OStream& theOStream, Standard_Integer ) const
+{
+  const Standard_Real ElapsedTime = myTimer.ElapsedTime();
+  Standard_Real UserTimeCPU = 0.0, SystemTimeCPU = 0.0;
+  myTimer.OSD_Chronometer::Show(UserTimeCPU, SystemTimeCPU);
 
+  OCCT_DUMP_CLASS_BEGIN(theOStream, Draw_Chronometer)
+  OCCT_DUMP_FIELD_VALUE_NUMERICAL(theOStream, ElapsedTime)
+  OCCT_DUMP_FIELD_VALUE_NUMERICAL(theOStream, UserTimeCPU)
+  OCCT_DUMP_FIELD_VALUE_NUMERICAL(theOStream, SystemTimeCPU)
+}

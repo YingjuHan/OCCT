@@ -18,6 +18,7 @@
 
 #include <NCollection_DataMap.hxx>
 #include <Draw_Display.hxx>
+#include <Standard_Dump.hxx>
 #include <Standard_NotImplemented.hxx>
 
 IMPLEMENT_STANDARD_RTTIEXT(Draw_Drawable3D, Standard_Transient)
@@ -98,6 +99,24 @@ void Draw_Drawable3D::Dump (Standard_OStream& S) const
 {
   S << myXmin << " " << myXmax << "\n";
   S << myYmin << " " << myYmax << "\n";
+}
+
+//=======================================================================
+//function : DumpJson
+//purpose  :
+//=======================================================================
+void Draw_Drawable3D::DumpJson(Standard_OStream& theOStream, Standard_Integer ) const
+{
+  // this information is not expected to be printed,
+  // just a dummy for subclasses not implenting this interface
+  OCCT_DUMP_CLASS_BEGIN(theOStream, Draw_Drawable3D)
+  OCCT_DUMP_FIELD_VALUE_NUMERICAL(theOStream, myXmin)
+  OCCT_DUMP_FIELD_VALUE_NUMERICAL(theOStream, myXmax)
+  OCCT_DUMP_FIELD_VALUE_NUMERICAL(theOStream, myYmin)
+  OCCT_DUMP_FIELD_VALUE_NUMERICAL(theOStream, myYmax)
+  OCCT_DUMP_FIELD_VALUE_STRING(theOStream, myName)
+  OCCT_DUMP_FIELD_VALUE_NUMERICAL(theOStream, isVisible)
+  OCCT_DUMP_FIELD_VALUE_NUMERICAL(theOStream, isProtected)
 }
 
 //=======================================================================

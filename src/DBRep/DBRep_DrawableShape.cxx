@@ -1006,6 +1006,15 @@ void DBRep_DrawableShape::Dump (Standard_OStream& S) const
 }
 
 //=======================================================================
+//function : DumpJson
+//purpose  :
+//=======================================================================
+void DBRep_DrawableShape::DumpJson(Standard_OStream& theOStream, Standard_Integer theDepth) const
+{
+  myShape.DumpJson(theOStream, theDepth);
+}
+
+//=======================================================================
 //function : Save
 //purpose  :
 //=======================================================================
