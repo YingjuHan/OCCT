@@ -12,6 +12,83 @@ To examine the full set of changes between versions, you can use git to browse t
 Please take a look onto [upgrade/upgrade.md](../upgrade/upgrade.md)
 if you are upgrading your product to a newer version of OCCT.
 
+OCCT 7.X (in development)
+-----------------------------------------------------------------------------------------------------------------------
+
+- **General**
+   - Added missing class field initializers to many classes.
+   - `Standard_Failure` now inherits `std::exception`, implements `std::exception::what()`;
+     inheritance from `Standard_Transient` has been removed
+     (application code catching messages from `Standard_Failure` might require modifications).
+   - Adapted for C++ range-based loops: `TopExp_Explorer`, `TDF_ChildIterator` (`TDF_Label`), `NCollection_DataMap`,
+     `TopoDS_Iterator` (`TopoDS_Shape`), `TColStd_PackedMapOfInteger`.
+   - Linux: `Standard_ErrorHandler` now relies on `thread_local` stack instead of global mutex
+     (improves performance in multi-threaded environments).
+- **Modeling**
+   - Improved stability of results produced by `BRepOffset`, `BRepFill_Evolved`
+     (unordered maps replaced by ordered maps).
+   - Bugfixes in `HLRBRep_PolyAlgo` for transformed shapes.
+   - Back-ported bug-fixes from OCCT 7.8 and OCCT 7.9 releases.
+- **Data Exchange**
+   - Bugfixes for STL and OBJ formats.
+   - Back-ported bug-fixes for STEP and IGES from OCCT 7.8 and OCCT 7.9 releases.
+   - Back-ported STEP parser performance improvement.
+- **Visualization**
+   - HiDPI: transform-persistent objects (non-zoomable text, trihedrons, viewcube, etc.)
+     are now automatically scaled based on `Graphic3d_RenderingParams::ResolutionRatio()`.
+   - Enable wide lines within OpenGL Core Profile (when available).
+   - Linux: introduced Wayland support.
+   - `Aspect_DisplayConnection` is now virtual interface
+     (use `Xw_DisplayConnection` for Xlib and `Wayland_DisplayConnection` for Wayland).
+   - Redesigned `Image_AlienPixMap` - split into several implementations for different image libraries / formats
+     (`Image_RWFreeImage` for FreeImage, `Image_RWWinCodec` for WinCodec)
+     with base interface defined by `Image_RWPixMap`;
+     `Image_AlienPixMap` provides the same interface as before, but now it works as a selector to different libraries;
+     introduced `Image_RWPNG` for using `libpng`.
+   - CJK: prefer "Microsoft Yahei" over legacy "SimSun" font on Windows; fixed rendering of punctuation symbols.
+   - Fixed detection of (some) cylinders.
+   - Fixed misdetection of degenerated line segments.
+- **Configuration**
+   - Tcl: fixed compatibility issues with *Tcl 9.0*.
+   - MinGW: added `.dll.a` lookup and `.rc` embedding (DLL information);
+   - MSVC: removed `#pragma comment(lib, "libX")` from code, fixed unescaped quotes within generated config file;
+   - Linux: fixed auto-detection of system Draco library, added `-Wl,--no-undefined` and `-Wl,--as-needed` flags;
+   - WebAssembly: fixed runtime issues within `WASM64` (`-sMEMORY64=1`), fixed building issues with Emscripten 4.x;
+   - Common: removed redundant building macros,
+     removed modification of `custom.sh` within INSTALL location during configure step.
+- **Draw Harness**
+   - Linux: fixed RED color propagated to the next command.
+   - Linux: fixed hanging `wzoom` with AXO viewer.
+   - Linux: added preliminary Wayland support (`vinit -wayland`) for 3D Viewer.
+   - `Draw_Interpreter` initialization is postponed till the first usage;
+     fixes errors inside Tcl library when application links to `TKDraw` but doesn't use Tcl.
+   - Added commands `dumpjson` and `vdumpjson`.
+   - Fixed double-inclusion of command in `help` listing.
+   - Windows: 3D Viewer can be now created with `vinit -dpiaware` flag for HiDPI screens.
+   - Windows: `XProgress +g` now displays progress within taskbar icon (`ITaskbarList3`).
+- **Testing**
+   - Moved (a major part of) non-public tests from `tests` to `tests_occ`.
+   - Linux: fixed updating of `cpulimit`, improved process termination by `cpulimit`.
+   - `testgrid` now prints progress details into console, may use GUI progress bat (`XProgress +g`),
+     generates `summary.csv` (`testdiff` now generates `diff.csv`).
+   - Test cases have been corrected to clean-up large file artifacts.
+- **Debugging**
+   - Improved Visual Studio debugger visualizers (Natvis) for OCCT classes.
+   - Added `OSD_Thread::SetName()` property.
+- About 117 changes back-ported from OCCT 7.8 and OCCT 7.9 releases.
+
+OCCT collections have been improved to allow C++ range-based loop syntax, e.g.:
+
+```cpp
+  for (const TopoDS_Shape& aFaceIter : TopExp_Explorer(theShape, TopAbs_FACE))
+  {
+    const TopoDS_Face& aFace = TopoDS::Face(aFaceIter);
+  }
+...
+  NCollection_DataMap<int, double> theMap = ...;
+  for (const auto& [key, value]: theMap) { ... }
+```
+
 Open CASCADE Technology 7.7 (2022-11-03)
 -----------------------------------------------------------------------------------------------------------------------
 **OCCT 7.7.0** (2022-11-03) provides about 250 improvements and corrections over the previous release 7.6.0.
