@@ -792,7 +792,9 @@ const Bnd_Box& AIS_Shape::BoundingBox()
     return myBB;
   }
 
-  if(myCompBB) {
+  if (myCompBB)
+  {
+    myBB.SetVoid();
     BRepBndLib::Add (myshape, myBB, false);
     myCompBB = Standard_False;
   }
