@@ -878,7 +878,8 @@ bool Image_AlienPixMap::savePPM (const TCollection_AsciiString& theFileName) con
 
   // Write header
   fprintf (aFile, "P6\n%d %d\n255\n", (int )SizeX(), (int )SizeY());
-  fprintf (aFile, "# Image stored by OpenCASCADE framework in linear RGB colorspace\n");
+  // avoid comments in binary version of PPM format since some readers don't skip it
+  //fprintf (aFile, "# Image stored by OpenCASCADE framework in linear RGB colorspace\n");
 
   // Write pixel data
   Standard_Byte aByte;
