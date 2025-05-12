@@ -16,21 +16,20 @@
 #ifndef Image_AlienPixMap_HeaderFile
 #define Image_AlienPixMap_HeaderFile
 
-#include <Image_PixMap.hxx>
-
-class TCollection_AsciiString;
-struct FIBITMAP;
+#include <Image_RWPixMap.hxx>
 
 //! Image class that support file reading/writing operations using auxiliary image library.
-//! Supported image formats:
-//! - *.bmp - bitmap image, lossless format without compression.
-//! - *.ppm - PPM (Portable Pixmap Format), lossless format without compression.
-//! - *.png - PNG (Portable Network Graphics) lossless format with compression.
-//! - *.jpg, *.jpe, *.jpeg - JPEG/JIFF (Joint Photographic Experts Group) lossy format (compressed with quality losses). YUV color space used (automatically converted from/to RGB).
-//! - *.tif, *.tiff - TIFF (Tagged Image File Format).
-//! - *.tga - TGA (Truevision Targa Graphic), lossless format.
-//! - *.gif - GIF (Graphical Interchange Format), lossy format. Color stored using palette (up to 256 distinct colors).
-//! - *.exr - OpenEXR high dynamic-range format (supports float pixel formats). 
+//! The list of supported image formats depends on OCCT building options and enabled 3rd-party dependencies:
+//! - FreeImage library is handled by Image_RWFreeImage.
+//!   When enabled (USE_FREEIMAGE=ON in CMake), the wide range of image formats will be supported including
+//!   BMP, PNG, JPEG, TIFF, GIF, TGA, EXR, PPM.
+//! - Windows Imaging Component (WIC) is handled by Image_RWWinCodec.
+//!   When available (Windows platform only, built without FreeImage), the minimal set of image formats will be supported including
+//!   BMP, PNG, JPEG, TIFF, GIF.
+//! - Emscripten SDK is handled by Image_RWEmscripten.
+//!   When available (WebAssembly target), the minimal set of image formats will be supported (for which Browser implements readers) including
+//!   BMP, PNG, JPEG.
+//! - When no 3rd-party image library is available, this class will be able to export images in PPM format only, with no import possible.
 class Image_AlienPixMap : public Image_PixMap
 {
   DEFINE_STANDARD_RTTIEXT(Image_AlienPixMap, Image_PixMap)
@@ -77,36 +76,19 @@ public:
                                           const Standard_Size theSizeY,
                                           const Standard_Size theSizeRowBytes = 0) Standard_OVERRIDE;
 
-  //! Initialize by copying data.
-  Standard_EXPORT virtual bool InitCopy (const Image_PixMap& theCopy) Standard_OVERRIDE;
-
-  //! Method correctly deallocate internal buffer.
-  Standard_EXPORT virtual void Clear() Standard_OVERRIDE;
-
   //! Performs gamma correction on image.
   //! theGamma - gamma value to use; a value of 1.0 leaves the image alone
   Standard_EXPORT bool AdjustGamma (const Standard_Real theGammaCorr);
 
 private:
 
-  FIBITMAP* myLibImage;
+  Handle(Image_RWPixMap) myLibImage;
 
 private:
 
   //! Copying allowed only within Handles
   Image_AlienPixMap            (const Image_AlienPixMap& );
   Image_AlienPixMap& operator= (const Image_AlienPixMap& );
-
-  //! Wrapper initialization is disallowed for this class (will return false in any case)!
-  //! Use only copying and allocation initializers.
-  Standard_EXPORT virtual bool InitWrapper (Image_Format        thePixelFormat,
-                                            Standard_Byte*      theDataPtr,
-                                            const Standard_Size theSizeX,
-                                            const Standard_Size theSizeY,
-                                            const Standard_Size theSizeRowBytes) Standard_OVERRIDE;
-
-  //! Built-in PPM export
-  Standard_EXPORT bool savePPM (const TCollection_AsciiString& theFileName) const;
 
 };
 

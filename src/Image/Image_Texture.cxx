@@ -243,70 +243,39 @@ TCollection_AsciiString Image_Texture::MimeType() const
 // ================================================================
 TCollection_AsciiString Image_Texture::ProbeImageFileFormat() const
 {
-  static const Standard_Size THE_PROBE_SIZE = 20;
-  char aBuffer[THE_PROBE_SIZE];
   if (!myBuffer.IsNull())
   {
-    memcpy (aBuffer, myBuffer->Data(), myBuffer->Size() < THE_PROBE_SIZE ? myBuffer->Size() : THE_PROBE_SIZE);
+    return Image_RWPixMap::CommonProbeFormat(myBuffer, nullptr, TCollection_AsciiString());
   }
-  else
-  {
-    const Handle(OSD_FileSystem)& aFileSystem = OSD_FileSystem::DefaultFileSystem();
-    std::shared_ptr<std::istream> aFileIn = aFileSystem->OpenIStream (myImagePath, std::ios::in | std::ios::binary);
-    if (aFileIn.get() == NULL)
-    {
-      Message::SendFail (TCollection_AsciiString ("Error: Unable to open file '") + myImagePath + "'");
-      return false;
-    }
-    if (myOffset >= 0)
-    {
-      aFileIn->seekg ((std::streamoff )myOffset, std::ios_base::beg);
-      if (!aFileIn->good())
-      {
-        Message::SendFail (TCollection_AsciiString ("Error: Image is defined with invalid file offset '") + myImagePath + "'");
-        return false;
-      }
-    }
 
-    if (!aFileIn->read (aBuffer, THE_PROBE_SIZE))
+  static const Standard_Size THE_PROBE_SIZE = 20;
+  char aBuffer[THE_PROBE_SIZE] = {};
+
+  const Handle(OSD_FileSystem)& aFileSystem = OSD_FileSystem::DefaultFileSystem();
+  std::shared_ptr<std::istream> aFileIn = aFileSystem->OpenIStream (myImagePath, std::ios::in | std::ios::binary);
+  if (aFileIn.get() == NULL)
+  {
+    Message::SendFail (TCollection_AsciiString ("Error: Unable to open file '") + myImagePath + "'");
+    return "";
+  }
+  if (myOffset >= 0)
+  {
+    aFileIn->seekg ((std::streamoff )myOffset, std::ios_base::beg);
+    if (!aFileIn->good())
     {
-      Message::SendFail (TCollection_AsciiString ("Error: unable to read image file '") + myImagePath + "'");
-      return false;
+      Message::SendFail (TCollection_AsciiString ("Error: Image is defined with invalid file offset '") + myImagePath + "'");
+      return "";
     }
   }
 
-  if (memcmp (aBuffer, "\x89" "PNG\r\n" "\x1A" "\n", 8) == 0)
+  if (!aFileIn->read (aBuffer, THE_PROBE_SIZE))
   {
-    return "png";
+    Message::SendFail (TCollection_AsciiString ("Error: unable to read image file '") + myImagePath + "'");
+    return "";
   }
-  else if (memcmp (aBuffer, "\xFF\xD8\xFF", 3) == 0)
-  {
-    return "jpg";
-  }
-  else if (memcmp (aBuffer, "GIF87a", 6) == 0
-        || memcmp (aBuffer, "GIF89a", 6) == 0)
-  {
-    return "gif";
-  }
-  else if (memcmp (aBuffer, "II\x2A\x00", 4) == 0
-        || memcmp (aBuffer, "MM\x00\x2A", 4) == 0)
-  {
-    return "tiff";
-  }
-  else if (memcmp (aBuffer, "BM", 2) == 0)
-  {
-    return "bmp";
-  }
-  else if (memcmp (aBuffer,     "RIFF", 4) == 0
-        && memcmp (aBuffer + 8, "WEBP", 4) == 0)
-  {
-    return "webp";
-  }
-  else if (memcmp (aBuffer, "DDS ", 4) == 0)
-  {
-    return "dds";
-  }
-  return "";
+
+  Handle(NCollection_Buffer) aBuffWrap = new NCollection_Buffer(nullptr, THE_PROBE_SIZE, (Standard_Byte* )aBuffer);
+  return Image_RWPixMap::CommonProbeFormat(aBuffWrap, nullptr, TCollection_AsciiString());
 }
 
 // ================================================================

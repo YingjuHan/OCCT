@@ -160,7 +160,8 @@ void Image_PixMap::SetFormat (Image_Format thePixelFormat)
 bool Image_PixMap::InitWrapper3D (Image_Format thePixelFormat,
                                   Standard_Byte* theDataPtr,
                                   const NCollection_Vec3<Standard_Size>& theSizeXYZ,
-                                  const Standard_Size theSizeRowBytes)
+                                  const Standard_Size theSizeRowBytes,
+                                  const Handle(NCollection_BaseAllocator)& theAlloc)
 {
   Clear();
   myImgFormat = thePixelFormat;
@@ -172,8 +173,7 @@ bool Image_PixMap::InitWrapper3D (Image_Format thePixelFormat,
     return false;
   }
 
-  Handle(NCollection_BaseAllocator) anEmptyAlloc;
-  myData.Init (anEmptyAlloc, Image_PixMap::SizePixelBytes (thePixelFormat),
+  myData.Init (theAlloc, Image_PixMap::SizePixelBytes (thePixelFormat),
                theSizeXYZ, theSizeRowBytes, theDataPtr);
   return true;
 }
@@ -281,7 +281,33 @@ bool Image_PixMap::InitCopy (const Image_PixMap& theCopy)
     }
   }
 
-  memcpy (myData.ChangeData(), theCopy.myData.Data(), theCopy.SizeBytes());
+  if (myImgFormat != theCopy.myImgFormat
+   || SizeX() != theCopy.SizeX()
+   || SizeY() != theCopy.SizeY()
+   || SizeZ() != theCopy.SizeZ())
+  {
+    // pixel format conversion is required
+    Clear();
+    return false;
+  }
+
+  if (SizeRowBytes() == theCopy.SizeRowBytes()
+   && TopDownInc() == theCopy.TopDownInc())
+  {
+    // copy with one call
+    memcpy(myData.ChangeData(), theCopy.myData.Data(), std::min(SizeBytes(), theCopy.SizeBytes()));
+    return true;
+  }
+
+  // copy row-by-row
+  for (Standard_Size aSlice = 0; aSlice < myData.SizeZ; ++aSlice)
+  {
+    const Standard_Size aRowSizeBytes = std::min(SizeRowBytes(), theCopy.SizeRowBytes());
+    for (Standard_Size aRow = 0; aRow < myData.SizeY; ++aRow)
+    {
+      memcpy(ChangeSliceRow(aSlice, aRow), theCopy.SliceRow(aSlice, aRow), aRowSizeBytes);
+    }
+  }
   return true;
 }
 

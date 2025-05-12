@@ -117,6 +117,9 @@ public: // high-level API
     return NCollection_Vec3<Standard_Size> (myData.SizeX, myData.SizeY, myData.SizeZ);
   }
 
+  //! Return data allocator.
+  const Handle(NCollection_BaseAllocator)& Allocator() const { return myData.Allocator(); }
+
   //! Return width / height.
   Standard_Real Ratio() const
   {
@@ -233,7 +236,8 @@ public:
   Standard_EXPORT virtual bool InitWrapper3D (Image_Format thePixelFormat,
                                               Standard_Byte* theDataPtr,
                                               const NCollection_Vec3<Standard_Size>& theSizeXYZ,
-                                              const Standard_Size theSizeRowBytes = 0);
+                                              const Standard_Size theSizeRowBytes = 0,
+                                              const Handle(NCollection_BaseAllocator)& theAlloc = Handle(NCollection_BaseAllocator)());
 
   //! Initialize 2D/3D image with required dimensions.
   //! Memory will be left uninitialized (performance trick).
