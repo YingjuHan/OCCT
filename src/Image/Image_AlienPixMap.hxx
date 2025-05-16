@@ -29,7 +29,9 @@
 //! - Emscripten SDK is handled by Image_RWEmscripten.
 //!   When available (WebAssembly target), the minimal set of image formats will be supported (for which Browser implements readers) including
 //!   BMP, PNG, JPEG.
-//! - When no 3rd-party image library is available, this class will be able to export images in PPM format only, with no import possible.
+//! - When no multi-format library is available (FreeImage, WIC), then per-format library will be used.
+//!   - PPM format is handled by Image_RWPPM.
+//!   - PNG format is handled by Image_RWPNG and available via libpng library (USE_LIBPNG=ON in CMake).
 class Image_AlienPixMap : public Image_PixMap
 {
   DEFINE_STANDARD_RTTIEXT(Image_AlienPixMap, Image_PixMap)

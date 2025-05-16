@@ -176,6 +176,10 @@ set (USE_FREEIMAGE_DESCR
 "Indicates whether FreeImage product should be used in OCCT visualization
 module for support of popular graphics image formats (PNG, BMP etc)")
 
+set (USE_LIBPNG_DESCR
+"Indicates whether libpng should be used in OCCT visualization
+module for support of PNG image format (when FreeImage is disabled)")
+
 set (USE_OPENVR_DESCR
 "Indicates whether OpenVR should be used in OCCT visualization module for VR support")
 

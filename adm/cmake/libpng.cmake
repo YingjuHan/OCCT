@@ -1,0 +1,16 @@
+# libpng
+
+include (FindPkgConfig)
+if (NOT PKG_CONFIG_FOUND)
+  message (FATAL_ERROR "pkg-config not found")
+endif()
+pkg_check_modules (LIBPNG libpng16 REQUIRED)
+if (NOT LIBPNG_FOUND)
+  message(FATAL_ERROR "libpng16 development libraries cannot be found")
+else()
+  add_library(libpng SHARED IMPORTED)
+  set_property(TARGET libpng APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+  set_target_properties(libpng PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${LIBPNG_INCLUDE_DIRS})
+  set_target_properties(libpng PROPERTIES IMPORTED_LOCATION "-ldl")
+  set_target_properties(libpng PROPERTIES IMPORTED_LINK_INTERFACE_LIBRARIES "${LIBPNG_LIBRARIES}")
+endif()

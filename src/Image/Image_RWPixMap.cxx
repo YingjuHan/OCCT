@@ -16,6 +16,7 @@
 #include <Image_RWEmscripten.hxx>
 #include <Image_RWFreeImage.hxx>
 #include <Image_RWPixMapSelector.hxx>
+#include <Image_RWPNG.hxx>
 #include <Image_RWPPM.hxx>
 #include <Image_RWWinCodec.hxx>
 #include <Message.hxx>
@@ -66,12 +67,24 @@ static Handle(Image_RWPixMapSelector) createDefaultSelector()
     aSystem->AddLibrary(aWasmImg, true);
   }
 #endif
-
-  if (aSystem->Libraries().IsEmpty())
+  if (!aSystem->Libraries().IsEmpty())
   {
-    aSystem->AddLibrary(new Image_RWPPM(), false);
+    // prefer multi-format image library
+    return aSystem;
   }
 
+  // use per-format libraries only when multi-format library is disabled
+  Handle(Image_RWPNG) aPngImg = new Image_RWPNG();
+  if (aPngImg->IsAvailable())
+  {
+    aSystem->AddLibrary(aPngImg, false);
+  }
+
+  Handle(Image_RWPPM) aPpmImg = new Image_RWPPM();
+  if (aPpmImg->IsAvailable())
+  {
+    aSystem->AddLibrary(aPpmImg, false);
+  }
   return aSystem;
 }
 
@@ -226,7 +239,12 @@ TCollection_AsciiString Image_RWPixMap::CommonProbeFormat(const Handle(NCollecti
   {
     return IMAGE_TYPE_DDS;
   }
-  else if (memcmp(aBuffer, "P6\n", 3) == 0)
+  else if (memcmp(aBuffer, "P1\n", 3) == 0
+        || memcmp(aBuffer, "P2\n", 3) == 0
+        || memcmp(aBuffer, "P3\n", 3) == 0
+        || memcmp(aBuffer, "P4\n", 3) == 0
+        || memcmp(aBuffer, "P5\n", 3) == 0
+        || memcmp(aBuffer, "P6\n", 3) == 0)
   {
     return IMAGE_TYPE_PPM;
   }

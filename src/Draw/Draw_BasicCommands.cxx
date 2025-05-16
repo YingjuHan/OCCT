@@ -375,6 +375,11 @@ static Standard_Integer dversion(Draw_Interpretor& di, Standard_Integer, const c
 #else
   di << "FreeImage disabled\n";
 #endif
+#ifdef HAVE_LIBPNG
+  di << "libpng enabled (HAVE_LIBPNG)\n";
+#else
+  di << "libpng disabled\n";
+#endif
 #ifdef HAVE_FFMPEG
   di << "FFmpeg enabled (HAVE_FFMPEG)\n";
 #else

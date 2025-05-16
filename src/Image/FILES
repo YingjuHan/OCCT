@@ -20,6 +20,8 @@ Image_RWPixMap.cxx
 Image_RWPixMap.hxx
 Image_RWPixMapSelector.cxx
 Image_RWPixMapSelector.hxx
+Image_RWPNG.cxx
+Image_RWPNG.hxx
 Image_RWPPM.cxx
 Image_RWPPM.hxx
 Image_RWWinCodec.cxx
