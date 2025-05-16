@@ -45,6 +45,20 @@ public:
                                      const TCollection_AsciiString& theFileName,
                                      const TCollection_AsciiString& theFormat) const override;
 
+private:
+
+  //! PPM format variations.
+  enum PPMFormat
+  {
+    PPMFormat_UNKNOWN = 0,
+    PPMFormat_P1_AsciiBitmap = 1, //!< ascii bitmap
+    PPMFormat_P2_AsciiGreymap,    //!< ascii greymap
+    PPMFormat_P3_AsciiPixmap,     //!< ascii pixmap
+    PPMFormat_P4_RawBitmap,       //!< raw bitmap
+    PPMFormat_P5_RawGreymap,      //!< raw greymap
+    PPMFormat_P6_RawPixmap,       //!< raw pixmap
+  };
+
 };
 
 #endif // Image_RWPPM_HeaderFile

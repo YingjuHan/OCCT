@@ -998,6 +998,10 @@ static Standard_Integer VDump (Draw_Interpretor& theDI,
       {
         aParams.BufferType = Graphic3d_BT_Depth;
       }
+      else if (aBufArg == "hdr")
+      {
+        aParams.BufferType = Graphic3d_BT_RGB_RayTraceHdrLeft;
+      }
       else
       {
         Message::SendFail() << "Error: unknown buffer '" << aBufArg << "'";

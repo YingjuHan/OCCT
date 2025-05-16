@@ -182,7 +182,8 @@ bool Image_RWWinCodec::SupportsReading(const TCollection_AsciiString& theName) c
       || theName == IMAGE_TYPE_PNG
       || theName == IMAGE_TYPE_JPG
       || theName == IMAGE_TYPE_TIFF
-      || theName == IMAGE_TYPE_GIF;
+      || theName == IMAGE_TYPE_GIF
+      || theName == IMAGE_TYPE_PPM;
 #else
   (void)theName;
   return false;
@@ -253,6 +254,13 @@ bool Image_RWWinCodec::Read(Image_PixMap& thePixmap,
                             const TCollection_AsciiString& theFileName) const
 {
   thePixmap.Clear();
+
+  const TCollection_AsciiString aFormat = ProbeFormat(theData, theStream, theFileName);
+  if (aFormat == IMAGE_TYPE_PPM)
+  {
+    Image_RWPPM aTool;
+    return aTool.Read(thePixmap, theData, theStream, theFileName);
+  }
 #ifdef HAVE_WINCODEC
   Image_ComPtr<IWICImagingFactory> aWicImgFactory;
   CoInitializeEx(nullptr, COINIT_MULTITHREADED);

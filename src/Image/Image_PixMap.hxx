@@ -63,6 +63,10 @@ public:
   //! Return string representation of compressed pixel format.
   Standard_EXPORT static Standard_CString ImageFormatToString (Image_CompressedFormat theFormat);
 
+  //! Find pixel format from string representation.
+  Standard_EXPORT static bool ImageFormatFromString(Standard_CString theName,
+                                                    Image_Format& theFormat);
+
   //! Convert raw pixel value into Quantity_ColorRGBA. This function is relatively slow.
   //! @param[in] theRawValue pointer to pixel definition
   //! @param[in] theFormat pixel format
@@ -226,6 +230,13 @@ public: // high-level API
 
   //! Method correctly deallocate internal buffer.
   Standard_EXPORT virtual void Clear();
+
+  //! Copy single row from another pixmap. Images should have equal widths or exception will be thrown.
+  //! The method will perform necessary pixel format conversion between images.
+  //! @param[in] theRowTo   row index within this (destination) image
+  //! @param[in] theOther   another image to copy data from
+  //! @param[in] theRowFrom row index within @p theOther image to copy
+  Standard_EXPORT void FillRowFrom(const Standard_Size theRowTo, const Image_PixMap& theOther, const Standard_Size theRowFrom);
 
 public:
 

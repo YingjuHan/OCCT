@@ -105,6 +105,25 @@ Standard_CString Image_PixMap::ImageFormatToString (Image_CompressedFormat theFo
 }
 
 // =======================================================================
+// function : ImageFormatFromString
+// purpose  :
+// =======================================================================
+bool Image_PixMap::ImageFormatFromString(Standard_CString theName,
+                                         Image_Format& theFormat)
+{
+  const TCollection_AsciiString aName(theName);
+  for (int anIter = 0; anIter < Image_Format_NB; ++anIter)
+  {
+    if (TCollection_AsciiString::IsSameString(aName, Image_Table_ImageFormats[anIter].Name, false))
+    {
+      theFormat = (Image_Format)anIter;
+      return true;
+    }
+  }
+  return false;
+}
+
+// =======================================================================
 // function : Image_PixMap
 // purpose  :
 // =======================================================================
@@ -309,6 +328,74 @@ bool Image_PixMap::InitCopy (const Image_PixMap& theCopy)
     }
   }
   return true;
+}
+
+// =======================================================================
+// function : FillRowFrom
+// purpose  :
+// =======================================================================
+void Image_PixMap::FillRowFrom(const Standard_Size theRowTo, const Image_PixMap& theOther, const Standard_Size theRowFrom)
+{
+  const Standard_Size aWidth = SizeX();
+  if (theOther.SizeX() != SizeX() || theRowFrom >= theOther.SizeY() || theRowTo >= SizeY())
+  {
+    throw Standard_OutOfRange("Image_PixMap::FillRowFrom(), wrong indices");
+  }
+
+  if (theOther.Format() == myImgFormat)
+  {
+    // fast raw copy
+    const Standard_Size aRowSizeBytes = std::min(SizeRowBytes(), theOther.SizeRowBytes());
+    memcpy(ChangeRow(theRowTo), theOther.Row(theRowFrom), aRowSizeBytes);
+    return;
+  }
+  else if ((theOther.Format() == Image_Format_BGR && myImgFormat == Image_Format_RGB)
+        || (theOther.Format() == Image_Format_RGB && myImgFormat == Image_Format_BGR))
+  {
+    // swap RGB/BGR components
+    for (Standard_Size aCol = 0; aCol < aWidth; ++aCol)
+    {
+      const NCollection_Vec3<Standard_Byte>& aBgr = theOther.Value<NCollection_Vec3<Standard_Byte>>(theRowFrom, aCol);
+      ChangeValue<NCollection_Vec3<Standard_Byte>>(0, aCol) = NCollection_Vec3<Standard_Byte>(aBgr.b(), aBgr.g(), aBgr.r());
+    }
+  }
+  else if ((theOther.Format() == Image_Format_BGRA && myImgFormat == Image_Format_RGBA)
+        || (theOther.Format() == Image_Format_RGBA && myImgFormat == Image_Format_BGRA)
+        || (theOther.Format() == Image_Format_BGR32 && myImgFormat == Image_Format_RGB32)
+        || (theOther.Format() == Image_Format_RGB32 && myImgFormat == Image_Format_BGR32))
+  {
+    // swap RGBA/BGRA components
+    for (Standard_Size aCol = 0; aCol < aWidth; ++aCol)
+    {
+      const NCollection_Vec4<Standard_Byte>& aBgra = theOther.Value<NCollection_Vec4<Standard_Byte>>(theRowFrom, aCol);
+      ChangeValue<NCollection_Vec4<Standard_Byte>>(0, aCol) = NCollection_Vec4<Standard_Byte>(aBgra.b(), aBgra.g(), aBgra.r(), aBgra.a());
+    }
+  }
+  else if ((theOther.Format() == Image_Format_RGB32 && myImgFormat == Image_Format_RGB)
+        || (theOther.Format() == Image_Format_RGBA && myImgFormat == Image_Format_RGB)
+        || (theOther.Format() == Image_Format_BGR32 && myImgFormat == Image_Format_BGR)
+        || (theOther.Format() == Image_Format_BGRA && myImgFormat == Image_Format_BGR))
+  {
+    // skip extra component
+    for (Standard_Size aCol = 0; aCol < aWidth; ++aCol)
+    {
+      const NCollection_Vec3<Standard_Byte>& anRgb = theOther.Value<NCollection_Vec3<Standard_Byte>>(theRowFrom, aCol);
+      ChangeValue<NCollection_Vec3<Standard_Byte>>(0, aCol) = anRgb;
+    }
+  }
+  else
+  {
+    // slowest, but universal (implemented for all supported pixel formats)
+    const bool toLinearize = true;
+    for (Standard_Size aCol = 0; aCol < aWidth; ++aCol)
+    {
+      const Standard_Byte*     aRawPixelIn = theOther.RawValueXY(aCol, theRowFrom);
+      const Quantity_ColorRGBA aColorIn   = ColorFromRawPixel(aRawPixelIn, theOther.Format(), toLinearize);
+
+      Standard_Byte* aRawPixelOut = ChangeRawValueXY(aCol, theRowTo);
+      ColorToRawPixel(aRawPixelOut, myImgFormat, aColorIn, toLinearize);
+    }
+  }
 }
 
 // =======================================================================

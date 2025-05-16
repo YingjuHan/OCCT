@@ -59,6 +59,9 @@
 #include <Image_AlienPixMap.hxx>
 #include <Image_Diff.hxx>
 #include <Image_VideoRecorder.hxx>
+#include <Image_RWFreeImage.hxx>
+#include <Image_RWWinCodec.hxx>
+#include <Image_RWPPM.hxx>
 #include <Message.hxx>
 #include <Message_ProgressScope.hxx>
 #include <NCollection_DataMap.hxx>
@@ -6261,6 +6264,153 @@ static int VDiffImage (Draw_Interpretor& theDI, Standard_Integer theArgNb, const
   }
   ViewerTest::CurrentView()->SetProj (V3d_Zpos);
   ViewerTest::CurrentView()->FitAll();
+  return 0;
+}
+
+//! Parse image library name.
+static bool parseImgLibName(Handle(Image_RWPixMap)& theLib,
+                            const char* theName)
+{
+  TCollection_AsciiString aName(theName);
+  aName.LowerCase();
+  if (aName == "default")
+  {
+    theLib = Image_RWPixMap::DefaultSelector();
+  }
+  else if (aName == "freeimage")
+  {
+    theLib = new Image_RWFreeImage();
+  }
+  else if (aName == "wincodec" || aName == "windowscodecs")
+  {
+    theLib = new Image_RWWinCodec();
+  }
+  else if (aName == "ppm")
+  {
+    theLib = new Image_RWPPM();
+  }
+  else
+  {
+    return false;
+  }
+  return true;
+}
+
+//==============================================================================
+//function : VTestImage
+//purpose  :
+//==============================================================================
+static int VTestImage(Draw_Interpretor& theDI, Standard_Integer theArgNb, const char** theArgVec)
+{
+  Handle(Image_RWPixMap) anImgLibIn = Image_RWPixMap::DefaultSelector();
+  Handle(Image_RWPixMap) anImgLibOut = Image_RWPixMap::DefaultSelector();
+
+  TCollection_AsciiString anImgPathIn;
+  TCollection_AsciiString anImgPathOut;
+
+  Image_Format aFormat = Image_Format_UNKNOWN;
+  Graphic3d_Vec2i aDims;
+  for (Standard_Integer anArgIter = 1; anArgIter < theArgNb; ++anArgIter)
+  {
+    TCollection_AsciiString anArg(theArgVec[anArgIter]);
+    anArg.LowerCase();
+    if (anArg == "-imglib"
+     && anArgIter + 1 < theArgNb
+     && parseImgLibName(anImgLibIn, theArgVec[anArgIter + 1]))
+    {
+      ++anArgIter;
+      anImgLibOut = anImgLibIn;
+    }
+    else if ((anArg == "-imglibload" || anArg == "-imglibread" || anArg == "-imglibin")
+          && anArgIter + 1 < theArgNb
+          && parseImgLibName(anImgLibIn, theArgVec[anArgIter + 1]))
+    {
+      ++anArgIter;
+    }
+    else if ((anArg == "-imglibsave" || anArg == "-imglibwrite" || anArg == "-imglibout")
+          && anArgIter + 1 < theArgNb
+          && parseImgLibName(anImgLibOut, theArgVec[anArgIter + 1]))
+    {
+      ++anArgIter;
+    }
+    else if (anArg == "-format"
+          && anArgIter + 1 < theArgNb
+          && Image_PixMap::ImageFormatFromString(theArgVec[anArgIter + 1], aFormat))
+    {
+      ++anArgIter;
+    }
+    else if (anImgPathIn.IsEmpty()
+          && anArg == "-blank"
+          && anArgIter + 2 < theArgNb
+          && Draw::ParseInteger(theArgVec[anArgIter + 1], aDims.x())
+          && Draw::ParseInteger(theArgVec[anArgIter + 2], aDims.y()))
+    {
+      anArgIter += 2;
+    }
+    else if (anImgPathIn.IsEmpty() && aDims.x() == 0)
+    {
+      anImgPathIn = theArgVec[anArgIter];
+    }
+    else if (anImgPathOut.IsEmpty())
+    {
+      anImgPathOut = theArgVec[anArgIter];
+    }
+    else
+    {
+      Message::SendFail() << "Syntax error at '" << theArgVec[anArgIter] << "'";
+      return 1;
+    }
+  }
+
+  Handle(Image_PixMap) aPixmap = new Image_PixMap();
+  if (!anImgPathIn.IsEmpty())
+  {
+    if (!anImgLibIn->Read(*aPixmap, Handle(NCollection_Buffer)(), nullptr, anImgPathIn))
+    {
+      theDI << "Error: unable to load image '" << anImgPathIn << "'";
+      return 1;
+    }
+  }
+  if (aDims.x() != 0)
+  {
+    Image_Format anInitFormat = aFormat != Image_Format_UNKNOWN ? aFormat : Image_Format_RGB;
+    if (!aPixmap->InitZero(anInitFormat, aDims.x(), aDims.y()))
+    {
+      theDI << "Error: unable to init image " << aDims.x() << "x" << aDims.y();
+      return 1;
+    }
+  }
+  else if (aFormat != Image_Format_UNKNOWN
+        && aFormat != aPixmap->Format())
+  {
+    Handle(Image_PixMap) aCopy = aPixmap;
+    aPixmap = new Image_PixMap();
+    if (!aPixmap->InitZero(aFormat, aCopy->SizeX(), aCopy->SizeY()))
+    {
+      theDI << "Error: unable to init image " << int(aCopy->SizeX()) << "x" << int(aCopy->SizeY());
+      return 1;
+    }
+
+    for (Standard_Size aRow = 0; aRow < aPixmap->SizeY(); ++aRow)
+    {
+      aPixmap->FillRowFrom(aRow, *aCopy, aRow);
+    }
+  }
+
+  if (aPixmap->IsEmpty())
+  {
+    theDI << "Syntax error: not enough arguments";
+    return 1;
+  }
+
+  if (!anImgPathOut.IsEmpty())
+  {
+    if (!anImgLibOut->Write(*aPixmap, anImgPathOut, ""))
+    {
+      theDI << "Error: unable to write image '" << anImgPathOut << "'";
+      return 1;
+    }
+  }
   return 0;
 }
 
@@ -14283,6 +14433,20 @@ Compare two images by content and generate difference image.
 When -exitOnClose is specified, closing the view will exit application.
 When -closeOnEscape is specified, view will be closed on pressing Escape.
 )" /* [diffimage] */);
+
+  addCmd("testimage", VTestImage, /* [testimage] */ R"(
+testimage imageInput [imageOutput]
+          [-imglib|-imglibLoad|-imglibSave {default|freeImage|winCodec|ppm|libpng}]=default
+          [-format {RGB|RGBA|Gray|RGBF|GrayF}]
+          [-blank width height]
+Read image from file and save it into another file.
+Command for testing reading/writing image libraries.
+ -imglib     image library for reading/writing image file
+ -imglibLoad image library for reading input   image file
+ -imglibSave image library for writing output  image file
+ -format     image pixel format
+ -blank      create blank image instead of reading input file
+)" /* [testimage] */);
 
   addCmd ("vselect", VSelect, /* [vselect] */ R"(
 vselect x1 y1 [x2 y2 [x3 y3 ... xn yn]] [-allowoverlap 0|1]

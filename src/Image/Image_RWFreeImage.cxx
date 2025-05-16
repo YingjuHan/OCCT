@@ -605,6 +605,53 @@ bool Image_RWFreeImage::Write(Image_PixMap& thePixmap,
   }
 
 #ifdef HAVE_FREEIMAGE
+  // swap rgba/bgra if needed
+  Image_Format aNewFormat = thePixmap.Format();
+  if (Image_PixMap::IsBigEndianHost())
+  {
+    if (thePixmap.Format() == Image_Format_BGR)
+    {
+      aNewFormat = Image_Format_RGB;
+    }
+    else if (thePixmap.Format() == Image_Format_BGRA)
+    {
+      aNewFormat = Image_Format_RGBA;
+    }
+    else if (thePixmap.Format() == Image_Format_BGR32)
+    {
+      aNewFormat = Image_Format_RGB32;
+    }
+  }
+  else
+  {
+    if (thePixmap.Format() == Image_Format_RGB)
+    {
+      aNewFormat = Image_Format_BGR;
+    }
+    else if (thePixmap.Format() == Image_Format_RGBA)
+    {
+      aNewFormat = Image_Format_BGRA;
+    }
+    else if (thePixmap.Format() == Image_Format_RGB32)
+    {
+      aNewFormat = Image_Format_BGR32;
+    }
+  }
+
+  if (thePixmap.Format() == Image_Format_BGRF)
+  {
+    aNewFormat = Image_Format_RGBF;
+  }
+  else if (thePixmap.Format() == Image_Format_BGRAF)
+  {
+    aNewFormat = Image_Format_RGBAF;
+  }
+  if (aNewFormat != thePixmap.Format())
+  {
+    Image_PixMap::SwapRgbaBgra(thePixmap);
+    thePixmap.SetFormat(aNewFormat);
+  }
+
   FREE_IMAGE_TYPE aFormatFI = convertToFreeFormat(thePixmap.Format());
   int aBitsPerPixel = (int)Image_PixMap::SizePixelBytes(thePixmap.Format()) * 8;
   if (aFormatFI == FIT_UNKNOWN)
