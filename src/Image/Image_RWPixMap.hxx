@@ -115,7 +115,7 @@ public:
                     const TCollection_AsciiString& theFileName) const = 0;
 
   //! Return default rows order used by underlying image library.
-  virtual bool IsTopDownDefault() const { return true; }
+  virtual bool IsTopDownDefault() const { return false; }
 
   //! Initialize image plane with required dimensions.
   //! @param[in,out] thePixmap       image to initialize

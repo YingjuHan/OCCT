@@ -240,7 +240,6 @@ bool Image_RWWinCodec::InitTrash(Image_PixMap& thePixmap,
   {
     return false;
   }
-  thePixmap.SetTopDown(true);
   return true;
 }
 
@@ -366,12 +365,31 @@ bool Image_RWWinCodec::Read(Image_PixMap& thePixmap,
   {
     aWicSrc = aWicConvertedFrame.get();
   }
-  if (aWicSrc->CopyPixels(nullptr, (UINT )thePixmap.SizeRowBytes(), (UINT )thePixmap.SizeBytes(), thePixmap.ChangeData()) != S_OK)
+
+  if (thePixmap.IsTopDown())
   {
-    Message::SendFail() << "Error: cannot copy pixels from WIC Image";
-    return false;
+    if (aWicSrc->CopyPixels(nullptr, (UINT)thePixmap.SizeRowBytes(), (UINT)thePixmap.SizeBytes(), thePixmap.ChangeData()) != S_OK)
+    {
+      Message::SendFail() << "Error: cannot copy pixels from WIC Image";
+      return false;
+    }
   }
-  thePixmap.SetTopDown(true);
+  else
+  {
+    for (Standard_Size aRow = 0; aRow < thePixmap.SizeY(); ++aRow)
+    {
+      WICRect aRect = {};
+      aRect.X = 0;
+      aRect.Y = (INT)aRow;
+      aRect.Width = (INT)thePixmap.SizeX();
+      aRect.Height = 1;
+      if (aWicSrc->CopyPixels(&aRect, (UINT)thePixmap.SizeRowBytes(), (UINT)thePixmap.SizeRowBytes(), (BYTE*)thePixmap.Row(aRow)) != S_OK)
+      {
+        Message::SendFail() << "Error: cannot write pixels to WIC Frame";
+        return false;
+      }
+    }
+  }
   return true;
 #else
   (void)theData;

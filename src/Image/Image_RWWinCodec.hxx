@@ -41,9 +41,6 @@ public:
                                     std::istream* theStream,
                                     const TCollection_AsciiString& theFileName) const override;
 
-  //! Return default rows order used by underlying image library.
-  virtual bool IsTopDownDefault() const override { return true; }
-
   //! Initialize image plane with required dimensions.
   Standard_EXPORT virtual bool InitTrash(Image_PixMap& thePixmap,
                                          Image_Format thePixelFormat,
