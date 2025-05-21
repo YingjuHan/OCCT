@@ -643,17 +643,17 @@ void Image_PixMap::ColorToRawPixel (Standard_Byte* theRawValue,
       Image_ColorRGBA& aPixel = *reinterpret_cast<Image_ColorRGBA*> (theRawValue);
       if (theToDeLinearize)
       {
-        aPixel.r() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f);
-        aPixel.g() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f);
-        aPixel.b() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f);
+        aPixel.r() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f + 0.5f);
+        aPixel.g() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f + 0.5f);
+        aPixel.b() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f + 0.5f);
       }
       else
       {
-        aPixel.r() = Standard_Byte(aColor.r() * 255.0f);
-        aPixel.g() = Standard_Byte(aColor.g() * 255.0f);
-        aPixel.b() = Standard_Byte(aColor.b() * 255.0f);
+        aPixel.r() = Standard_Byte(aColor.r() * 255.0f + 0.5f);
+        aPixel.g() = Standard_Byte(aColor.g() * 255.0f + 0.5f);
+        aPixel.b() = Standard_Byte(aColor.b() * 255.0f + 0.5f);
       }
-      aPixel.a() = Standard_Byte(aColor.a() * 255.0f);
+      aPixel.a() = Standard_Byte(aColor.a() * 255.0f + 0.5f);
       return;
     }
     case Image_Format_BGRA:
@@ -661,17 +661,17 @@ void Image_PixMap::ColorToRawPixel (Standard_Byte* theRawValue,
       Image_ColorBGRA& aPixel = *reinterpret_cast<Image_ColorBGRA*> (theRawValue);
       if (theToDeLinearize)
       {
-        aPixel.r() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f);
-        aPixel.g() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f);
-        aPixel.b() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f);
+        aPixel.r() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f + 0.5f);
+        aPixel.g() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f + 0.5f);
+        aPixel.b() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f + 0.5f);
       }
       else
       {
-        aPixel.r() = Standard_Byte(aColor.r() * 255.0f);
-        aPixel.g() = Standard_Byte(aColor.g() * 255.0f);
-        aPixel.b() = Standard_Byte(aColor.b() * 255.0f);
+        aPixel.r() = Standard_Byte(aColor.r() * 255.0f + 0.5f);
+        aPixel.g() = Standard_Byte(aColor.g() * 255.0f + 0.5f);
+        aPixel.b() = Standard_Byte(aColor.b() * 255.0f + 0.5f);
       }
-      aPixel.a() = Standard_Byte(aColor.a() * 255.0f);
+      aPixel.a() = Standard_Byte(aColor.a() * 255.0f + 0.5f);
       return;
     }
     case Image_Format_RGB32:
@@ -679,15 +679,15 @@ void Image_PixMap::ColorToRawPixel (Standard_Byte* theRawValue,
       Image_ColorRGB32& aPixel = *reinterpret_cast<Image_ColorRGB32*> (theRawValue);
       if (theToDeLinearize)
       {
-        aPixel.r()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f);
-        aPixel.g()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f);
-        aPixel.b()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f);
+        aPixel.r()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f + 0.5f);
+        aPixel.g()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f + 0.5f);
+        aPixel.b()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f + 0.5f);
       }
       else
       {
-        aPixel.r()  = Standard_Byte(aColor.r() * 255.0f);
-        aPixel.g()  = Standard_Byte(aColor.g() * 255.0f);
-        aPixel.b()  = Standard_Byte(aColor.b() * 255.0f);
+        aPixel.r()  = Standard_Byte(aColor.r() * 255.0f + 0.5f);
+        aPixel.g()  = Standard_Byte(aColor.g() * 255.0f + 0.5f);
+        aPixel.b()  = Standard_Byte(aColor.b() * 255.0f + 0.5f);
       }
       aPixel.a_() = 255;
       return;
@@ -697,15 +697,15 @@ void Image_PixMap::ColorToRawPixel (Standard_Byte* theRawValue,
       Image_ColorBGR32& aPixel = *reinterpret_cast<Image_ColorBGR32*> (theRawValue);
       if (theToDeLinearize)
       {
-        aPixel.r()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f);
-        aPixel.g()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f);
-        aPixel.b()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f);
+        aPixel.r()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f + 0.5f);
+        aPixel.g()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f + 0.5f);
+        aPixel.b()  = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f + 0.5f);
       }
       else
       {
-        aPixel.r()  = Standard_Byte(aColor.r() * 255.0f);
-        aPixel.g()  = Standard_Byte(aColor.g() * 255.0f);
-        aPixel.b()  = Standard_Byte(aColor.b() * 255.0f);
+        aPixel.r()  = Standard_Byte(aColor.r() * 255.0f + 0.5f);
+        aPixel.g()  = Standard_Byte(aColor.g() * 255.0f + 0.5f);
+        aPixel.b()  = Standard_Byte(aColor.b() * 255.0f + 0.5f);
       }
       aPixel.a_() = 255;
       return;
@@ -715,15 +715,15 @@ void Image_PixMap::ColorToRawPixel (Standard_Byte* theRawValue,
       Image_ColorRGB& aPixel = *reinterpret_cast<Image_ColorRGB*> (theRawValue);
       if (theToDeLinearize)
       {
-        aPixel.r() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f);
-        aPixel.g() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f);
-        aPixel.b() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f);
+        aPixel.r() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f + 0.5f);
+        aPixel.g() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f + 0.5f);
+        aPixel.b() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f + 0.5f);
       }
       else
       {
-        aPixel.r() = Standard_Byte(aColor.r() * 255.0f);
-        aPixel.g() = Standard_Byte(aColor.g() * 255.0f);
-        aPixel.b() = Standard_Byte(aColor.b() * 255.0f);
+        aPixel.r() = Standard_Byte(aColor.r() * 255.0f + 0.5f);
+        aPixel.g() = Standard_Byte(aColor.g() * 255.0f + 0.5f);
+        aPixel.b() = Standard_Byte(aColor.b() * 255.0f + 0.5f);
       }
       return;
     }
@@ -732,31 +732,31 @@ void Image_PixMap::ColorToRawPixel (Standard_Byte* theRawValue,
       Image_ColorBGR& aPixel = *reinterpret_cast<Image_ColorBGR*> (theRawValue);
       if (theToDeLinearize)
       {
-        aPixel.r() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f);
-        aPixel.g() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f);
-        aPixel.b() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f);
+        aPixel.r() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.r()) * 255.0f + 0.5f);
+        aPixel.g() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.g()) * 255.0f + 0.5f);
+        aPixel.b() = Standard_Byte(Quantity_Color::Convert_LinearRGB_To_sRGB (aColor.b()) * 255.0f + 0.5f);
       }
       else
       {
-        aPixel.r() = Standard_Byte(aColor.r() * 255.0f);
-        aPixel.g() = Standard_Byte(aColor.g() * 255.0f);
-        aPixel.b() = Standard_Byte(aColor.b() * 255.0f);
+        aPixel.r() = Standard_Byte(aColor.r() * 255.0f + 0.5f);
+        aPixel.g() = Standard_Byte(aColor.g() * 255.0f + 0.5f);
+        aPixel.b() = Standard_Byte(aColor.b() * 255.0f + 0.5f);
       }
       return;
     }
     case Image_Format_Gray:
     {
-      *reinterpret_cast<Standard_Byte*>(theRawValue) = Standard_Byte(aColor.r() * 255.0f);
+      *reinterpret_cast<Standard_Byte*>(theRawValue) = Standard_Byte(aColor.r() * 255.0f + 0.5f);
       return;
     }
     case Image_Format_Alpha:
     {
-      *reinterpret_cast<Standard_Byte*>(theRawValue) = Standard_Byte(aColor.a() * 255.0f);
+      *reinterpret_cast<Standard_Byte*>(theRawValue) = Standard_Byte(aColor.a() * 255.0f + 0.5f);
       return;
     }
     case Image_Format_Gray16:
     {
-      *reinterpret_cast<uint16_t*>(theRawValue) = uint16_t(aColor.r() * 65535.0f);
+      *reinterpret_cast<uint16_t*>(theRawValue) = uint16_t(aColor.r() * 65535.0f + 0.5f);
       return;
     }
     case Image_Format_UNKNOWN:
