@@ -344,7 +344,8 @@ bool Image_RWWinCodec::Read(Image_PixMap& thePixmap,
   Image_Format aPixelFormat = convertFromWicFormat(aWicPixelFormat);
   if (aPixelFormat == Image_Format_UNKNOWN)
   {
-    aPixelFormat = Image_Format_RGB;
+    // convert to BGR (not RGB - for consistency with BMP, PNG and JPEG decoders)
+    aPixelFormat = Image_Format_BGR;
     if (aWicImgFactory->CreateFormatConverter(&aWicConvertedFrame.ChangePtr()) != S_OK
      || aWicConvertedFrame->Initialize(aWicFrameDecode.get(), convertToWicFormat(aPixelFormat), WICBitmapDitherTypeNone, nullptr, 0.0f, WICBitmapPaletteTypeCustom) != S_OK)
     {
