@@ -324,6 +324,7 @@ int Graphic3d_ShaderManager::defaultGlslVersion (const Handle(Graphic3d_ShaderPr
           }
         }
         if ((theBits & Graphic3d_ShaderFlags_StippleLine) != 0
+         || (theBits & Graphic3d_ShaderFlags_OitDepthPeeling) != 0
          || theProgram->IsPBR())
         {
           if (IsGapiGreaterEqual (3, 0))
@@ -449,6 +450,10 @@ void Graphic3d_ShaderManager::defaultOitGlslVersion (const Handle(Graphic3d_Shad
         if (IsGapiGreaterEqual (3, 2))
         {
           theProgram->SetHeader ("#version 150");
+        }
+        else if (IsGapiGreaterEqual (3, 0))
+        {
+          theProgram->SetHeader ("#version 130");
         }
       }
       break;

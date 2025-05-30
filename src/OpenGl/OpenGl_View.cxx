@@ -2825,10 +2825,15 @@ bool OpenGl_View::blitBuffers (OpenGl_FrameBuffer*    theReadFbo,
   bool toDrawTexture = true;
   if (aCtx->arbFBOBlit != NULL)
   {
+    const int aNbDrawSamples = theDrawFbo != nullptr ? theDrawFbo->NbSamples() : 0;
     if (!toApplyGamma
      &&  theReadFbo->NbSamples() != 0)
     {
-      toDrawTexture = false;
+      // OpenGL ES 3.2 doesn't support blitting into MSAA buffer
+      if (aNbDrawSamples == 0 || aCtx->GraphicsLibrary() != Aspect_GraphicsLibrary_OpenGLES)
+      {
+        toDrawTexture = false;
+      }
     }
     if (theReadFbo->IsColorRenderBuffer())
     {
