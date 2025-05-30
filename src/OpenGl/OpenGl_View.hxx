@@ -428,8 +428,11 @@ private:
   void drawStereoPair (OpenGl_FrameBuffer* theDrawFbo);
 
   //! Check and update OIT compatibility with current OpenGL context's state.
-  bool checkOitCompatibility (const Handle(OpenGl_Context)& theGlContext,
-                              const Standard_Boolean theMSAA);
+  //! @param[in] theCtx active OpenGL context
+  //! @param[in, out] theNbSamples number of MSAA samples to configure
+  //! @return TRUE if OIT could be used
+  bool checkOitCompatibility (const Handle(OpenGl_Context)& theCtx,
+                              Standard_Integer& theNbSamples);
 
 protected:
 
@@ -490,6 +493,7 @@ protected: //! @name Rendering properties
   Standard_Boolean           myToFlipOutput;          //!< Flag to draw result image upside-down
   unsigned int               myFrameCounter;          //!< redraw counter, for debugging
   Standard_Boolean           myHasFboBlit;            //!< disable FBOs on failure
+  Standard_Integer           myOitMsaaErrored;        //!< number of MSAA samples for which error message displayed last time
   Standard_Boolean           myToDisableOIT;          //!< disable OIT on failure
   Standard_Boolean           myToDisableOITMSAA;      //!< disable OIT with MSAA on failure
   Standard_Boolean           myToDisableMSAA;         //!< disable MSAA after failure

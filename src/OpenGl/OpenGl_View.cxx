@@ -119,6 +119,7 @@ OpenGl_View::OpenGl_View (const Handle(Graphic3d_StructureManager)& theMgr,
   //
   myFrameCounter         (0),
   myHasFboBlit           (Standard_True),
+  myOitMsaaErrored       (0),
   myToDisableOIT         (Standard_False),
   myToDisableOITMSAA     (Standard_False),
   myToDisableMSAA        (Standard_False),
@@ -1194,9 +1195,7 @@ bool OpenGl_View::prepareFrameBuffers (Graphic3d_Camera::Projection& theProj)
   // and blit it into non-MSAA immediate FBO.
   const bool hasTextureMsaa = aCtx->HasTextureMultisampling();
 
-  bool toUseOit = myRenderParams.TransparencyMethod != Graphic3d_RTM_BLEND_UNORDERED
-               && !myIsSubviewComposer
-               && checkOitCompatibility (aCtx, aNbSamples > 0);
+  bool toUseOit = !myIsSubviewComposer && checkOitCompatibility (aCtx, aNbSamples);
 
   const bool toInitImmediateFbo = myTransientDrawToFront && !myIsSubviewComposer
                                && (!aCtx->caps->useSystemBuffer || (toUseOit && HasImmediateStructures()));
@@ -3263,44 +3262,57 @@ bool OpenGl_View::copyBackToFront()
 // function : checkOitCompatibility
 // purpose  :
 // =======================================================================
-Standard_Boolean OpenGl_View::checkOitCompatibility (const Handle(OpenGl_Context)& theGlContext,
-                                                     const Standard_Boolean theMSAA)
+Standard_Boolean OpenGl_View::checkOitCompatibility (const Handle(OpenGl_Context)& theCtx,
+                                                     Standard_Integer& theNbSamples)
 {
-  // determine if OIT is supported by current OpenGl context
-  Standard_Boolean& aToDisableOIT = theMSAA ? myToDisableMSAA : myToDisableOIT;
-  if (aToDisableOIT)
+  if (myRenderParams.TransparencyMethod == Graphic3d_RTM_BLEND_UNORDERED
+   || myToDisableOIT)
   {
-    return Standard_False;
+    return false;
   }
 
-  TCollection_ExtendedString aCompatibilityMsg;
-  if (theGlContext->hasFloatBuffer     == OpenGl_FeatureNotAvailable
-   && theGlContext->hasHalfFloatBuffer == OpenGl_FeatureNotAvailable)
+  if (theCtx->hasFloatBuffer     == OpenGl_FeatureNotAvailable
+   && theCtx->hasHalfFloatBuffer == OpenGl_FeatureNotAvailable)
   {
-    aCompatibilityMsg += "OpenGL context does not support floating-point RGBA color buffer format.\n";
+    theCtx->PushMessage (GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR, 0, GL_DEBUG_SEVERITY_HIGH,
+                         "OpenGL context does not support floating-point RGBA color buffer format.\n"
+                         "Order-independent transparency will be unavailable.");
+    myToDisableOIT = true;
+    return false;
   }
-  if (theMSAA && theGlContext->hasSampleVariables == OpenGl_FeatureNotAvailable)
+  else if (theCtx->hasDrawBuffers == OpenGl_FeatureNotAvailable)
   {
-    aCompatibilityMsg += "Current version of GLSL does not support built-in sample variables.\n";
-  }
-  if (theGlContext->hasDrawBuffers == OpenGl_FeatureNotAvailable)
-  {
-    aCompatibilityMsg += "OpenGL context does not support multiple draw buffers.\n";
-  }
-  if (aCompatibilityMsg.IsEmpty())
-  {
-    return Standard_True;
+    theCtx->PushMessage (GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR, 0, GL_DEBUG_SEVERITY_HIGH,
+                         "OpenGL context does not support multiple draw buffers.\n"
+                         "Order-independent transparency will be unavailable.");
+    myToDisableOIT = true;
+    return false;
   }
 
-  aCompatibilityMsg += "  Blended order-independent transparency will not be available.\n";
-  theGlContext->PushMessage (GL_DEBUG_SOURCE_APPLICATION,
-                          GL_DEBUG_TYPE_ERROR,
-                          0,
-                          GL_DEBUG_SEVERITY_HIGH,
-                          aCompatibilityMsg);
-
-  aToDisableOIT = Standard_True;
-  return Standard_False;
+  if (theNbSamples > 0
+   && myRenderParams.TransparencyMethod == Graphic3d_RTM_DEPTH_PEELING_OIT)
+  {
+    if (myOitMsaaErrored != theNbSamples)
+    {
+      myOitMsaaErrored = theNbSamples; // display message when MSAA changes
+      theCtx->PushMessage (GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR, 0, GL_DEBUG_SEVERITY_HIGH,
+                           "MSAA is incompatible with Depth Peeling OIT and will be disabled.\n");
+    }
+    theNbSamples = 0;
+  }
+  else if (theNbSamples > 0
+        && theCtx->hasSampleVariables == OpenGl_FeatureNotAvailable)
+  {
+    if (myOitMsaaErrored != theNbSamples)
+    {
+      myOitMsaaErrored = theNbSamples; // display message when MSAA changes
+      theCtx->PushMessage (GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_ERROR, 0, GL_DEBUG_SEVERITY_HIGH,
+                           "MSAA is incompatible with Blended order-independent transparency and will be disabled\n"
+                           "(current version of GLSL does not support built-in sample variables).");
+    }
+    theNbSamples = 0;
+  }
+  return true;
 }
 
 // =======================================================================
