@@ -235,9 +235,9 @@ gp_Pnt Bnd_Box::CornerMax() const
   }
   if (IsOpenXmax()) aCornerMax.SetX (Bnd_Precision_Infinite);
   else              aCornerMax.SetX (Xmax + Gap);
-  if (IsOpenYmin()) aCornerMax.SetY (Bnd_Precision_Infinite);
+  if (IsOpenYmax()) aCornerMax.SetY (Bnd_Precision_Infinite);
   else              aCornerMax.SetY (Ymax + Gap);
-  if (IsOpenZmin()) aCornerMax.SetZ (Bnd_Precision_Infinite);
+  if (IsOpenZmax()) aCornerMax.SetZ (Bnd_Precision_Infinite);
   else              aCornerMax.SetZ (Zmax + Gap);
   return aCornerMax;
 }
