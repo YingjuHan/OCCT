@@ -1327,10 +1327,16 @@ void TCollection_AsciiString::UpperCase()
 //------------------------------------------------------------------------
 Standard_Integer TCollection_AsciiString::UsefullLength () const
 {
-  Standard_Integer i ;
-  for ( i = mylength -1 ; i >= 0 ; i--) 
-    if (IsGraphic(mystring[i])) break;
-  return i+1;
+  const Standard_Utf8Char* aPtr = mystring;
+  for (NCollection_UtfIterator<Standard_Utf8Char> anIter(mystring); *anIter !=0; ++anIter)
+  {
+    const Standard_Utf32Char aChar = *anIter;
+    if (aChar <= Standard_Utf32Char(0x7F) && !IsGraphic(Standard_Character(aChar)))
+      return Standard_Integer(aPtr - mystring);
+
+    aPtr = anIter.BufferHere();
+  }
+  return mylength;
 }
 
 // ----------------------------------------------------------------------------
