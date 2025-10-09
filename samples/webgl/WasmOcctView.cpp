@@ -44,7 +44,33 @@
 
 #include <iostream>
 
-#define THE_CANVAS_ID "canvas"
+#if defined(_LP64)
+EM_JS(char*, occJSNumberToPtr, (double thePtr), { return BigInt(thePtr); });
+#else
+EM_JS(char*, occJSNumberToPtr, (double thePtr), { return thePtr; });
+#endif
+
+//! Return DOM id of default WebGL canvas from Module.canvas.
+EM_JS(char*, occJSModuleCanvasId, (), {
+  const aCanvasId = Module.canvas.id;
+  const aNbBytes  = lengthBytesUTF8 (aCanvasId) + 1;
+  const aStrPtr   = Module._malloc (aNbBytes);
+  stringToUTF8 (aCanvasId, aStrPtr, aNbBytes);
+  return occJSNumberToPtr(aStrPtr);
+});
+
+//! Return DOM id of default WebGL canvas from Module.canvas.
+static TCollection_AsciiString getModuleCanvasId()
+{
+  char* aRawId = occJSModuleCanvasId();
+  TCollection_AsciiString anId (aRawId != NULL ? aRawId : "");
+  free (aRawId);
+
+  if (!anId.IsEmpty())
+    anId = TCollection_AsciiString("#") + anId;
+
+  return anId;
+}
 
 namespace
 {
@@ -179,7 +205,7 @@ void WasmOcctView::run()
 void WasmOcctView::initWindow()
 {
   myDevicePixelRatio = emscripten_get_device_pixel_ratio();
-  myCanvasId = THE_CANVAS_ID;
+  myCanvasId = getModuleCanvasId();
   const char* aTargetId = !myCanvasId.IsEmpty() ? myCanvasId.ToCString() : EMSCRIPTEN_EVENT_TARGET_WINDOW;
   const EM_BOOL toUseCapture = EM_TRUE;
   emscripten_set_resize_callback     (EMSCRIPTEN_EVENT_TARGET_WINDOW, this, toUseCapture, onResizeCallback);
@@ -315,7 +341,7 @@ bool WasmOcctView::initViewer()
     }
   }
 
-  Handle(Wasm_Window) aWindow = new Wasm_Window (THE_CANVAS_ID);
+  Handle(Wasm_Window) aWindow = new Wasm_Window (myCanvasId);
   aWindow->Size (myWinSizeOld.x(), myWinSizeOld.y());
 
   myTextStyle = new Prs3d_TextAspect();
