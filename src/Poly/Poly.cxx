@@ -106,6 +106,7 @@ void Poly::Write(const Handle(Poly_Triangulation)& T,
     OS << std::setw(8) << T->NbNodes() << " Nodes\n";
     OS << std::setw(8) << T->NbTriangles() << " Triangles\n";
     OS << ((T->HasUVNodes()) ? "with" : "without") << " UV nodes\n";
+    OS << ((T->HasNormals()) ? "with" : "without") << " normals\n";
   }
 
   // write the deflection
@@ -141,6 +142,20 @@ void Poly::Write(const Handle(Poly_Triangulation)& T,
       OS << aNode2d.X() << " ";
       if (!Compact) OS << std::setw(17);
       OS << aNode2d.Y() << "\n";
+    }
+  }
+
+  if (T->HasNormals() && !Compact)
+  {
+    OS << "\nNormals :\n";
+    gp_Vec3f aNorm;
+    for (i = 1; i <= nbNodes; i++)
+    {
+      T->Normal (i, aNorm);
+      OS << std::setw(10) << i << " : "
+         << std::setw(10) << aNorm.x()
+         << " " << std::setw(10) << aNorm.y()
+         << " " << std::setw(10) << aNorm.z() << "\n";
     }
   }
 
