@@ -208,6 +208,7 @@ OpenGl_Context::OpenGl_Context (const Handle(OpenGl_Caps)& theCaps)
   myMaxMsaaSamples(0),
   myMaxDrawBuffers (1),
   myMaxColorAttachments (1),
+  myMaxLineWidth (1),
   myGlVerMajor (0),
   myGlVerMinor (0),
   myIsInitialized (Standard_False),
@@ -1262,6 +1263,7 @@ void OpenGl_Context::init (const Standard_Boolean theIsCoreProfile)
   myMaxMsaaSamples = 0;
   myMaxDrawBuffers = 1;
   myMaxColorAttachments = 1;
+  myMaxLineWidth = 1;
   myDefaultVao = 0;
   OpenGl_GlFunctions::readGlVersion (myGlVerMajor, myGlVerMinor);
   mySupportedFormats->Clear();
@@ -1385,6 +1387,12 @@ void OpenGl_Context::init (const Standard_Boolean theIsCoreProfile)
       myDrawBuffers.Resize (0, myMaxDrawBuffers - 1, false);
     }
   }
+
+  // OpenGL Core Profile deprecated wide lines, but they are still supported by some vendors.
+  // GL_ALIASED_LINE_WIDTH_RANGE introduced by OpenGL 1.2+
+  GLint aLineRange[2] = {};
+  core11fwd->glGetIntegerv(IsGlGreaterEqual(1, 2) ? GL_ALIASED_LINE_WIDTH_RANGE : GL_SMOOTH_LINE_WIDTH_RANGE, aLineRange);
+  myMaxLineWidth = Max(aLineRange[1], 1);
 
   core11fwd->glGetIntegerv (GL_MAX_TEXTURE_SIZE, &myMaxTexDim);
   if (IsGlGreaterEqual (1, 3) && core11ffp != NULL)
@@ -1969,6 +1977,7 @@ void OpenGl_Context::DiagnosticInformation (TColStd_IndexedDataMapOfStringString
 
   if ((theFlags & Graphic3d_DiagnosticInfo_Limits) != 0)
   {
+    addInfo (theDict, "Max line width", TCollection_AsciiString(myMaxLineWidth));
     addInfo (theDict, "Max texture size", TCollection_AsciiString(myMaxTexDim));
     addInfo (theDict, "Max FBO dump size", TCollection_AsciiString() + myMaxDumpSizeX + "x" + myMaxDumpSizeY);
     addInfo (theDict, "Max combined texture units", TCollection_AsciiString(myMaxTexCombined));
@@ -2502,10 +2511,8 @@ void OpenGl_Context::SetLineStipple (const Standard_ShortReal theFactor,
 // =======================================================================
 void OpenGl_Context::SetLineWidth (const Standard_ShortReal theWidth)
 {
-  if (myGapi == Aspect_GraphicsLibrary_OpenGLES
-   || core11ffp != NULL)
+  if (myMaxLineWidth > 1)
   {
-    // glLineWidth() is still defined within Core Profile, but has no effect with values != 1.0f
     core11fwd->glLineWidth (theWidth * myLineWidthScale);
   }
 }
@@ -3065,6 +3072,7 @@ void OpenGl_Context::DumpJson (Standard_OStream& theOStream, Standard_Integer th
   OCCT_DUMP_FIELD_VALUE_NUMERICAL (theOStream, myMaxMsaaSamples)
   OCCT_DUMP_FIELD_VALUE_NUMERICAL (theOStream, myMaxDrawBuffers)
   OCCT_DUMP_FIELD_VALUE_NUMERICAL (theOStream, myMaxColorAttachments)
+  OCCT_DUMP_FIELD_VALUE_NUMERICAL (theOStream, myMaxLineWidth)
   OCCT_DUMP_FIELD_VALUE_NUMERICAL (theOStream, myGlVerMajor)
   OCCT_DUMP_FIELD_VALUE_NUMERICAL (theOStream, myGlVerMinor)
   OCCT_DUMP_FIELD_VALUE_NUMERICAL (theOStream, myIsInitialized)

@@ -516,6 +516,9 @@ public:
   //! @return value for GL_MAX_CLIP_PLANES
   Standard_Integer MaxClipPlanes() const { return myMaxClipPlanes; }
 
+  //! @return upper value for GL_LINE_WIDTH_RANGE
+  Standard_Integer MaxLineWidth() const { return myMaxLineWidth; }
+
   //! @return TRUE if ray tracing mode is supported
   Standard_Boolean HasRayTracing() const { return myHasRayTracing; }
 
@@ -1117,6 +1120,7 @@ private: // context info
   Standard_Integer myMaxMsaaSamples;       //!< value for GL_MAX_SAMPLES
   Standard_Integer myMaxDrawBuffers;       //!< value for GL_MAX_DRAW_BUFFERS
   Standard_Integer myMaxColorAttachments;  //!< value for GL_MAX_COLOR_ATTACHMENTS
+  Standard_Integer myMaxLineWidth;         //!< value for GL_LINE_WIDTH_RANGE
   Standard_Integer myGlVerMajor;           //!< cached GL version major number
   Standard_Integer myGlVerMinor;           //!< cached GL version minor number
   Standard_Boolean myIsInitialized;        //!< flag indicates initialization state

@@ -528,6 +528,8 @@ Standard_Integer OpenGl_GraphicDriver::InquireLimit (const Graphic3d_TypeOfLimit
       return !aCtx.IsNull() ? aCtx->MaxClipPlanes() : 0;
     case Graphic3d_TypeOfLimit_MaxNbViews:
       return 10000;
+    case Graphic3d_TypeOfLimit_MaxLineWidth:
+      return !aCtx.IsNull() ? aCtx->MaxLineWidth() : 1;
     case Graphic3d_TypeOfLimit_MaxTextureSize:
       return !aCtx.IsNull() ? aCtx->MaxTextureSize() : 1024;
     case Graphic3d_TypeOfLimit_MaxCombinedTextureUnits:

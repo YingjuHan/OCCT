@@ -20,6 +20,7 @@ enum Graphic3d_TypeOfLimit
   Graphic3d_TypeOfLimit_MaxNbLights,                    //!< maximum number of active light sources
   Graphic3d_TypeOfLimit_MaxNbClipPlanes,                //!< maximum number of active clipping planes
   Graphic3d_TypeOfLimit_MaxNbViews,                     //!< maximum number of views
+  Graphic3d_TypeOfLimit_MaxLineWidth,                   //!< maximum line width in pixels
   Graphic3d_TypeOfLimit_MaxTextureSize,                 //!< maximum size of texture
   Graphic3d_TypeOfLimit_MaxViewDumpSizeX,               //!< maximum width  for image dump
   Graphic3d_TypeOfLimit_MaxViewDumpSizeY,               //!< maximum height for image dump
