@@ -100,6 +100,12 @@ private:
   Standard_Real myLastPosition;
   Standard_Size myStartTime;
   Standard_ThreadId myGuiThreadId;
+
+#ifdef _WIN32
+  struct ITaskbarList3* myTaskbarList = nullptr;
+  Aspect_Drawable       myTaskbarWin1 = nullptr;
+  Aspect_Drawable       myTaskbarWin2 = nullptr;
+#endif
 };
 
 #endif // _Draw_ProgressIndicator_HeaderFile

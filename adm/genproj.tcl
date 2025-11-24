@@ -1414,7 +1414,7 @@ proc osutils:csfList { theOS theCsfLibsMap theCsfFrmsMap theRelease} {
       set aLibsMap(CSF_FreeImagePlus) "freeimage"
     }
   } elseif { "$theOS" == "wnt" } {
-    set aLibsMap(CSF_FreeImagePlus) "windowscodecs Ole32"
+    set aLibsMap(CSF_FreeImagePlus) "windowscodecs"
   }
   if { "$::HAVE_FFMPEG" == "true" } {
     set aLibsMap(CSF_FFmpeg) "avcodec avformat swscale avutil"
@@ -1454,6 +1454,7 @@ proc osutils:csfList { theOS theCsfLibsMap theCsfFrmsMap theRelease} {
     set aLibsMap(CSF_gdi32)        "gdi32"
     set aLibsMap(CSF_user32)       "user32 comdlg32"
     set aLibsMap(CSF_shell32)      "shell32"
+    set aLibsMap(CSF_ole32)        "ole32"
     set aLibsMap(CSF_opengl32)     "opengl32"
     set aLibsMap(CSF_wsock32)      "wsock32"
     set aLibsMap(CSF_netapi32)     "netapi32"

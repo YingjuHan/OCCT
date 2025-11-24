@@ -11,6 +11,11 @@
 // Alternatively, this file may be used under the terms of Open CASCADE
 // commercial license or contractual agreement.
 
+#ifdef _WIN32
+#include <windows.h>
+#include <shobjidl.h>
+#endif
+
 #include <Draw_ProgressIndicator.hxx>
 
 #include <Draw.hxx>
@@ -26,6 +31,7 @@
 
 #include <stdio.h>
 #include <time.h>
+
 IMPLEMENT_STANDARD_RTTIEXT(Draw_ProgressIndicator,Message_ProgressIndicator)
 
 //=======================================================================
@@ -54,6 +60,15 @@ Draw_ProgressIndicator::Draw_ProgressIndicator (const Draw_Interpretor &di, Stan
 Draw_ProgressIndicator::~Draw_ProgressIndicator()
 {
   Reset();
+#ifdef _WIN32
+  if (myTaskbarList != nullptr)
+  {
+    myTaskbarList->Release();
+    myTaskbarList = nullptr;
+    myTaskbarWin1 = nullptr;
+    myTaskbarWin2 = nullptr;
+  }
+#endif
 }
 
 //=======================================================================
@@ -66,6 +81,14 @@ void Draw_ProgressIndicator::Reset()
   Message_ProgressIndicator::Reset();
   if (myShown)
   {
+  #ifdef _WIN32
+    if (myTaskbarWin1 != nullptr)
+      myTaskbarList->SetProgressState((HWND)myTaskbarWin1, TBPF_NOPROGRESS);
+
+    if (myTaskbarWin2 != nullptr)
+      myTaskbarList->SetProgressState((HWND)myTaskbarWin2, TBPF_NOPROGRESS);
+#endif
+
     // eval will reset current string result - backup it beforehand
     const TCollection_AsciiString aTclResStr (myDraw->Result());
     myDraw->Eval ( "destroy .xprogress" );
@@ -166,10 +189,33 @@ void Draw_ProgressIndicator::Show (const Message_ProgressScope& theScope, const 
                          "pack .xprogress.bar .xprogress.text .xprogress.stop -side top;", this );
       myDraw->Eval ( command );
       myShown = Standard_True;
+
+    #ifdef _WIN32
+      if (myTaskbarList == nullptr
+       && CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_ALL, IID_ITaskbarList3, (void**)&myTaskbarList) == S_OK)
+      {
+        // Take top-level Tk window created by DrawDefault.
+        // The calls `winfo id .` and `winfo id .xprogress` return something different and cannot be used.
+        // Fallback showing progress on console window (GetConsoleWindow will work conhost, but not with Terminal).
+        myTaskbarWin1 = FindWindowW(L"TkTopLevel", L"Draw");
+        myTaskbarWin2 = GetConsoleWindow();
+        if (myTaskbarWin1 == nullptr && myTaskbarWin2 == nullptr) // no window to use
+        {
+          myTaskbarList->Release();
+          myTaskbarList = nullptr;
+        }
+      }
+      if (myTaskbarWin1 != nullptr)
+        myTaskbarList->SetProgressState((HWND)myTaskbarWin1, TBPF_NORMAL);
+
+      if (myTaskbarWin2 != nullptr)
+        myTaskbarList->SetProgressState((HWND)myTaskbarWin2, TBPF_NORMAL);
+#endif
     }
     std::stringstream aCommand;
     aCommand.setf(std::ios::fixed, std::ios::floatfield);
     aCommand.precision(0);
+    aCommand << "wm title .xprogress \"Progress: " << 100. * GetPosition() << "%\";";
     aCommand << ".xprogress.bar coords progress 2 2 " << (1 + 400 * GetPosition()) << " 21;";
     aCommand << ".xprogress.bar coords progress_next 2 2 " << (1 + 400 * theScope.GetPortion()) << " 21;";
     aCommand << ".xprogress.text configure -text \"" << aText.str() << "\";";
@@ -178,6 +224,14 @@ void Draw_ProgressIndicator::Show (const Message_ProgressScope& theScope, const 
     myDraw->Eval (aCommand.str().c_str());
     *myDraw << aTclResStr;
   }
+
+#ifdef _WIN32
+  if (myGraphMode && myTaskbarWin1 != nullptr)
+    myTaskbarList->SetProgressValue((HWND)myTaskbarWin1, int(100.0 * aPosition), 100);
+
+  if (myGraphMode && myTaskbarWin2 != nullptr)
+    myTaskbarList->SetProgressValue((HWND)myTaskbarWin2, int(100.0 * aPosition), 100);
+#endif
 
   // Print textual progress info
   if (myTclMode && myDraw)
