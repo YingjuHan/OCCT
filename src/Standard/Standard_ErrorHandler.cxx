@@ -17,15 +17,9 @@
 //==== Role : class "Standard_ErrorHandler" implementation.
 //============================================================================
 #include <Standard_ErrorHandler.hxx>
-#include <Standard_Failure.hxx>
-#include <Standard_Mutex.hxx>
-#include <Standard.hxx>
 
-#ifndef _WIN32
-#include <pthread.h>
-#else
-#include <windows.h>
-#endif
+#include <Standard_Assert.hxx>
+#include <Standard_Failure.hxx>
 
 // ===========================================================================
 // The class "Standard_ErrorHandler" variables
@@ -37,43 +31,17 @@
 // or a longjmp, there will be a "terminating SEGV" impossible to handle.
 
 //==== The top of the Errors Stack ===========================================
-static Standard_ErrorHandler* Top = 0;
-
-//! A mutex to protect from concurrent access to Top.
-//! Mutex is defined as function to avoid issues caused by
-//! an undefined static variables initialization order across compilation units (@sa #0031681 bug).
-//! Note that we should NOT use Sentry while in this class, as Sentry
-//! would register mutex as callback in the current exception handler.
-static Standard_Mutex& GetMutex()
-{
-  static Standard_Mutex theMutex;
-  return theMutex;
-}
-
-static inline Standard_ThreadId GetThreadID()
-{
-#ifndef _WIN32
-  return (Standard_ThreadId)pthread_self();
-#else
-  return GetCurrentThreadId();
-#endif
-}
+static thread_local Standard_ErrorHandler* Top = 0;
 
 //============================================================================
 //====  Constructor : Create a ErrorHandler structure. And add it at the 
 //====                'Top' of "ErrorHandler's stack".
 //============================================================================
 
-Standard_ErrorHandler::Standard_ErrorHandler () : 
-       myStatus(Standard_HandlerVoid), myCallbackPtr(0)
+Standard_ErrorHandler::Standard_ErrorHandler()
 {
-  myThread   = GetThreadID();
-  memset (&myLabel, 0, sizeof(myLabel));
-
-  GetMutex().Lock();
   myPrevious = Top;
   Top        = this;
-  GetMutex().Unlock();
 }
 
 
@@ -84,11 +52,6 @@ Standard_ErrorHandler::Standard_ErrorHandler () :
 void Standard_ErrorHandler::Destroy()
 {
   Unlink();
-  if (myStatus == Standard_HandlerJumped)
-  {
-    // jumped, but not caught
-    Abort (myCaughtError);
-  }
 }
 
 
@@ -99,35 +62,18 @@ void Standard_ErrorHandler::Destroy()
 
 void Standard_ErrorHandler::Unlink()
 {
-  // put a lock on the stack
-  GetMutex().Lock();
-  
-  Standard_ErrorHandler* aPrevious = 0;
-  Standard_ErrorHandler* aCurrent = Top;
-  
-  // locate this handler in the stack
-  while(aCurrent!=0 && this!=aCurrent) {
-    aPrevious = aCurrent;
-    aCurrent = aCurrent->myPrevious;
-  }
-  
-  if(aCurrent==0) {
-    GetMutex().Unlock();
-    return;
-  }
-  
-  if(aPrevious==0) {
-    // a top exception taken
-    Top = aCurrent->myPrevious;
-  }
-  else {
-    aPrevious->myPrevious=aCurrent->myPrevious;
-  }
+  Standard_ASSERT(Top == this, "Destroying error handler that is not on top",
+    while (Top && Top != this) Top->Unlink());
+
+  if (Top == this)
+    Top = myPrevious;
+  else
+    Standard_ASSERT_INVOKE("Broken logic of error handlers, likely error handler created not on stack");
+
   myPrevious = 0;
-  GetMutex().Unlock();
 
   // unlink and destroy all registered callbacks
-  Standard_Address aPtr = aCurrent->myCallbackPtr;
+  Standard_Address aPtr = myCallbackPtr;
   myCallbackPtr = 0;
   while ( aPtr ) {
     Standard_ErrorHandler::Callback* aCallback = (Standard_ErrorHandler::Callback*)aPtr;
@@ -144,7 +90,7 @@ void Standard_ErrorHandler::Unlink()
 
 Standard_Boolean Standard_ErrorHandler::IsInTryBlock()
 {
-  Standard_ErrorHandler* anActive = FindHandler(Standard_HandlerVoid, Standard_False);
+  Standard_ErrorHandler* anActive = FindHandler();
   return anActive != NULL;
 }
 
@@ -156,9 +102,8 @@ Standard_Boolean Standard_ErrorHandler::IsInTryBlock()
 
 void Standard_ErrorHandler::Abort (const Handle(Standard_Failure)& theError)
 {
-  Standard_ErrorHandler* anActive = FindHandler(Standard_HandlerVoid, Standard_True);
+  Standard_ErrorHandler* anActive = FindHandler();
 
-  //==== Check if can do the "longjmp" =======================================
   if(anActive == NULL) {
     std::cerr << "*** Abort *** an exception was raised, but no catch was found." << std::endl;
     if (!theError.IsNull())
@@ -166,117 +111,37 @@ void Standard_ErrorHandler::Abort (const Handle(Standard_Failure)& theError)
     exit(1);
   }
 
-  anActive->myStatus = Standard_HandlerJumped;
+  anActive->myCaughtError = theError;
   longjmp(anActive->myLabel, Standard_True);
 }
 
-
 //============================================================================
-//==== Catches: If there is a 'Error', and it is in good type 
-//====          returns True and clean 'Error', else returns False.
+//==== Raise
 //============================================================================
 
-Standard_Boolean Standard_ErrorHandler::Catches (const Handle(Standard_Type)& AType) 
+void Standard_ErrorHandler::Raise()
 {
-  Standard_ErrorHandler* anActive = FindHandler(Standard_HandlerJumped, Standard_False);
-  if(anActive==0)
-    return Standard_False;
-  
-  if(anActive->myCaughtError.IsNull())
-    return Standard_False;
-
-  if(anActive->myCaughtError->IsKind(AType)){
-    myStatus=Standard_HandlerProcessed;
-    return Standard_True;
-  } else {
-    return Standard_False;
+  if (myCaughtError.IsNull())
+  {
+    std::cerr << "*** Abort *** an exception handler was called, but not exception object is set." << std::endl;
+    exit(1);
   }
+
+  myCaughtError->Reraise();
 }
 
-Handle(Standard_Failure) Standard_ErrorHandler::LastCaughtError()
+//============================================================================
+//==== FindHandler
+//============================================================================
+
+Standard_ErrorHandler* Standard_ErrorHandler::FindHandler()
 {
-  Handle(Standard_Failure) aHandle;
-  Standard_ErrorHandler* anActive = FindHandler(Standard_HandlerProcessed, Standard_False);
-  if(anActive!=0) 
-    aHandle = anActive->myCaughtError;
-  
-  return aHandle;
-}
-
-Handle(Standard_Failure) Standard_ErrorHandler::Error() const
-{
-  return myCaughtError;
-}
-
-
-void Standard_ErrorHandler::Error (const Handle(Standard_Failure)& theError)
-{
-  Standard_ErrorHandler* anActive = FindHandler (Standard_HandlerVoid, Standard_False);
-  if (anActive == NULL)
-    Abort (theError);
-
-  anActive->myCaughtError = theError;
-}
-
-
-Standard_ErrorHandler* Standard_ErrorHandler::FindHandler(const Standard_HandlerStatus theStatus,
-                                                          const Standard_Boolean theUnlink)
-{
-  // lock the stack
-  GetMutex().Lock();
-    
-  // Find the current ErrorHandler according to thread
-  Standard_ErrorHandler* aPrevious = 0;
-  Standard_ErrorHandler* aCurrent = Top;
-  Standard_ErrorHandler* anActive = 0;
-  Standard_Boolean aStop = Standard_False;
-  Standard_ThreadId aTreadId = GetThreadID();
-  
-  // searching an exception with correct ID number
-  // which is not processed for the moment
-  while(!aStop) {
-    while(aCurrent!=NULL && aTreadId!=aCurrent->myThread) {
-      aPrevious = aCurrent;
-      aCurrent = aCurrent->myPrevious;
-    }
-    
-    if(aCurrent!=NULL) {
-      if(theStatus!=aCurrent->myStatus) {
-        
-        if(theUnlink) {
-          //unlink current
-          if(aPrevious==0) {
-            // a top exception taken
-            Top = aCurrent->myPrevious;
-          }
-          else {
-            aPrevious->myPrevious=aCurrent->myPrevious;
-          }
-        }
-        
-        //shift
-        aCurrent = aCurrent->myPrevious;
-      }
-      else {
-	//found one
-        anActive = aCurrent;
-	aStop = Standard_True;
-      }
-    }
-    else {
-      //Current is NULL, means that no handlesr
-      aStop = Standard_True;
-    }
-  }
-  GetMutex().Unlock();
-  
-  return anActive;
+  return Top;
 }
 
 #if defined(OCC_CONVERT_SIGNALS)
 
 Standard_ErrorHandler::Callback::Callback ()
-  : myHandler(0), myPrev(0), myNext(0)
 {
 }
 
@@ -290,8 +155,7 @@ void Standard_ErrorHandler::Callback::RegisterCallback ()
   if ( myHandler ) return; // already registered
 
   // find current active exception handler
-  Standard_ErrorHandler *aHandler =
-    Standard_ErrorHandler::FindHandler(Standard_HandlerVoid, Standard_False);
+  Standard_ErrorHandler* aHandler = Standard_ErrorHandler::FindHandler();
 
   // if found, add this callback object first to the list
   if ( aHandler ) {

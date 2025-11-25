@@ -16,10 +16,11 @@
 #ifndef _Draw_ProgressIndicator_HeaderFile
 #define _Draw_ProgressIndicator_HeaderFile
 
-#include <Standard.hxx>
-
+#include <Aspect_Drawable.hxx>
 #include <Message_ProgressIndicator.hxx>
 #include <Draw_Interpretor.hxx>
+#include <Standard.hxx>
+#include <Standard_ThreadId.hxx>
 
 class Draw_ProgressIndicator;
 DEFINE_STANDARD_HANDLE(Draw_ProgressIndicator, Message_ProgressIndicator)
