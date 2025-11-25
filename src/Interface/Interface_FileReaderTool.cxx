@@ -385,9 +385,9 @@ void Interface_FileReaderTool::LoadModel
       num0 = thereader->FindNextRecord(num); //:g9 abv 28 May 98: tr8_as2_ug.stp - infinite cycle: (0);
 
 #ifdef _WIN32
-      if (anException.IsKind(STANDARD_TYPE(OSD_Exception))) ierr = 2;
+      if (dynamic_cast<const OSD_Exception*>(&anException) != nullptr) ierr = 2;
 #else
-      if (anException.IsKind(STANDARD_TYPE(OSD_Signal))) ierr = 2;
+      if (dynamic_cast<const OSD_Signal*>(&anException) != nullptr) ierr = 2;
 #endif
 //:abv 03Apr00: anent is actually a previous one:      if (anent.IsNull()) 
       anent = thereader->BoundEntity(num);

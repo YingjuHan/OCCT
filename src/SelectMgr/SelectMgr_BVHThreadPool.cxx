@@ -148,13 +148,13 @@ void SelectMgr_BVHThreadPool::BVHThread::performThread()
         OCC_CATCH_SIGNALS
           anEntity->BVH();
       }
-      catch (Standard_Failure const& aFailure)
+      catch (const Standard_Failure& aFailure)
       {
-        TCollection_AsciiString aMsg = TCollection_AsciiString (aFailure.DynamicType()->Name())
+        TCollection_AsciiString aMsg = TCollection_AsciiString (aFailure.ExceptionType())
           + ": " + aFailure.GetMessageString();
         Message::DefaultMessenger()->SendFail (aMsg);
       }
-      catch (std::exception& anStdException)
+      catch (const std::exception& anStdException)
       {
         TCollection_AsciiString aMsg = TCollection_AsciiString (typeid(anStdException).name())
           + ": " + anStdException.what();

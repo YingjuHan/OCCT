@@ -28,6 +28,7 @@
 #include <TopoDS_HShape.hxx>
 #include <TopoDS_Shape.hxx>
 #include <NCollection_DataMap.hxx>
+#include <NCollection_Shared.hxx>
 
 IMPLEMENT_STANDARD_RTTIEXT(MoniTool_CaseData,Standard_Transient)
 
@@ -112,8 +113,12 @@ static OSD_Timer& chrono() {
   thesubst = 0;
 }
 
-    void  MoniTool_CaseData::AddRaised (const Handle(Standard_Failure)& theException, const Standard_CString name)
-      {  AddData ( theException,1,name);  }
+    void  MoniTool_CaseData::AddRaised (const Standard_Failure& theException, const Standard_CString name)
+      {
+        TCollection_AsciiString aMsg = TCollection_AsciiString(theException.ExceptionType()) + ": " + theException.GetMessageString();
+        Handle(NCollection_Shared<Standard_Failure>) aCopy = new NCollection_Shared<Standard_Failure>(aMsg.ToCString());
+        AddData ( aCopy,1,name);
+      }
 
     void  MoniTool_CaseData::AddShape
   (const TopoDS_Shape& sh, const Standard_CString name)

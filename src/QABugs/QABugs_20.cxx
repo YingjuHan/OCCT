@@ -3008,9 +3008,9 @@ static Standard_Integer OCC29925 (Draw_Interpretor& theDI, Standard_Integer, con
       anOp = "UpperCase";
       UpperCase (c);
     }
-    catch (const Handle(Standard_Failure)& e)
+    catch (const Standard_Failure& e)
     {
-      theDI << anOp << "() fails for " << c << " (" << e->DynamicType()->Name() << ")\n";
+      theDI << anOp << "() fails for " << c << " (" << e.ExceptionType() << ")\n";
     }
   }
 

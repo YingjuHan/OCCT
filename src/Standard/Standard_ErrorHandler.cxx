@@ -100,14 +100,15 @@ Standard_Boolean Standard_ErrorHandler::IsInTryBlock()
 //====    Abort if there is a non null 'Error'
 //============================================================================
 
-void Standard_ErrorHandler::Abort (const Handle(Standard_Failure)& theError)
+void Standard_ErrorHandler::Abort (const std::shared_ptr<Standard_Failure>& theError)
 {
   Standard_ErrorHandler* anActive = FindHandler();
 
   if(anActive == NULL) {
     std::cerr << "*** Abort *** an exception was raised, but no catch was found." << std::endl;
-    if (!theError.IsNull())
+    if (theError.get() != nullptr)
       std::cerr << "\t... The exception is:" << theError->GetMessageString() << std::endl;
+
     exit(1);
   }
 
@@ -121,7 +122,7 @@ void Standard_ErrorHandler::Abort (const Handle(Standard_Failure)& theError)
 
 void Standard_ErrorHandler::Raise()
 {
-  if (myCaughtError.IsNull())
+  if (myCaughtError.get() == nullptr)
   {
     std::cerr << "*** Abort *** an exception handler was called, but not exception object is set." << std::endl;
     exit(1);

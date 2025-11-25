@@ -19,11 +19,6 @@
 //! Defines an exception class \a C1 that inherits an exception class \a C2.
 /*! \a C2 must be Standard_Failure or its ancestor.
     The macro defines empty constructor, copy constructor and static methods Raise() and NewInstance().
-    Since Standard_Failure implements class manipulated by handle, DEFINE_STANDARD_RTTI macro is also
-    added to enable RTTI.
-
-    When using DEFINE_STANDARD_EXCEPTION in your code make sure you also insert a macro
-    DEFINE_STANDARD_HANDLE(C1,C2) before it.
 */
 
 #define DEFINE_STANDARD_EXCEPTION(C1,C2) \
@@ -36,16 +31,16 @@ public: \
   C1(Standard_CString theMessage, Standard_CString theStackTrace) \
   : C2 (theMessage, theStackTrace) {} \
   static void Raise(const Standard_CString theMessage = "") { \
-    Handle(C1) _E = new C1; \
+    std::shared_ptr<C1> _E = std::make_shared<C1>(); \
     _E->Reraise(theMessage); \
   } \
   static void Raise(Standard_SStream& theMessage) { \
-    Handle(C1) _E = new C1; \
+    std::shared_ptr<C1> _E = std::make_shared<C1>(); \
     _E->Reraise (theMessage); \
   } \
-  static Handle(C1) NewInstance(Standard_CString theMessage = "") { return new C1(theMessage); } \
-  static Handle(C1) NewInstance(Standard_CString theMessage, Standard_CString theStackTrace) { return new C1(theMessage, theStackTrace); } \
-  DEFINE_STANDARD_RTTI_INLINE(C1,C2) \
+  static std::shared_ptr<C1> NewInstance(Standard_CString theMessage = "") { return std::make_shared<C1>(theMessage); } \
+  static std::shared_ptr<C1> NewInstance(Standard_CString theMessage, Standard_CString theStackTrace) { return std::make_shared<C1>(theMessage, theStackTrace); } \
+  virtual const char* ExceptionType() const Standard_OVERRIDE { return #C1; } \
 };
 
 //! Obsolete macro, kept for compatibility with old code

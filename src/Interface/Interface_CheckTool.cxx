@@ -44,12 +44,12 @@ static void raisecheck (Standard_Failure& theException,Handle(Interface_Check)& 
 {
   char mess[100];
   sprintf (mess,"** Exception Raised during Check : %s **",
-	   theException.DynamicType()->Name());
+	   theException.ExceptionType());
   ach->AddFail(mess);
 #ifdef _WIN32
-  if (theException.IsKind(STANDARD_TYPE(OSD_Exception))) {
+  if (dynamic_cast<const OSD_Exception*>(&theException) != nullptr) {
 #else
-  if (theException.IsKind(STANDARD_TYPE(OSD_Signal))) {
+  if (dynamic_cast<const OSD_Signal*>(&theException) != nullptr) {
 #endif
     theException.SetMessageString("System Signal received, check interrupt");
     throw theException;

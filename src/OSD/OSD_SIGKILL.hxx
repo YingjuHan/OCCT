@@ -15,19 +15,7 @@
 #ifndef _OSD_SIGKILL_HeaderFile
 #define _OSD_SIGKILL_HeaderFile
 
-#include <Standard_Type.hxx>
-#include <Standard_SStream.hxx>
 #include <OSD_Signal.hxx>
-
-class OSD_SIGKILL;
-DEFINE_STANDARD_HANDLE(OSD_SIGKILL, OSD_Signal)
-
-#if !defined No_Exception && !defined No_OSD_SIGKILL
-  #define OSD_SIGKILL_Raise_if(CONDITION, MESSAGE) \
-  if (CONDITION) throw OSD_SIGKILL(MESSAGE);
-#else
-  #define OSD_SIGKILL_Raise_if(CONDITION, MESSAGE)
-#endif
 
 DEFINE_STANDARD_EXCEPTION(OSD_SIGKILL, OSD_Signal)
 

@@ -239,7 +239,7 @@ void OSD_ThreadPool::Launcher::wait()
        aThreadIter.More() && aThreadIter.Value() != NULL; aThreadIter.Next())
   {
     aThreadIter.ChangeValue()->WaitIdle();
-    if (!aThreadIter.Value()->myFailure.IsNull())
+    if (aThreadIter.Value()->myFailure.get() != nullptr)
     {
       ++aNbFailures;
     }
@@ -253,7 +253,7 @@ void OSD_ThreadPool::Launcher::wait()
   for (NCollection_Array1<EnumeratedThread*>::Iterator aThreadIter (myThreads);
        aThreadIter.More() && aThreadIter.Value() != NULL; aThreadIter.Next())
   {
-    if (!aThreadIter.Value()->myFailure.IsNull())
+    if (aThreadIter.Value()->myFailure.get() != nullptr)
     {
       if (aNbFailures == 1)
       {
@@ -276,30 +276,31 @@ void OSD_ThreadPool::Launcher::wait()
 // function : performJob
 // purpose  :
 // =======================================================================
-void OSD_ThreadPool::performJob (Handle(Standard_Failure)& theFailure,
+void OSD_ThreadPool::performJob (std::shared_ptr<Standard_Failure>& theFailure,
                                  OSD_ThreadPool::JobInterface* theJob,
                                  int theThreadIndex)
 {
+  // std::nested_exception is not currently used
   try
   {
     OCC_CATCH_SIGNALS
     theJob->Perform (theThreadIndex);
   }
-  catch (Standard_Failure const& aFailure)
+  catch (const Standard_Failure& aFailure)
   {
-    TCollection_AsciiString aMsg = TCollection_AsciiString (aFailure.DynamicType()->Name())
+    TCollection_AsciiString aMsg = TCollection_AsciiString (aFailure.ExceptionType())
                                  + ": " + aFailure.GetMessageString();
-    theFailure = new Standard_ProgramError (aMsg.ToCString(), aFailure.GetStackString());
+    theFailure = std::make_shared<Standard_ProgramError>(aMsg.ToCString(), aFailure.GetStackString());
   }
-  catch (std::exception& anStdException)
+  catch (const std::exception& anStdException)
   {
     TCollection_AsciiString aMsg = TCollection_AsciiString (typeid(anStdException).name())
                                  + ": " + anStdException.what();
-    theFailure = new Standard_ProgramError (aMsg.ToCString(), NULL);
+    theFailure = std::make_shared<Standard_ProgramError>(aMsg.ToCString(), (const char*)NULL);
   }
   catch (...)
   {
-    theFailure = new Standard_ProgramError ("Error: Unknown exception", NULL);
+    theFailure = std::make_shared<Standard_ProgramError>("Error: Unknown exception", (const char*)NULL);
   }
 }
 
@@ -319,7 +320,7 @@ void OSD_ThreadPool::EnumeratedThread::performThread()
       return;
     }
 
-    myFailure.Nullify();
+    myFailure.reset();
     if (myJob != NULL)
     {
       OSD::SetThreadLocalSignal (OSD::SignalMode(), myToCatchFpe);

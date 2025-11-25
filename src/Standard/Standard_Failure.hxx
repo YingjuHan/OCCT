@@ -18,18 +18,18 @@
 #define _Standard_Failure_HeaderFile
 
 #include <Standard_Type.hxx>
-
-#include <Standard_CString.hxx>
 #include <Standard_Transient.hxx>
 #include <Standard_OStream.hxx>
 #include <Standard_SStream.hxx>
 
-DEFINE_STANDARD_HANDLE(Standard_Failure, Standard_Transient)
+#include <exception>
+#include <memory>
 
 //! Forms the root of the entire exception hierarchy.
-class Standard_Failure : public Standard_Transient
+class Standard_Failure : public std::exception
 {
 public:
+  DEFINE_STANDARD_ALLOC
 
   //! Creates a status object of type "Failure".
   Standard_EXPORT Standard_Failure();
@@ -55,12 +55,18 @@ public:
 
   //! Prints on the stream @p theStream the exception name followed by the error message.
   //!
-  //! Note: there is a short-cut @c operator<< (Standard_OStream&, Handle(Standard_Failure)&)
+  //! Note: there is a short-cut @c operator<< (Standard_OStream&, Standard_Failure&)
   Standard_EXPORT void Print (Standard_OStream& theStream) const;
-  
+
+  //! Returns error message
+  virtual const char* what() const noexcept Standard_OVERRIDE
+  {
+    return GetMessageString();
+  }
+
   //! Returns error message
   Standard_EXPORT virtual Standard_CString GetMessageString() const;
-  
+
   //! Sets error message
   Standard_EXPORT virtual void SetMessageString (const Standard_CString theMessage);
 
@@ -79,6 +85,11 @@ public:
 
 public:
 
+  //! Return exception (sub)class name for displaying in messages.
+  virtual const char* ExceptionType() const { return "Standard_Failure"; }
+
+public:
+
   //! Raises an exception of type "Failure" and associates
   //! an error message to it. The message can be printed
   //! in an exception handler.
@@ -92,11 +103,11 @@ public:
   //! Used to construct an instance of the exception object as a handle.
   //! Shall be used to protect against possible construction of exception object in C stack,
   //! which is dangerous since some of methods require that object was allocated dynamically.
-  Standard_EXPORT static Handle(Standard_Failure) NewInstance (Standard_CString theMessage);
+  Standard_EXPORT static std::shared_ptr<Standard_Failure> NewInstance (Standard_CString theMessage);
 
   //! Used to construct an instance of the exception object as a handle.
-  Standard_EXPORT static Handle(Standard_Failure) NewInstance (Standard_CString theMessage,
-                                                               Standard_CString theStackTrace);
+  Standard_EXPORT static std::shared_ptr<Standard_Failure> NewInstance (Standard_CString theMessage,
+                                                                        Standard_CString theStackTrace);
 
   //! Returns the default length of stack trace to be captured by Standard_Failure constructor;
   //! 0 by default meaning no stack trace.
@@ -112,9 +123,7 @@ public:
   //! from this handler (e.g. Linux), uses longjump to get to
   //! the current active signal handler, and only then is
   //! converted to C++ exception.
-  Standard_EXPORT void Jump();
-
-  DEFINE_STANDARD_RTTIEXT(Standard_Failure,Standard_Transient)
+  Standard_EXPORT static void Jump(const std::shared_ptr<Standard_Failure>& theFail);
 
 protected:
 
@@ -153,17 +162,6 @@ private:
   StringRef* myStackTrace;
 
 };
-
-// =======================================================================
-// function : operator<<
-// purpose  :
-// =======================================================================
-inline Standard_OStream& operator<< (Standard_OStream& theStream,
-                                     const Handle(Standard_Failure)& theFailure)
-{
-  theFailure->Print (theStream);
-  return theStream;
-}
 
 // =======================================================================
 // function : operator<<

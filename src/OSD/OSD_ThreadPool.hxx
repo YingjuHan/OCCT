@@ -169,7 +169,7 @@ protected:
   private:
     OSD_ThreadPool* myPool;
     JobInterface* myJob;
-    Handle(Standard_Failure) myFailure;
+    std::shared_ptr<Standard_Failure> myFailure;
     Standard_Condition myWakeEvent;
     Standard_Condition myIdleEvent;
     int myThreadIndex;
@@ -313,7 +313,7 @@ protected:
   void release();
 
   //! Perform the job and catch exceptions.
-  static void performJob (Handle(Standard_Failure)& theFailure,
+  static void performJob (std::shared_ptr<Standard_Failure>& theFailure,
                           OSD_ThreadPool::JobInterface* theJob,
                           int theThreadIndex);
 
