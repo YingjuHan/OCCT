@@ -95,7 +95,7 @@ Handle(Geom2d_Curve) Geom2dAdaptor::MakeCurve
     }
     else
     {
-      Standard_DomainError::Raise("Geom2dAdaptor::MakeCurve, Not Geom2dAdaptor_Curve");
+      throw Standard_DomainError("Geom2dAdaptor::MakeCurve, Not Geom2dAdaptor_Curve");
     }
   }
   break;

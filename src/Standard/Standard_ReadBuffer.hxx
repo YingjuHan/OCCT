@@ -67,7 +67,7 @@ public:
 
     if (theChunkLen > sizeof(myBuffer))
     {
-      Standard_ProgramError::Raise ("Internal error - chunk size is greater then preallocated buffer");
+      throw Standard_ProgramError("Internal error - chunk size is greater then preallocated buffer");
     }
   }
 

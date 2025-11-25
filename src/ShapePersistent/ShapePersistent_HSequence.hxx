@@ -51,8 +51,7 @@ class ShapePersistent_HSequence
     //! Returns persistent type name
     virtual Standard_CString PName() const
     {
-      Standard_NotImplemented::Raise("ShapePersistent_HSequence::node::PName - not implemented");
-      return "";
+      throw Standard_NotImplemented("ShapePersistent_HSequence::node::PName - not implemented");
     }
 
     const Handle(node)& Previuos() const  { return myPreviuos; } 
@@ -94,8 +93,7 @@ class ShapePersistent_HSequence
     //! Returns persistent type name
     virtual Standard_CString PName() const
     {
-      Standard_NotImplemented::Raise("ShapePersistent_HSequence::instance::PName - not implemented");
-      return "";
+      throw Standard_NotImplemented("ShapePersistent_HSequence::instance::PName - not implemented");
     }
 
     //! Import transient object from the persistent data.

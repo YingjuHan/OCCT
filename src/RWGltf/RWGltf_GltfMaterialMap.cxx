@@ -399,8 +399,7 @@ void RWGltf_GltfMaterialMap::DefineMaterial (const XCAFPrs_Style& theStyle,
 #ifdef HAVE_RAPIDJSON
   if (myWriter == NULL)
   {
-    Standard_ProgramError::Raise ("RWGltf_GltfMaterialMap::DefineMaterial() should be called with JSON Writer");
-    return;
+    throw Standard_ProgramError("RWGltf_GltfMaterialMap::DefineMaterial() should be called with JSON Writer");
   }
 
   XCAFDoc_VisMaterialPBR aPbrMat;

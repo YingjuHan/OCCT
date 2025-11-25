@@ -56,15 +56,14 @@ protected:
     //! Write persistent data to a file.
     virtual void Write (StdObjMgt_WriteData&) const
     {
-      Standard_NotImplemented::Raise("ShapePersistent_Geom::geometryBase::Write - not implemented");
+      throw Standard_NotImplemented("ShapePersistent_Geom::geometryBase::Write - not implemented");
     }
     //! Gets persistent child objects
     virtual void PChildren (StdObjMgt_Persistent::SequenceOfPersistent&) const { }
     //! Returns persistent type name
     virtual Standard_CString PName() const
     { 
-      Standard_NotImplemented::Raise("ShapePersistent_Geom::geometryBase::PName - not implemented");
-      return ""; 
+      throw Standard_NotImplemented("ShapePersistent_Geom::geometryBase::PName - not implemented");
     }
   };
 
@@ -81,13 +80,12 @@ protected:
     //! Gets persistent child objects
     virtual void PChildren (StdObjMgt_Persistent::SequenceOfPersistent&) const
     {
-      Standard_NotImplemented::Raise("ShapePersistent_Geom::subBase::PChildren - not implemented");
+      throw Standard_NotImplemented("ShapePersistent_Geom::subBase::PChildren - not implemented");
     }
     //! Returns persistent type name
     virtual Standard_CString PName() const
     { 
-      Standard_NotImplemented::Raise("ShapePersistent_Geom::subBase::PName - not implemented");
-      return ""; 
+      throw Standard_NotImplemented("ShapePersistent_Geom::subBase::PName - not implemented");
     }
   };
 
@@ -104,8 +102,7 @@ protected:
     //! Returns persistent type name
     virtual Standard_CString PName() const
     {
-      Standard_NotImplemented::Raise("ShapePersistent_Geom::subBase_gp::PName - not implemented");
-      return "";
+      throw Standard_NotImplemented("ShapePersistent_Geom::subBase_gp::PName - not implemented");
     }
   };
 
@@ -115,8 +112,7 @@ protected:
     //! Returns persistent type name
     virtual Standard_CString PName() const
     {
-      Standard_NotImplemented::Raise("ShapePersistent_Geom::subBase_empty::PName - not implemented");
-      return "";
+      throw Standard_NotImplemented("ShapePersistent_Geom::subBase_empty::PName - not implemented");
     }
   };
 
@@ -136,13 +132,12 @@ protected:
     //! Write persistent data to a file.
     virtual void Write(StdObjMgt_WriteData&) const
     {
-      Standard_NotImplemented::Raise("ShapePersistent_Geom::instance::Write - not implemented");
+      throw Standard_NotImplemented("ShapePersistent_Geom::instance::Write - not implemented");
     }
     //! Returns persistent type name
     virtual Standard_CString PName() const
     {
-      Standard_NotImplemented::Raise("ShapePersistent_Geom::instance::PName - not implemented");
-      return "";
+      throw Standard_NotImplemented("ShapePersistent_Geom::instance::PName - not implemented");
     }
   };
 

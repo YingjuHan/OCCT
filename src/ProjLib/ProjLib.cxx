@@ -272,8 +272,7 @@ void  ProjLib::MakePCurveOfType
   case GeomAbs_BezierCurve : 
   case GeomAbs_OtherCurve : 
     default :
-    Standard_NotImplemented::Raise
-      ("ProjLib::MakePCurveOfType");
+    throw Standard_NotImplemented("ProjLib::MakePCurveOfType");
     break;
   }
 }

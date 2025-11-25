@@ -149,7 +149,7 @@ ShapePersistent_Geom2d::Translate(const Handle(Geom2d_Curve)& theCurve,
         aPC = ShapePersistent_Geom2d_Curve::Translate(Handle(Geom2d_OffsetCurve)::DownCast(theCurve), theMap);
       }
       else {
-        Standard_NullObject::Raise("No mapping for the current Transient Curve");
+        throw Standard_NullObject("No mapping for the current Transient Curve");
       }
       theMap.Bind(theCurve, aPC);
     }

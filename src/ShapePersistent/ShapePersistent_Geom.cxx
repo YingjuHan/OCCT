@@ -81,7 +81,7 @@ ShapePersistent_Geom::Translate (const Handle(Geom_Curve)& theCurve,
         aPC = ShapePersistent_Geom_Curve::Translate(Handle(Geom_OffsetCurve)::DownCast(theCurve), theMap);
       }
       else {
-        Standard_NullObject::Raise("No mapping for the current Transient Curve");
+        throw Standard_NullObject("No mapping for the current Transient Curve");
       }
       theMap.Bind(theCurve, aPC);
     }
@@ -139,7 +139,7 @@ ShapePersistent_Geom::Translate(const Handle(Geom_Surface)& theSurf,
         aPS = ShapePersistent_Geom_Surface::Translate(Handle(Geom_OffsetSurface)::DownCast(theSurf), theMap);
       }
       else {
-        Standard_NullObject::Raise("No mapping for the current Transient Surface");
+        throw Standard_NullObject("No mapping for the current Transient Surface");
       }
       theMap.Bind(theSurf, aPS);
     }

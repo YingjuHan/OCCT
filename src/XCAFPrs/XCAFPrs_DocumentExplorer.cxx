@@ -274,7 +274,7 @@ void XCAFPrs_DocumentExplorer::initRoot()
     if (aRootLab.IsNull())
     {
       // assert - invalid input
-      //Standard_ProgramError::Raise ("XCAFPrs_DocumentExplorer - NULL label in the input");
+      //throw Standard_ProgramError("XCAFPrs_DocumentExplorer - NULL label in the input");
       myRootIter.Next();
       continue;
     }
@@ -305,7 +305,7 @@ void XCAFPrs_DocumentExplorer::initCurrent (Standard_Boolean theIsAssembly)
   {
     if (myTop < 0)
     {
-      Standard_ProgramError::Raise ("XCAFPrs_DocumentExplorer - internal error");
+      throw Standard_ProgramError("XCAFPrs_DocumentExplorer - internal error");
     }
     myCurrent = myNodeStack.Value (myTop);
   }
@@ -345,8 +345,7 @@ void XCAFPrs_DocumentExplorer::Next()
 {
   if (!myHasMore)
   {
-    Standard_ProgramError::Raise ("XCAFPrs_DocumentExplorer::Next() - out of range");
-    return; // assert
+    throw Standard_ProgramError("XCAFPrs_DocumentExplorer::Next() - out of range");
   }
 
   if (myTop < 0)

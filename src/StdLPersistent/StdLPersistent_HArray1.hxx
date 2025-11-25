@@ -88,8 +88,7 @@ protected:
       { return PNameT(); }
     Standard_CString PNameT() const 
     {
-      Standard_NotImplemented::Raise("StdLPersistent_HArray1::instance::PName - not implemented"); 
-      return "";
+      throw Standard_NotImplemented("StdLPersistent_HArray1::instance::PName - not implemented");
     }
     void PChildrenT(StdObjMgt_Persistent::SequenceOfPersistent&) const {}
 
