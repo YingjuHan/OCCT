@@ -156,6 +156,8 @@ Standard_Boolean RWStl_Reader::Read (const char* theFile,
   bool isAscii = ((size_t)theEnd < THE_STL_MIN_FILE_SIZE || IsAscii (*aStream, true));
 
   Standard_ReadLineBuffer aBuffer (THE_BUFFER_SIZE);
+  Standard_Integer aLineCounter = 0;
+  Standard_Integer aNbSolids = 0;
 
   // Note: here we are trying to handle rare but realistic case of
   // STL files which are composed of several STL data blocks
@@ -163,11 +165,12 @@ Standard_Boolean RWStl_Reader::Read (const char* theFile,
   // For this reason use infinite (logarithmic) progress scale,
   // but in special mode so that the first cycle will take ~ 70% of it
   Message_ProgressScope aPS (theProgress, NULL, 1, true);
-  while (aStream->good())
+  while (aStream->good() || !aBuffer.IsEmpty())
   {
+    TCollection_AsciiString aName;
     if (isAscii)
     {
-      if (!ReadAscii (*aStream, aBuffer, theEnd, aPS.Next (2)))
+      if (!readAscii (aName, aLineCounter, *aStream, aBuffer, theEnd, aPS.Next (2)))
       {
         break;
       }
@@ -178,11 +181,12 @@ Standard_Boolean RWStl_Reader::Read (const char* theFile,
       {
         break;
       }
+      *aStream >> std::ws; // skip any white spaces
     }
-    *aStream >> std::ws; // skip any white spaces
-    AddSolid();
+    AddSolid (aName);
+    ++aNbSolids;
   }
-  return ! aStream->fail();
+  return !aStream->fail() && aNbSolids > 0;
 }
 
 //==============================================================================
@@ -285,10 +289,12 @@ static bool ReadVertex (const char* theStr, double& theX, double& theY, double& 
 }
 
 //==============================================================================
-//function : ReadAscii
+//function : readAscii
 //purpose  :
 //==============================================================================
-Standard_Boolean RWStl_Reader::ReadAscii (Standard_IStream& theStream,
+Standard_Boolean RWStl_Reader::readAscii (TCollection_AsciiString& theName,
+                                          Standard_Integer& theLineCounter,
+                                          Standard_IStream& theStream,
                                           Standard_ReadLineBuffer& theBuffer,
                                           const std::streampos theUntilPos,
                                           const Message_ProgressRange& theProgress)
@@ -296,19 +302,34 @@ Standard_Boolean RWStl_Reader::ReadAscii (Standard_IStream& theStream,
   // use method seekpos() to get true 64-bit offset to enable
   // handling of large files (VS 2010 64-bit)
   const int64_t aStartPos = GETPOS(theStream.tellg());
-  size_t aLineLen = 0;
-  const char* aLine;
+  const bool  isFileStart = theLineCounter == 0;
 
-  // skip header "solid ..."
-  aLine = theBuffer.ReadLine (theStream, aLineLen);
-  // skip empty lines
-  while (aLine && !*aLine)
+  size_t aLineLen = 0;
+  const char* aLine = theBuffer.ReadLine(theStream, aLineLen);
+  ++theLineCounter;
+  theName.Clear();
+  for (; aLine != nullptr;)
   {
-    aLine = theBuffer.ReadLine (theStream, aLineLen);
+    if (str_starts_with (aLine, "solid", 5))
+    {
+      theName = aLine[5];
+      break;
+    }
+    else if (*aLine != '\0') // skip empty lines before 'solid'
+    {
+      Message::SendFail() << "Error: invalid STL header";
+      return false;
+    }
+
+    aLine = theBuffer.ReadLine(theStream, aLineLen);
+    ++theLineCounter;
   }
+
   if (aLine == NULL)
   {
-    Message::SendFail ("Error: premature end of file");
+    if (isFileStart)
+      Message::SendFail ("Error: premature end of file");
+
     return false;
   }
 
@@ -325,7 +346,6 @@ Standard_Boolean RWStl_Reader::ReadAscii (Standard_IStream& theStream,
   const Standard_Integer aNbSteps = 1 + Standard_Integer((GETPOS(theUntilPos) - aStartPos) / aStepB);
   Message_ProgressScope aPS (theProgress, "Reading text STL file", aNbSteps);
   int64_t aProgressPos = aStartPos + aStepB;
-  int aNbLine = 1;
 
   while (aPS.More())
   {
@@ -336,26 +356,35 @@ Standard_Boolean RWStl_Reader::ReadAscii (Standard_IStream& theStream,
     }
 
     aLine = theBuffer.ReadLine (theStream, aLineLen); // "facet normal nx ny nz"
+    ++theLineCounter;
     if (aLine == NULL)
     {
       Message::SendFail ("Error: premature end of file");
       return false;
+    }
+
+    if (str_starts_with (aLine, "color", 5))
+    {
+      Message::SendWarning() << "Warning: skipping non-standard 'color' line " << theLineCounter;
+      continue;
     }
     if (str_starts_with (aLine, "endsolid", 8))
     {
       // end of STL code
       break;
     }
+
     if (!str_starts_with (aLine, "facet", 5))
     {
-      Message::SendFail (TCollection_AsciiString ("Error: unexpected format of facet at line ") + (aNbLine + 1));
+      Message::SendFail() << "Error: unexpected format of facet at line " << theLineCounter;
       return false;
     }
 
     aLine = theBuffer.ReadLine (theStream, aLineLen);  // "outer loop"
+    ++theLineCounter;
     if (aLine == NULL || !str_starts_with (aLine, "outer", 5))
     {
-      Message::SendFail (TCollection_AsciiString ("Error: unexpected format of facet at line ") + (aNbLine + 1));
+      Message::SendFail() << "Error: unexpected format of facet at line " << theLineCounter;
       return false;
     }
 
@@ -364,6 +393,7 @@ Standard_Boolean RWStl_Reader::ReadAscii (Standard_IStream& theStream,
     for (Standard_Integer i = 0; i < 3; i++)
     {
       aLine = theBuffer.ReadLine (theStream, aLineLen);
+      ++theLineCounter;
       if (aLine == NULL)
       {
         isEOF = true;
@@ -372,7 +402,7 @@ Standard_Boolean RWStl_Reader::ReadAscii (Standard_IStream& theStream,
       gp_XYZ aReadVertex;
       if (!ReadVertex (aLine, aReadVertex.ChangeCoord (1), aReadVertex.ChangeCoord (2), aReadVertex.ChangeCoord (3)))
       {
-        Message::SendFail (TCollection_AsciiString ("Error: cannot read vertex coordinates at line ") + aNbLine);
+        Message::SendFail() << "Error: cannot read vertex coordinates at line " << theLineCounter;
         return false;
       }
       aVertex[i] = aReadVertex;
@@ -385,15 +415,12 @@ Standard_Boolean RWStl_Reader::ReadAscii (Standard_IStream& theStream,
       break;
     }
 
-    aNbLine += 5;
-
     // add triangle
     aMergeTool.AddTriangle (aVertex);
 
     theBuffer.ReadLine (theStream, aLineLen); // skip "endloop"
     theBuffer.ReadLine (theStream, aLineLen); // skip "endfacet"
-
-    aNbLine += 2;
+    theLineCounter += 2;
   }
 
   return aPS.More();

@@ -116,7 +116,7 @@ namespace
   public:
     //! Add new solid
     //! Add triangulation to triangulation list for multi-domain case
-    virtual void AddSolid() Standard_OVERRIDE
+    virtual void AddSolid(const TCollection_AsciiString& ) Standard_OVERRIDE
     {
       if (Handle(Poly_Triangulation) aCurrentTri = GetTriangulation())
       {

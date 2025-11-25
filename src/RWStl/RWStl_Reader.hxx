@@ -19,6 +19,7 @@
 #include <gp_XYZ.hxx>
 #include <Standard_ReadLineBuffer.hxx>
 #include <Standard_IStream.hxx>
+#include <TCollection_AsciiString.hxx>
 
 class Message_ProgressRange;
 
@@ -70,10 +71,15 @@ public:
   //! Empty lines are not supported and will read to reading failure.
   //! If theUntilPos is non-zero, reads not more than until that position.
   //! Returns true if success, false on error or user break.
-  Standard_EXPORT Standard_Boolean ReadAscii (Standard_IStream& theStream,
-                                              Standard_ReadLineBuffer& theBuffer,
-                                              const std::streampos theUntilPos,
-                                              const Message_ProgressRange& theProgress);
+  Standard_Boolean ReadAscii (Standard_IStream& theStream,
+                              Standard_ReadLineBuffer& theBuffer,
+                              const std::streampos theUntilPos,
+                              const Message_ProgressRange& theProgress)
+  {
+    TCollection_AsciiString aName;
+    Standard_Integer aLineCounter = 0;
+    return readAscii(aName, aLineCounter, theStream, theBuffer, theUntilPos, theProgress);
+  }
 
 public:
 
@@ -87,7 +93,7 @@ public:
 
   //! Callback function to be implemented in descendant.
   //! Should create a new triangulation for a solid in multi-domain case.
-  virtual void AddSolid() {}
+  virtual void AddSolid (const TCollection_AsciiString& theName) { (void)theName; }
 public:
 
   //! Return merge tolerance; M_PI/2 by default - all nodes are merged regardless angle between triangles.
@@ -102,6 +108,17 @@ public:
 
   //! Set linear merge tolerance.
   void SetMergeTolerance (double theTolerance) { myMergeTolearance = theTolerance; }
+
+protected:
+
+  //! Read one 'solid' within ASCII STL file.
+  Standard_EXPORT Standard_Boolean readAscii(TCollection_AsciiString& theName,
+                                             Standard_Integer& theLineCounter,
+                                             Standard_IStream& theStream,
+                                             Standard_ReadLineBuffer& theBuffer,
+                                             const std::streampos theUntilPos,
+                                             const Message_ProgressRange& theProgress);
+
 
 protected:
 

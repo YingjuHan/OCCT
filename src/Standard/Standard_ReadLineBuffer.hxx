@@ -38,6 +38,9 @@ public:
   //! Destructor.
   virtual ~Standard_ReadLineBuffer() {}
 
+  //! Return true if buffer is empty.
+  bool IsEmpty() const { return myBufferPos == 0 || myBufferPos >= myBytesLastRead; }
+
   //! Clear buffer and cached values.
   void Clear()
   {

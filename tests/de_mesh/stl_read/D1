@@ -74,7 +74,7 @@ checknbshapes res_one_binary -face 1
 puts "\n#======================================================================"
 puts "# Binary file with no facets -- will be treated as Ascii and generate e r r o r"
 puts "#======================================================================"
-puts "REQUIRED ALL: Error: premature end of file"
+puts "REQUIRED ALL: Error: invalid STL header"
 set fd [open ${imagedir}/${casename}_zero_binary.stl w]
 fconfigure $fd -translation binary
 puts -nonewline $fd "stl [string repeat { } 76][binary format i 0]"
