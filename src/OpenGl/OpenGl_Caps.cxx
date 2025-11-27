@@ -40,6 +40,7 @@ OpenGl_Caps::OpenGl_Caps()
   contextSyncDebug  (Standard_False),
   contextNoAccel    (Standard_False),
   contextCompatible (Standard_True),
+  contextWebGlCompatibility (Standard_False),
   contextNoExtensions (Standard_False),
   contextMajorVersionUpper (-1),
   contextMinorVersionUpper (-1),
@@ -80,6 +81,7 @@ OpenGl_Caps& OpenGl_Caps::operator= (const OpenGl_Caps& theCopy)
   contextSyncDebug  = theCopy.contextSyncDebug;
   contextNoAccel    = theCopy.contextNoAccel;
   contextCompatible = theCopy.contextCompatible;
+  contextWebGlCompatibility = theCopy.contextWebGlCompatibility;
   contextNoExtensions = theCopy.contextNoExtensions;
   contextMajorVersionUpper = theCopy.contextMajorVersionUpper;
   contextMinorVersionUpper = theCopy.contextMinorVersionUpper;

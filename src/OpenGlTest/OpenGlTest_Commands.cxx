@@ -695,6 +695,13 @@ static int VCaps (Draw_Interpretor& theDI,
         aCaps->ffpEnable = Standard_False;
       }
     }
+    else if (anArgCase == "-webgl"
+          || anArgCase == "-webglcompat"
+          || anArgCase == "-webglcompatible"
+          || anArgCase == "-webglcompatibility")
+    {
+      aCaps->contextWebGlCompatibility = Draw::ParseOnOffIterator (theArgNb, theArgVec, anArgIter);
+    }
     else if (anArgCase == "-stereo"
           || anArgCase == "-quadbuffer"
           || anArgCase == "-nostereo"
@@ -766,7 +773,7 @@ void OpenGlTest::Commands (Draw_Interpretor& theCommands)
     __FILE__, VGlShaders, aGroup);
   theCommands.Add ("vcaps",
             "vcaps [-sRGB {0|1}] [-vbo {0|1}] [-sprites {0|1}] [-ffp {0|1}] [-polygonMode {0|1}]"
-    "\n\t\t:       [-compatibleProfile {0|1}] [-compressedTextures {0|1}]"
+    "\n\t\t:       [-compatibleProfile {0|1}] [-compressedTextures {0|1}] [-webGlCompatibility {0|1}]"
     "\n\t\t:       [-vsync {0|1}] [-useWinBuffer {0|1}] [-opaqueAlpha {0|1}]"
     "\n\t\t:       [-deepColor {0|1}] [-quadBuffer {0|1}] [-stereo {0|1}]"
     "\n\t\t:       [-softMode {0|1}] [-noupdate|-update]"
@@ -792,6 +799,7 @@ void OpenGlTest::Commands (Draw_Interpretor& theCommands)
     "\n\t\t: Context creation options:"
     "\n\t\t:  softMode          - software OpenGL implementation"
     "\n\t\t:  compatibleProfile - backward-compatible profile"
+    "\n\t\t:  webGlCompatibility - WebGL-compatible profile"
     "\n\t\t:  noExtensions      - disallow usage of extensions"
     "\n\t\t:  maxVersion        - force upper OpenGL version to be used"
     "\n\t\t: These parameters control alternative"

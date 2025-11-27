@@ -141,6 +141,16 @@ public: //! @name context creation parameters
   Standard_Boolean contextCompatible;
 
   /**
+   * Request WebGL-compatible OpenGL ES context.
+   * This flag requires EGL_CONTEXT_WEBGL_COMPATIBILITY_ANGLE extension support in EGL driver.
+   *
+   * Has no effect on OpenGL drivers.
+   *
+   * OFF by default.
+   */
+  Standard_Boolean contextWebGlCompatibility;
+
+  /**
    * Disallow using OpenGL extensions.
    * Should be used for debugging purposes only!
    *
