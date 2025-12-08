@@ -94,11 +94,8 @@ class AIS_Manipulator : public AIS_InteractiveObject
 {
 public:
 
-  //! Constructs a manipulator object with default placement and all parts to be displayed.
-  Standard_EXPORT AIS_Manipulator();
-
   //! Constructs a manipulator object with input location and positions of axes and all parts to be displayed.
-  Standard_EXPORT AIS_Manipulator (const gp_Ax2& thePosition);
+  Standard_EXPORT AIS_Manipulator (const gp_Ax2& thePosition = gp::XOY());
 
   //! Disable or enable visual parts for translation, rotation or scaling for some axis.
   //! By default all parts are enabled (will be displayed).
@@ -369,118 +366,6 @@ protected:
 
 protected: //! @name Auxiliary classes to fill presentation with proper primitives
 
-  class Quadric
-  {
-  public:
-
-    virtual ~Quadric()
-    {
-      myTriangulation.Nullify();
-      myArray.Nullify();
-    }
-
-
-    const Handle(Poly_Triangulation)& Triangulation() const { return myTriangulation; }
-
-    const Handle(Graphic3d_ArrayOfTriangles)& Array() const { return myArray; }
-
-  protected:
-
-    Handle(Poly_Triangulation) myTriangulation;
-    Handle(Graphic3d_ArrayOfTriangles) myArray;
-  };
-
-  class Disk : public Quadric
-  {
-  public:
-
-    Disk()
-      : Quadric(),
-      myInnerRad(0.0f),
-      myOuterRad(1.0f)
-    { }
-
-    ~Disk() { }
-
-    void Init (const Standard_ShortReal theInnerRadius,
-               const Standard_ShortReal theOuterRadius,
-               const gp_Ax1& thePosition,
-               const Standard_Integer theSlicesNb = 20,
-               const Standard_Integer theStacksNb = 20);
-
-  protected:
-
-    gp_Ax1             myPosition;
-    Standard_ShortReal myInnerRad;
-    Standard_ShortReal myOuterRad;
-  };
-
-  class Sphere : public Quadric
-  {
-  public:
-    Sphere()
-      : Quadric(),
-      myRadius(1.0f)
-    {}
-
-    void Init (const Standard_ShortReal theRadius,
-               const gp_Pnt& thePosition,
-               const Standard_Integer theSlicesNb = 20,
-               const Standard_Integer theStacksNb = 20);
-
-  protected:
-
-    gp_Pnt myPosition;
-    Standard_ShortReal myRadius;
-  };
-
-  class Cube
-  {
-  public:
-
-    Cube() { }
-    ~Cube() { }
-
-    void Init (const gp_Ax1& thePosition, const Standard_ShortReal myBoxSize);
-
-    const Handle(Poly_Triangulation)& Triangulation() const { return myTriangulation; }
-
-    const Handle(Graphic3d_ArrayOfTriangles)& Array() const { return myArray; }
-
-  private:
-
-    void addTriangle (const Standard_Integer theIndex, const gp_Pnt& theP1, const gp_Pnt& theP2, const gp_Pnt& theP3,
-                      const gp_Dir& theNormal);
-
-  protected:
-
-    Handle(Poly_Triangulation) myTriangulation;
-    Handle(Graphic3d_ArrayOfTriangles) myArray;
-  };
-
-  class Sector : public Quadric
-  {
-  public:
-
-    Sector()
-      : Quadric(),
-      myRadius(0.0f)
-    { }
-
-    ~Sector() { }
-
-    void Init(const Standard_ShortReal theRadius,
-              const gp_Ax1&            thePosition,
-              const gp_Dir&            theXDirection,
-              const Standard_Integer   theSlicesNb = 5,
-              const Standard_Integer   theStacksNb = 5);
-
-  protected:
-
-    gp_Ax1             myPosition;
-    Standard_ShortReal myRadius;
-  };
-
   //! The class describes on axis sub-object.
   //! It includes sub-objects itself:
   //! -rotator
@@ -504,51 +389,9 @@ protected: //! @name Auxiliary classes to fill presentation with proper primitiv
 
     const gp_Ax1& Position() const { return myPosition; }
 
-    void SetTransformPersistence (const Handle(Graphic3d_TransformPers)& theTrsfPers)
-    {
-      if (!myHighlightTranslator.IsNull())
-      {
-        myHighlightTranslator->SetTransformPersistence (theTrsfPers);
-      }
+    Standard_EXPORT void SetTransformPersistence (const Handle(Graphic3d_TransformPers)& theTrsfPers);
 
-      if (!myHighlightScaler.IsNull())
-      {
-        myHighlightScaler->SetTransformPersistence (theTrsfPers);
-      }
-
-      if (!myHighlightRotator.IsNull())
-      {
-        myHighlightRotator->SetTransformPersistence (theTrsfPers);
-      }
-
-      if (!myHighlightDragger.IsNull())
-      {
-        myHighlightDragger->SetTransformPersistence(theTrsfPers);
-      }
-    }
-
-    void Transform (const Handle(TopLoc_Datum3D)& theTransformation)
-    {
-      if (!myHighlightTranslator.IsNull())
-      {
-        myHighlightTranslator->SetTransformation (theTransformation);
-      }
-
-      if (!myHighlightScaler.IsNull())
-      {
-        myHighlightScaler->SetTransformation (theTransformation);
-      }
-
-      if (!myHighlightRotator.IsNull())
-      {
-        myHighlightRotator->SetTransformation (theTransformation);
-      }
-
-      if (!myHighlightDragger.IsNull())
-      {
-        myHighlightDragger->SetTransformation(theTransformation);
-      }
-    }
+    Standard_EXPORT void Transform (const Handle(TopLoc_Datum3D)& theTransformation);
 
     Standard_Boolean HasTranslation() const { return myHasTranslation; }
 
@@ -574,6 +417,9 @@ protected: //! @name Auxiliary classes to fill presentation with proper primitiv
 
     void SetAxisRadius (const Standard_ShortReal theValue) { myAxisRadius = theValue; }
 
+    //! Return radius of rotation circle.
+    Standard_ShortReal InnerRadius() const { return myInnerRadius; }
+
     const Handle(Prs3d_Presentation)& TranslatorHighlightPrs() const { return myHighlightTranslator; }
 
     const Handle(Prs3d_Presentation)& RotatorHighlightPrs() const { return myHighlightRotator; }
@@ -592,41 +438,31 @@ protected: //! @name Auxiliary classes to fill presentation with proper primitiv
 
     const Handle(Graphic3d_ArrayOfTriangles)& TriangleArray() const { return myTriangleArray; }
 
+    //! Return gap between visual part of the manipulator.
+    Standard_ShortReal Indent() const { return myIndent; }
+
     void SetIndent (const Standard_ShortReal theValue) { myIndent = theValue; }
+
+    Standard_ShortReal DiskThickness() const { return myDiskThickness; }
 
     Standard_ShortReal Size() const { return myLength + myBoxSize + myDiskThickness + myIndent * 2.0f; }
 
-    gp_Pnt ScalerCenter (const gp_Pnt& theLocation) const { return theLocation.XYZ() + myPosition.Direction().XYZ() * (myLength + myIndent + myBoxSize * 0.5f); }
-
-    void SetSize (const Standard_ShortReal theValue)
+    gp_Pnt ScalerCenter (const gp_Pnt& theLocation) const
     {
-      if (myIndent > theValue * 0.1f)
-      {
-        myLength = theValue * 0.7f;
-        myBoxSize = theValue * 0.15f;
-        myDiskThickness = theValue * 0.05f;
-        myIndent = theValue * 0.05f;
-      }
-      else // use pre-set value of predent
-      {
-        Standard_ShortReal aLength = theValue - 2 * myIndent;
-        myLength = aLength * 0.8f;
-        myBoxSize = aLength * 0.15f;
-        myDiskThickness = aLength * 0.05f;
-      }
-      myInnerRadius = myIndent * 2 + myBoxSize + myLength;
-      myAxisRadius = myBoxSize / 4.0f;
+      return theLocation.XYZ() + myPosition.Direction().XYZ() * (myLength + myIndent + myBoxSize * 0.5f);
     }
+
+    //! Return size of scaling cube.
+    Standard_ShortReal ScalerCubeSize() const { return myBoxSize; }
+
+    Standard_EXPORT void SetSize (const Standard_ShortReal theValue);
 
     Standard_Integer FacettesNumber() const { return myFacettesNumber; }
 
   public:
 
     const gp_Pnt& TranslatorTipPosition() const { return myArrowTipPos; }
-    const Sector& DraggerSector() const { return mySector; }
-    const Disk& RotatorDisk() const { return myCircle; }
     float RotatorDiskRadius() const { return myCircleRadius; }
-    const Cube& ScalerCube() const { return myCube; }
     const gp_Pnt& ScalerCubePosition() const { return myCubePos; }
 
   protected:
@@ -654,10 +490,7 @@ protected: //! @name Auxiliary classes to fill presentation with proper primitiv
     Standard_Integer myFacettesNumber;
 
     gp_Pnt   myArrowTipPos;
-    Sector   mySector;
-    Disk     myCircle;
     float    myCircleRadius;
-    Cube     myCube;
     gp_Pnt   myCubePos;
 
     Handle(Graphic3d_Group) myTranslatorGroup;
@@ -674,10 +507,13 @@ protected: //! @name Auxiliary classes to fill presentation with proper primitiv
 
   };
 
+  //! Compute cube triangulation.
+  static Handle(Graphic3d_ArrayOfTriangles) computeCube(const gp_Ax1& thePosition,
+                                                        const Standard_ShortReal theSize);
+
 protected:
 
   Axis myAxes[3]; //!< Tree axes of the manipulator.
-  Sphere myCenter; //!< Visual part displaying the center sphere of the manipulator.
   gp_Ax2 myPosition; //!< Position of the manipulator object. it displays its location and position of its axes.
 
   Standard_Integer myCurrentIndex; //!< Index of active axis.
