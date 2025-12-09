@@ -600,6 +600,7 @@ proc testgrid {args} {
 
     # start test cases
     set userbreak 0
+    testprogress -new [llength $tests_list]
     foreach test_def $tests_list {
         # check for user break
         if { $userbreak || "[info commands dbreak]" == "dbreak" && [catch dbreak] } {
@@ -669,11 +670,14 @@ proc testgrid {args} {
             set job [tpool::post -nowait $worker "catch \"$command\" output; return \$output"]
             set job_def($job) [list $logdir $dir $group $grid $casename]
             incr nbpooled
+            testprogress -open "$group $grid $casename"
             if { $nbpooled > $nbpooled_max } {
+                testprogress -show
                 _testgrid_process_jobs $worker $nbpooled_ok
             }
         } else {
             # sequential execution
+            testprogress -open "$group $grid $casename" -show
             catch {eval $command} output
             _log_test_case $output $logdir $dir $group $grid $casename log
 
@@ -696,6 +700,7 @@ proc testgrid {args} {
         catch {tpool::resume $worker}
         tpool::release $worker
     }
+    testprogress -delete
 
     uplevel dchrono _timer stop
     set time [lindex [split [uplevel dchrono _timer show] "\n"] 0]
@@ -1639,6 +1644,8 @@ proc _log_test_case {output logdir dir group grid casename logvar} {
     if { [file exists $logdir/$group/$grid/${casename}.tcl] } {
         file delete $logdir/$group/$grid/${casename}.tcl
     }
+
+    testprogress -close "$group $grid $casename" -show
 }
 
 # Auxiliary procedure to save log to file

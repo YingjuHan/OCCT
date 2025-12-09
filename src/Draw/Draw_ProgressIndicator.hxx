@@ -22,6 +22,8 @@
 #include <Standard.hxx>
 #include <Standard_ThreadId.hxx>
 
+#include <list>
+
 class Draw_ProgressIndicator;
 DEFINE_STANDARD_HANDLE(Draw_ProgressIndicator, Message_ProgressIndicator)
 
@@ -73,6 +75,10 @@ public:
   
   //! Redefines method UserBreak of Progress Indicator
   Standard_EXPORT virtual Standard_Boolean UserBreak() Standard_OVERRIDE;
+
+  //! Prepare textual progress info.
+  Standard_EXPORT virtual void TextProgress(const Message_ProgressScope& theScope,
+                                            std::stringstream& theStream);
   
   //! Get/Set default value for tcl mode
   Standard_EXPORT static Standard_Boolean& DefaultTclMode();
@@ -106,6 +112,41 @@ private:
   Aspect_Drawable       myTaskbarWin1 = nullptr;
   Aspect_Drawable       myTaskbarWin2 = nullptr;
 #endif
+};
+
+//! Implements ProgressIndicator for testgrid.
+class Draw_TestProgressIndicator : public Draw_ProgressIndicator
+{
+  using Draw_ProgressIndicator::Show;
+public:
+  //! Return global instance.
+  Standard_EXPORT static Handle(Draw_TestProgressIndicator)& Instance();
+
+public:
+  //! Main constructor.
+  Standard_EXPORT Draw_TestProgressIndicator(const Standard_Real theMax,
+                                             const Draw_Interpretor& theDI,
+                                             const Standard_Real theUpdateThreshold = 1.);
+
+  //! Open scope.
+  Standard_EXPORT void Open(const TCollection_AsciiString& theName);
+
+  //! Close scope.
+  Standard_EXPORT bool Close(const TCollection_AsciiString& theName);
+
+  //! Show progress.
+  void Show() { Draw_ProgressIndicator::Show(*myRoot); }
+
+  //! Prepare textual progress info.
+  Standard_EXPORT virtual void TextProgress(const Message_ProgressScope& theScope,
+                                            std::stringstream& theStream) Standard_OVERRIDE;
+
+private:
+  std::unique_ptr<Message_ProgressScope> myRoot;
+  std::list<std::pair<TCollection_AsciiString, std::unique_ptr<Message_ProgressScope>>> myOpened;
+  std::list<TCollection_AsciiString> myClosed;
+  int myNbMaxLines = 10;
+  int myNbClosed = 0;
 };
 
 #endif // _Draw_ProgressIndicator_HeaderFile

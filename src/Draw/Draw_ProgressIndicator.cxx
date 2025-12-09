@@ -101,6 +101,47 @@ void Draw_ProgressIndicator::Reset()
 }
 
 //=======================================================================
+//function : TextProgress
+//purpose  :
+//=======================================================================
+void Draw_ProgressIndicator::TextProgress(const Message_ProgressScope& theScope,
+                                          std::stringstream& theStream)
+{
+  theStream.setf(std::ios::fixed, std::ios::floatfield);
+  theStream.precision(0);
+  theStream << "Progress: " << 100. * GetPosition() << "%";
+
+  NCollection_List<const Message_ProgressScope*> aScopes;
+  for (const Message_ProgressScope* aPS = &theScope; aPS; aPS = aPS->Parent())
+    aScopes.Prepend(aPS);
+
+  for (NCollection_List<const Message_ProgressScope*>::Iterator it(aScopes); it.More(); it.Next())
+  {
+    const Message_ProgressScope* aPS = it.Value();
+    if (!aPS->Name()) continue; // skip unnamed scopes
+    theStream << " " << aPS->Name() << ": ";
+
+    // print progress info differently for finite and infinite scopes
+    Standard_Real aVal = aPS->Value();
+    if (aPS->IsInfinite())
+    {
+      if (Precision::IsInfinite(aVal))
+      {
+        theStream << "finished";
+      }
+      else
+      {
+        theStream << aVal;
+      }
+    }
+    else
+    {
+      theStream << aVal << " / " << aPS->MaxValue();
+    }
+  }
+}
+
+//=======================================================================
 //function : Show
 //purpose  : 
 //=======================================================================
@@ -133,36 +174,7 @@ void Draw_ProgressIndicator::Show (const Message_ProgressScope& theScope, const 
   
   // Prepare textual progress info
   std::stringstream aText;
-  aText.setf (std::ios::fixed, std:: ios::floatfield);
-  aText.precision(0);
-  aText << "Progress: " << 100. * GetPosition() << "%";
-  NCollection_List<const Message_ProgressScope*> aScopes;
-  for (const Message_ProgressScope* aPS = &theScope; aPS; aPS = aPS->Parent())
-    aScopes.Prepend(aPS);
-  for (NCollection_List<const Message_ProgressScope*>::Iterator it(aScopes); it.More(); it.Next())
-  {
-    const Message_ProgressScope* aPS = it.Value();
-    if (!aPS->Name()) continue; // skip unnamed scopes
-    aText << " " << aPS->Name() << ": ";
-
-    // print progress info differently for finite and infinite scopes
-    Standard_Real aVal = aPS->Value();
-    if (aPS->IsInfinite())
-    {
-      if (Precision::IsInfinite(aVal))
-      {
-        aText << "finished";
-      }
-      else
-      {
-        aText << aVal;
-      }
-    }
-    else
-    {
-      aText << aVal << " / " << aPS->MaxValue();
-    }
-  }
+  TextProgress(theScope, aText);
 
   // Show graphic progress bar.
   // It will be updated only within GUI thread.
@@ -377,4 +389,107 @@ Standard_Address &Draw_ProgressIndicator::StopIndicator()
 {
   static Standard_Address stopIndicator = 0;
   return stopIndicator;
+}
+
+//=======================================================================
+//function : Draw_TestProgressIndicator::Instance
+//purpose  :
+//=======================================================================
+Handle(Draw_TestProgressIndicator)& Draw_TestProgressIndicator::Instance()
+{
+  static Handle(Draw_TestProgressIndicator) anInstance;
+  return anInstance;
+}
+
+//=======================================================================
+//function : Draw_TestProgressIndicator
+//purpose  :
+//=======================================================================
+Draw_TestProgressIndicator::Draw_TestProgressIndicator(const Standard_Real theMax,
+                                                       const Draw_Interpretor& theDI,
+                                                       const Standard_Real theUpdateThreshold)
+: Draw_ProgressIndicator(theDI, theUpdateThreshold)
+{
+  myRoot.reset(new Message_ProgressScope(Start(), nullptr, theMax, theMax <= 0.0));
+}
+
+//=======================================================================
+//function : Draw_TestProgressIndicator::Open
+//purpose  :
+//=======================================================================
+void Draw_TestProgressIndicator::Open(const TCollection_AsciiString& theName)
+{
+  std::unique_ptr<Message_ProgressScope> aScope(new Message_ProgressScope(myRoot->Next(), nullptr, 1));
+  std::pair<TCollection_AsciiString, std::unique_ptr<Message_ProgressScope>> aScopeKey(theName, std::move(aScope));
+  myOpened.emplace_back(std::move(aScopeKey));
+}
+
+//=======================================================================
+//function : Draw_TestProgressIndicator::Close
+//purpose  :
+//=======================================================================
+bool Draw_TestProgressIndicator::Close(const TCollection_AsciiString& theName)
+{
+  for (auto anIter = myOpened.begin(); anIter != myOpened.end(); ++anIter)
+  {
+    if (anIter->first == theName)
+    {
+      if (int(myClosed.size()) >= myNbMaxLines)
+        myClosed.pop_front();
+
+      ++myNbClosed;
+      myClosed.emplace_back(std::move(anIter->first));
+      myOpened.erase(anIter);
+      return true;
+    }
+  }
+  return false;
+}
+
+//=======================================================================
+//function : Draw_TestProgressIndicator::TextProgress
+//purpose  :
+//=======================================================================
+void Draw_TestProgressIndicator::TextProgress(const Message_ProgressScope& ,
+                                              std::stringstream& theStream)
+{
+  if (myRoot.get() == nullptr)
+    return;
+
+  const int aNbClosed = int(myRoot->Value());
+  theStream.setf(std::ios::fixed, std::ios::floatfield);
+  theStream.precision(0);
+  theStream << "Progress: " << 100. * GetPosition() << "% (" << aNbClosed;
+  if (!myRoot->IsInfinite())
+    theStream << " / " << myRoot->MaxValue();
+
+  theStream << ")\n";
+  if (!myOpened.empty())
+  {
+    theStream << "Opened (" << myOpened.size() << "):\n";
+    int aCounter = 0;
+    for (const auto& anIter : myOpened)
+    {
+      if (++aCounter >= myNbMaxLines)
+      {
+        theStream << "  ...\n";
+        break;
+      }
+      theStream << "  " << anIter.first << "\n";
+    }
+  }
+  if (!myClosed.empty())
+  {
+    theStream << "Closed (" << myNbClosed << "):\n";
+    int aCounter = 0;
+    for (const auto& anIter : myClosed)
+    {
+      if (++aCounter >= myNbMaxLines)
+      {
+        theStream << "  ...\n";
+        break;
+      }
+      theStream << "  " << anIter << "\n";
+    }
+  }
 }

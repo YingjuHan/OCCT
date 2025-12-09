@@ -19,6 +19,7 @@
 #include <Draw_Appli.hxx>
 #include <Draw_Chronometer.hxx>
 #include <Draw_Drawable3D.hxx>
+#include <Draw_ProgressIndicator.hxx>
 #include <Message.hxx>
 #include <Message_Messenger.hxx>
 #include <Message_PrinterOStream.hxx>
@@ -328,8 +329,69 @@ static Standard_Integer decho(Draw_Interpretor& di, Standard_Integer n, const ch
   return 0;
 }
 
+static Standard_Integer testprogress(Draw_Interpretor& theDI,
+                                     Standard_Integer theNbArgs,
+                                     const char** theArgVec)
+{
+  Handle(Draw_TestProgressIndicator)& aProgress = Draw_TestProgressIndicator::Instance();
+  for (Standard_Integer anArgIter = 1; anArgIter < theNbArgs; ++anArgIter)
+  {
+    TCollection_AsciiString anArg(theArgVec[anArgIter]);
+    anArg.LowerCase();
+    if (anArg == "-new" && anArgIter + 1 < theNbArgs)
+    {
+      const int aNbMax = Draw::Atoi(theArgVec[++anArgIter]);
+      aProgress = new Draw_TestProgressIndicator(aNbMax, theDI);
+    }
+    else if (anArg == "-delete")
+    {
+      aProgress.Nullify();
+    }
+    else if (aProgress.IsNull())
+    {
+      theDI << "Syntax error - no progress indicator created";
+      return 1;
+    }
+    else if (anArg == "-open" && anArgIter + 1 < theNbArgs)
+    {
+      const char* aName = theArgVec[++anArgIter];
+      aProgress->Open(aName);
+    }
+    else if (anArg == "-close" && anArgIter + 1 < theNbArgs)
+    {
+      const char* aName = theArgVec[++anArgIter];
+      if (!aProgress->Close(aName))
+      {
+        theDI << "Syntax error - scope wasn't opened";
+        return 1;
+      }
+    }
+    else if (anArg == "-show")
+    {
+      aProgress->Show();
+    }
+    else
+    {
+      theDI << "Syntax error at '" << theArgVec[anArgIter] << "'";
+      return 1;
+    }
+  }
+  return 0;
+}
+
 static Standard_Integer dbreak(Draw_Interpretor& di, Standard_Integer, const char**)
 {
+  const Handle(Draw_TestProgressIndicator)& aProgress = Draw_TestProgressIndicator::Instance();
+  if (!aProgress.IsNull())
+  {
+    if (aProgress->UserBreak())
+    {
+      di << "User pressed Control-Break";
+      return 1; // Tcl exception
+    }
+    return 0;
+  }
+
   try {
     OSD::ControlBreak();
   }
@@ -1502,8 +1564,19 @@ void Draw::BasicCommands(Draw_Interpretor& theCommands)
                   "\n\t\t: Manages default DPI awareness flag used for creating 3D viewer",
                   __FILE__, dpiaware, g);
 
-  theCommands.Add("dbreak", "raises Tcl exception if user has pressed Control-Break key",
+  theCommands.Add("dbreak", "raises Tcl exception if user has pressed Control-Break key or aborted progress",
 		  __FILE__,dbreak,g);
+
+  theCommands.Add("testprogress",
+            "testprogress [-new nbScopes] [-delete|-show] [-open|-close testCase]"
+    "\n\t\t: Manages progress indicator for testgrid."
+    "\n\t\t:  -new    create progress with specified number of scopes;"
+    "\n\t\t:  -delete destroy progress;"
+    "\n\t\t:  -open   open  scope;"
+    "\n\t\t:  -close  close scope;"
+    "\n\t\t:  -show   update progress title.",
+      __FILE__, testprogress, g);
+
   theCommands.Add("dversion", "provides information on OCCT build configuration (version, compiler, OS, C library, etc.)",
 		  __FILE__,dversion,g);
   theCommands.Add("dlocale", "set and / or query locate of C subsystem (function setlocale())",
