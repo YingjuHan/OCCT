@@ -571,6 +571,8 @@ proc testgrid {args} {
     lappend log "Host: [info hostname]"
     lappend log "Started on: [clock format [clock seconds] -format {%Y-%m-%d %H:%M:%S}]"
     catch {lappend log "DRAW build:\n[dversion]" }
+    catch {lappend log "Multithreading info:\n[dparallel]" }
+    catch {lappend log "Memory info:\n[meminfo]" }
     catch { pload VISUALIZATION; vinit g/v/info -virtual -w 2 -h 2 }
     catch { lappend log "[vglinfo -complete -lineWidth 80]" }
     catch { vclose g/v/info 0 }
@@ -1426,10 +1428,15 @@ proc _run_test {scriptsdir group gridname casefile echo} {
     if { ! [catch {uplevel meminfo h} memuse] } {
         append stats "MEMORY DELTA: [expr ($memuse - $membase) / 1024] KiB\n"
     }
+    if { ! [catch {uplevel meminfo wsetpeak} mempeak] } {
+        append stats "MEMORY PEAK: [expr ($mempeak) / 1024] KiB\n"
+    }
     uplevel dchrono _timer stop
     set cpu_usr [uplevel dchrono _timer -userCPU]
+    set cpu_sys [uplevel dchrono _timer -sysCPU]
     set elps    [uplevel dchrono _timer -elapsed]
     append stats "TOTAL CPU TIME: $cpu_usr sec\n"
+    append stats "SYSTEM CPU TIME: $cpu_sys sec\n"
     append stats "ELAPSED TIME: $elps sec\n"
     if { $dlog_exists && ! $echo } {
         dlog add $stats
