@@ -23,6 +23,8 @@
 
 IMPLEMENT_STANDARD_RTTIEXT(XmlMXCAFDoc_ColorDriver,XmlMDF_ADriver)
 
+IMPLEMENT_DOMSTRING(RgbaColor, "rgba")
+
 //=======================================================================
 //function : XmlMXCAFDoc_ColorDriver
 //purpose  : Constructor
@@ -50,20 +52,43 @@ Standard_Boolean XmlMXCAFDoc_ColorDriver::Paste
                                  const Handle(TDF_Attribute)& theTarget,
                                  XmlObjMgt_RRelocationTable&  ) const
 {
-  Standard_Integer aValue;
-  XmlObjMgt_DOMString anIntStr = XmlObjMgt::GetStringValue(theSource);
+  const XmlObjMgt_Element& anElem = theSource;
 
-  if (anIntStr.GetInteger(aValue) == Standard_False) {
+  Handle(XCAFDoc_Color) anInt = Handle(XCAFDoc_Color)::DownCast(theTarget);
+
+  LDOMString  aString = anElem.getAttribute(::RgbaColor());
+  const char* aPos    = aString.GetString();
+  if (aPos != nullptr && *aPos != '\0')
+  {
+    NCollection_Vec4<float> aVec4;
+    char* aNext = nullptr;
+    aVec4[0] = (float)Strtod(aPos, &aNext);
+    aPos = aNext;
+    aVec4[1] = (float)Strtod(aPos, &aNext);
+    aPos = aNext;
+    aVec4[2] = (float)Strtod(aPos, &aNext);
+    aPos = aNext;
+    aVec4[3] = (float)Strtod(aPos, &aNext);
+    if (aPos != aNext)
+    {
+      anInt->Set(Quantity_ColorRGBA(aVec4));
+      return true;
+    }
+  }
+
+  // legacy persistence
+  Standard_Integer aValue = 0;
+  XmlObjMgt_DOMString anIntStr = XmlObjMgt::GetStringValue(theSource);
+  if (!anIntStr.GetInteger(aValue))
+  {
     TCollection_ExtendedString aMessageString =
       TCollection_ExtendedString("Cannot retrieve Color attribute from \"")
-        + anIntStr + "\"";
-    myMessageDriver->Send (aMessageString, Message_Fail);
+      + anIntStr + "\"";
+    myMessageDriver->Send(aMessageString, Message_Fail);
     return Standard_False;
   }
 
-  Handle(XCAFDoc_Color) anInt = Handle(XCAFDoc_Color)::DownCast(theTarget);
   anInt->Set((Quantity_NameOfColor)aValue);
-
   return Standard_True;
 }
 
@@ -76,5 +101,13 @@ void XmlMXCAFDoc_ColorDriver::Paste (const Handle(TDF_Attribute)& theSource,
                                        XmlObjMgt_SRelocationTable&  ) const
 {
   Handle(XCAFDoc_Color) anInt = Handle(XCAFDoc_Color)::DownCast(theSource);
+
+  // legacy persistence
   XmlObjMgt::SetStringValue (theTarget, (Standard_Integer)anInt->GetNOC());
+
+  // new persistent - store RGBA values as floating point numbers
+  const NCollection_Vec4<float> anRgba = anInt->GetColorRGBA();
+  const TCollection_AsciiString anRgbaStr = TCollection_AsciiString()
+    + anRgba.r() + " " + anRgba.g() + " " + anRgba.b() + " " + anRgba.a();
+  theTarget.Element().setAttribute(::RgbaColor(), anRgbaStr.ToCString());
 }
