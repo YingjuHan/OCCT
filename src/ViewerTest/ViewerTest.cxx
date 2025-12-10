@@ -6068,49 +6068,49 @@ static int VSelFilter(Draw_Interpretor& , Standard_Integer theArgc,
 //function : VPickSelected
 //purpose  :
 //=======================================================================
-static int VPickSelected (Draw_Interpretor& , Standard_Integer theArgNb, const char** theArgs)
+static int VPickSelected (Draw_Interpretor& theDI, Standard_Integer theNbArgs, const char** theArgVec)
 {
-  static Standard_Integer aCount = 0;
-  TCollection_AsciiString aName = "PickedShape_";
-
-  if (theArgNb > 1)
+  TCollection_AsciiString aName;
+  ViewerTest_AutoUpdater anUpdateTool(ViewerTest::GetAISContext(), ViewerTest::CurrentView());
+  for (Standard_Integer anArgIter = 1; anArgIter < theNbArgs; ++anArgIter)
   {
-    aName = theArgs[1];
-  }
-  else
-  {
-    aName = aName + aCount++ + "_";
-  }
-
-  Standard_Integer anIdx = 0;
-  for (TheAISContext()->InitSelected(); TheAISContext()->MoreSelected(); TheAISContext()->NextSelected(), ++anIdx)
-  {
-    TopoDS_Shape aShape;
-    if (TheAISContext()->HasSelectedShape())
+    if (anUpdateTool.parseRedrawMode(theArgVec[anArgIter]))
     {
-      aShape = TheAISContext()->SelectedShape();
+      //
+    }
+    else if (aName.IsEmpty())
+    {
+      aName = theArgVec[anArgIter];
     }
     else
     {
-      Handle(AIS_InteractiveObject) IO = TheAISContext()->SelectedInteractive();
-      aShape = Handle(AIS_Shape)::DownCast (IO)->Shape();
+      theDI << "Syntax error at '" << theArgVec[anArgIter] << "'";
+      return 1;
     }
-
-    TCollection_AsciiString aCurrentName = aName;
-    if (anIdx > 0)
-    {
-      aCurrentName += anIdx;
-    }
-
-    DBRep::Set ((aCurrentName).ToCString(), aShape);
-
-    Handle(AIS_Shape) aNewShape = new AIS_Shape (aShape);
-    GetMapOfAIS().Bind (aNewShape, aCurrentName);
-    TheAISContext()->Display (aNewShape, Standard_False);
   }
 
-  TheAISContext()->UpdateCurrentViewer();
+  if (aName.IsEmpty())
+  {
+    static Standard_Integer aCount = 0;
+    aName = TCollection_AsciiString("PickedShape_") + ++aCount;
+  }
 
+  TopTools_ListOfShape aShapes;
+  ViewerTest::GetSelectedShapes(aShapes);
+  if (aShapes.IsEmpty())
+  {
+    theDI << "Error: no selected shapes";
+    return 1;
+  }
+
+  Standard_Integer anIdx = 0;
+  for (const TopoDS_Shape& aShape : aShapes)
+  {
+    TCollection_AsciiString aCurrentName = aShapes.Size() == 1 ? aName : (aName + "_" + ++anIdx);
+    DBRep::Set(aCurrentName.ToCString(), aShape);
+    ViewerTest::Display(aCurrentName, new AIS_Shape(aShape), false);
+    theDI << aCurrentName << " ";
+  }
   return 0;
 }
 
