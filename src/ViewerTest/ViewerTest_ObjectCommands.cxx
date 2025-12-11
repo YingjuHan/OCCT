@@ -6808,6 +6808,59 @@ static int VNormals (Draw_Interpretor& theDI,
 }
 
 //=======================================================================
+//function : VTolSphere
+//purpose  : Displays vertices tolerances as spheres
+//=======================================================================
+static int VTolSphere(Draw_Interpretor& theDI,
+                      Standard_Integer  theNbArgs,
+                      const char**      theArgVec)
+{
+  if (ViewerTest::GetAISContext().IsNull())
+  {
+    theDI << "Error: no active viewer";
+    return 1;
+  }
+  else if (theNbArgs != 2)
+  {
+    theDI << "Syntax error: wrong number of arguments";
+    return 1;
+  }
+
+  const TCollection_AsciiString aName(theArgVec[1]);
+  const TopoDS_Shape aS = DBRep::GetExisting(aName);
+  if (aS.IsNull())
+  {
+    theDI << "Syntax error: no such shape '" << aName << "'\n";
+    return 1;
+  }
+
+  ViewerTest_AutoUpdater anUpdateTool(ViewerTest::GetAISContext(), ViewerTest::CurrentView());
+
+  TopTools_IndexedMapOfShape aMapV;
+  TopExp::MapShapes(aS, TopAbs_VERTEX, aMapV);
+  for (Standard_Integer i = 1; i <= aMapV.Extent(); ++i)
+  {
+    const TopoDS_Vertex& aV      = TopoDS::Vertex(aMapV.FindKey(i));
+    const Standard_Real  aRadius = BRep_Tool::Tolerance(aV);
+    const gp_Pnt         aCenter = BRep_Tool::Pnt(aV);
+
+    gp_Trsf aTrsf; aTrsf.SetTranslationPart(aCenter.XYZ());
+
+    const TCollection_AsciiString aVertName = aName + "_v" + i;
+    theDI << aVertName << " ";
+
+    static constexpr int aNbSlices = 10;
+    Handle(Graphic3d_ArrayOfTriangles) aTris = Prs3d_ToolSphere::Create(aRadius, aNbSlices, aNbSlices, aTrsf);
+    Handle(AIS_InteractiveObject) aPrs = new MyPArrayObject(aTris);
+    aPrs->SetColor(Quantity_NOC_RED);
+    aPrs->SetTransparency(0.5f);
+    ViewerTest::Display(aVertName, aPrs, false);
+  }
+
+  return 0;
+}
+
+//=======================================================================
 //function : ObjectsCommands
 //purpose  :
 //=======================================================================
@@ -7212,4 +7265,9 @@ vnormals Shape [{on|off}=on] [-length {10}] [-nbAlongU {1}] [-nbAlongV {1}] [-nb
                [-useMesh] [-oriented {0}1}=0]
 Displays/Hides normals calculated on shape geometry or retrieved from triangulation
 )" /* [vnormals] */);
+
+  addCmd("vtolsphere", VTolSphere, /* [vtolsphere] */ R"(
+vtolsphere shape
+Displays vertex tolerances by drawing shaded spheres.
+)" /* [vtolsphere] */);
 }

@@ -1,0 +1,12 @@
+puts "================================"
+puts "vtolsphere - command displaying vertex tolerances as shaded spheres in 3D Viewer"
+puts "================================"
+
+pload XDE VISUALIZATION
+testreadiges [locate_data_file bearing.iges] s
+vinit View1
+vdisplay s -dispMode 1
+vfit
+vtolsphere s
+
+vdump $imagedir/${casename}.png
