@@ -23,7 +23,10 @@
 class OpenGl_MaterialState : public OpenGl_StateInterface
 {
 public:
+  //! Return invalid cutoff value.
+  static float InvalidAlphaCutoff() { return -1.0f; }
 
+public:
   //! Creates new material state.
   OpenGl_MaterialState() : myAlphaCutoff (0.5f), myToDistinguish (false), myToMapTexture (false) {}
 
@@ -46,7 +49,7 @@ public:
   float AlphaCutoff() const { return myAlphaCutoff; }
 
   //! Return TRUE if alpha test should be enabled.
-  bool HasAlphaCutoff() const { return myAlphaCutoff <= 1.0f; }
+  bool HasAlphaCutoff() const { return myAlphaCutoff >= 0.0f; }
 
   //! Distinguish front/back flag.
   bool ToDistinguish() const { return myToDistinguish; }

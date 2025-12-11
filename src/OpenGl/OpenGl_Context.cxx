@@ -2363,7 +2363,7 @@ void OpenGl_Context::SetShadingMaterial (const OpenGl_Aspects* theAspect,
   float anAlphaCutoff = (anAspect->AlphaMode() == Graphic3d_AlphaMode_Mask
                       || anAspect->AlphaMode() == Graphic3d_AlphaMode_MaskBlend)
                       ? anAspect->AlphaCutoff()
-                      : ShortRealLast();
+                      : OpenGl_MaterialState::InvalidAlphaCutoff();
   if (anAspect->ToDrawEdges())
   {
     if (anAspect->InteriorStyle() == Aspect_IS_EMPTY

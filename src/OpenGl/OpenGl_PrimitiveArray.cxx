@@ -624,14 +624,10 @@ void OpenGl_PrimitiveArray::drawMarkers (const Handle(OpenGl_Workspace)& theWork
   aCtx->core11fwd->glDisable (GL_BLEND);
   if (aCtx->core11ffp != NULL)
   {
-    if (aCtx->ShaderManager()->MaterialState().AlphaCutoff() >= ShortRealLast())
-    {
-      aCtx->core11fwd->glDisable (GL_ALPHA_TEST);
-    }
+    if (aCtx->ShaderManager()->MaterialState().HasAlphaCutoff())
+      aCtx->core11fwd->glAlphaFunc(GL_GEQUAL, aCtx->ShaderManager()->MaterialState().AlphaCutoff());
     else
-    {
-      aCtx->core11fwd->glAlphaFunc (GL_GEQUAL, aCtx->ShaderManager()->MaterialState().AlphaCutoff());
-    }
+      aCtx->core11fwd->glDisable(GL_ALPHA_TEST);
   }
 }
 

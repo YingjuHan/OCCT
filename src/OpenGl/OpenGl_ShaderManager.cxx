@@ -900,11 +900,9 @@ void OpenGl_ShaderManager::pushMaterialState (const Handle(OpenGl_ShaderProgram)
   if (theProgram == myFfpProgram)
   {
     if (myContext->core11ffp == NULL)
-    {
       return;
-    }
 
-    if (myMaterialState.AlphaCutoff() < ShortRealLast())
+    if (myMaterialState.HasAlphaCutoff())
     {
       myContext->core11fwd->glAlphaFunc (GL_GEQUAL, myMaterialState.AlphaCutoff());
       myContext->core11fwd->glEnable (GL_ALPHA_TEST);
