@@ -137,8 +137,12 @@ help testgrid {
   -verbose [0-2]: verbose level, 1 by default, 2 if option is given without value
   -exclude N: exclude group, subgroup or single test case from executing, where
               N is name of group, subgroup or case. Excluded items should be separated by comma.
-              Option should be used as the first argument after list of executed groups, grids, and test cases.
+              Option should be used as the first argument after list
+              of executed groups, grids, and test cases.
   -parallel N: run N parallel processes (default is number of CPUs, 0 to disable)
+  -sequential N: execute specific group, subgroup or single test cases sequentially,
+                 regardless of -parallel option; syntax example:
+                 > testgrid grp grd1,grd2 -sequential {*}[join {"grp grd1" "grp grd2 A5"} ","]
   -refresh N: save summary logs every N seconds (default 600, minimal 1, 0 to disable)
   -outdir dirname: set log directory (should be empty or non-existing)
   -overwrite: force writing logs in existing non-empty directory
@@ -176,6 +180,9 @@ proc testgrid {args} {
     set exc_group 0
     set exc_grid 0
     set exc_case 0
+    set has_seq_groups 0
+    set has_seq_grids 0
+    set has_seq_cases 0
     set regress 0
     set skipped 0
     set logdir_regr ""
@@ -315,6 +322,45 @@ proc testgrid {args} {
                 }
             } else {
                 error "Option -exclude requires argument"
+            }
+            continue
+        }
+
+        #  run group, subgroup or single test case sequentially
+        if { $arg == "-sequential" } {
+            incr narg
+            if { $narg < [llength $args] && ! [regexp {^-} [lindex $args $narg]] } {
+                set argts $args
+                set idx_begin [string first " -se" $argts]
+                if { ${idx_begin} != "-1" } {
+                    set argts [string replace $argts 0 $idx_begin]
+                }
+                set idx_seq [string first "sequential" $argts]
+                if { ${idx_seq} != "-1" } {
+                    set argts [string replace $argts 0 $idx_seq+10]
+                }
+                set idx [string first " -" $argts]
+                if { ${idx} != "-1" } {
+                    set argts [string replace $argts $idx end]
+                }
+                set argts [split $argts ,]
+                foreach argt $argts {
+                    if { [llength $argt] == 1 } {
+                        lappend seq_groups $argt
+                        set has_seq_groups 1
+                    } elseif { [llength $argt] == 2 } {
+                        lappend seq_grids $argt
+                        set has_seq_grids 1
+                        incr narg
+                    } elseif { [llength $argt] == 3 } {
+                        lappend seq_cases $argt
+                        set has_seq_cases 1
+                        incr narg
+                        incr narg
+                    }
+                }
+            } else {
+                error "Option -sequential requires argument"
             }
             continue
         }
@@ -496,6 +542,13 @@ proc testgrid {args} {
                     }
                 }
 
+		# handle list of sequential groups
+		set isSeqGroup 0
+		if { $parallel <= 0 } { set isSeqGroup 1 }
+		if { $has_seq_groups && $isSeqGroup == 0 && [lsearch $seq_groups "$group"] != -1 } {
+		    set isSeqGroup 1
+		}
+
                 # iterate by all grids
                 foreach grid $gridlist {
 
@@ -514,6 +567,12 @@ proc testgrid {args} {
                         _log_and_puts log "Error: tests directory for grid $grid ($griddir) is missing; skipped"
                         continue
                     }
+
+		    # handle list of sequential grids
+		    set isSeqGrid $isSeqGroup
+		    if { $has_seq_grids && $isSeqGrid == 0 && [lsearch $seq_grids "$group $grid"] != -1 } {
+		        set isSeqGrid 1
+		    }
 
                     # create directory for logging test results
                     if { $logdir != "" } { file mkdir $logdir/$group/$grid }
@@ -548,9 +607,31 @@ proc testgrid {args} {
 
                         if { $nbskip > 0 } {
                             incr nbskip -1
-                        } else {
-                            lappend tests_list [list $dir $group $grid $casename $casefile]
+                            continue
                         }
+
+                        set toExcludeCase 0
+                        if { ${exc_case} > 0 } {
+                            foreach exclude_case_element ${exclude_case} {
+                                set exclude_casegroup_elem [lindex $exclude_case_element end-2]
+                                set exclude_casegrid_elem [lindex $exclude_case_element end-1]
+                                set exclude_elem [lindex $exclude_case_element end]
+                                if { ${exclude_casegroup_elem} == "${group}" &&
+                                     ${exclude_casegrid_elem} == "${grid}" &&
+                                     ${exclude_elem} == "${casename}" } {
+                                    set toExcludeCase 1
+                                }
+                            }
+                        }
+                        if { $toExcludeCase } { continue }
+
+                        # handle list of sequential cases
+                        set isSeqCase $isSeqGrid
+                        if { $has_seq_cases && $isSeqCase == 0 && [lsearch $seq_cases "$group $grid $casename"] != -1 } {
+                            set isSeqCase 1
+                        }
+
+                        lappend tests_list [list $dir $group $grid $casename $casefile $isSeqCase]
                     }
                 }
             }
@@ -610,6 +691,7 @@ proc testgrid {args} {
 
     # start test cases
     set userbreak 0
+    set tests_list_seq {}
     testprogress -new [llength $tests_list]
     foreach test_def $tests_list {
         # check for user break
@@ -623,6 +705,7 @@ proc testgrid {args} {
         set grid      [lindex $test_def 2]
         set casename  [lindex $test_def 3]
         set casefile  [lindex $test_def 4]
+        set caseseq   [lindex $test_def 5]
 
         # command to set tests for generation of image in results directory
         set imgdir_cmd ""
@@ -651,11 +734,6 @@ proc testgrid {args} {
         # note: this is not needed if echo is set to 1 in call to _run_test above
         if { ! [catch {dlog get}] } {
             puts $fd_cmd "puts \[dlog get\]"
-        } else {
-            # else try to use old-style QA_ variables to get more output...
-            set env(QA_DUMP) 1
-            set env(QA_DUP) 1
-            set env(QA_print_command) 1
         }
 
         # final 'exit' is needed when running on Linux under VirtualGl
@@ -676,6 +754,11 @@ proc testgrid {args} {
 
         # run test case, either in parallel or sequentially
         if { $parallel > 0 } {
+            if { $caseseq } {
+                lappend tests_list_seq [list $dir $group $grid $casename $casefile $command]
+                continue
+            }
+
             # parallel execution
             set job [tpool::post -nowait $worker "catch \"$command\" output; return \$output"]
             set job_def($job) [list $logdir $dir $group $grid $casename]
@@ -686,17 +769,7 @@ proc testgrid {args} {
                 _testgrid_process_jobs $worker $nbpooled_ok
             }
         } else {
-            # sequential execution
-            testprogress -open "$group $grid $casename" -show
-            catch {eval $command} output
-            _log_test_case $output $logdir $dir $group $grid $casename log
-
-            # update summary log with requested period
-            if { $logdir != "" && $refresh > 0 && [expr [clock seconds] - $refresh_timer > $refresh] } {
-                # update and dump summary
-                _log_summarize $logdir $log
-                set refresh_timer [clock seconds]
-            }
+            lappend tests_list_seq [list $dir $group $grid $casename $casefile $command]
         }
     }
 
@@ -710,6 +783,40 @@ proc testgrid {args} {
         catch {tpool::resume $worker}
         tpool::release $worker
     }
+
+    # sequential execution
+    set aNbSeqTests [llength $tests_list_seq]
+    if { $parallel > 0 && $aNbSeqTests > 0 } {
+        set ptime [lindex [split [uplevel dchrono _timer show] "\n"] 0]
+        puts "$ptime"
+        puts "Running $aNbSeqTests tests sequentially"
+    }
+    foreach test_def $tests_list_seq {
+        # check for user break
+        if { $userbreak || "[info commands dbreak]" == "dbreak" && [catch dbreak] } {
+            set userbreak 1
+            break
+        }
+
+        set dir       [lindex $test_def 0]
+        set group     [lindex $test_def 1]
+        set grid      [lindex $test_def 2]
+        set casename  [lindex $test_def 3]
+        set casefile  [lindex $test_def 4]
+        set command   [lindex $test_def 5]
+
+        testprogress -open "$group $grid $casename" -show
+        catch {eval $command} output
+        _log_test_case $output $logdir $dir $group $grid $casename log
+
+        # update summary log with requested period
+        if { $logdir != "" && $refresh > 0 && [expr [clock seconds] - $refresh_timer > $refresh] } {
+            # update and dump summary
+            _log_summarize $logdir $log
+            set refresh_timer [clock seconds]
+        }
+    }
+
     testprogress -delete
 
     uplevel dchrono _timer stop
