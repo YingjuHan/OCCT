@@ -125,6 +125,13 @@ static Standard_Integer QAHandleOps (Draw_Interpretor& theDI,
   Handle(Geom_Line) qLine = cpLine; // constructor from const pointer -- could be made explicit...
   
   // check that compiler keeps temporary object referenced by local variable
+#if defined(__GNUC__) && (__GNUC__ >= 12)
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wdangling-pointer"
+  #if (__GNUC__ >= 13)
+    #pragma GCC diagnostic ignored "-Wdangling-reference"
+  #endif
+#endif
   const Handle(Geom_Line)& aTmpRef (Handle(Geom_Line)::DownCast (aCurve2));
   // note that here and in similar checks below we use comparison of pointers instead 
   // of checking handle for Null, since such check may fail if temporary object is
@@ -137,6 +144,9 @@ static Standard_Integer QAHandleOps (Draw_Interpretor& theDI,
   // classes do not inherit each other and they use hard cast for references to simulate inheritance
   const Handle(Geom_Curve)& aTmpRefBase (Handle(Geom_Line)::DownCast (aCurve2));
   CHECK(theDI, aTmpRefBase.get() != aCurve2.get(),  "local reference to temporary handle object (base type)");
+#if defined(__GNUC__) && (__GNUC__ >= 12)
+  #pragma GCC diagnostic pop
+#endif
 
   // check operations with Handle_* classes
   Handle(Geom_Line) hLine = aLine;
@@ -174,6 +184,13 @@ static Standard_Integer QAHandleOps (Draw_Interpretor& theDI,
   Handle_Geom_Line qhLine = cpLine; // constructor from const pointer -- could be made explicit...
 
   // check that compiler keeps temporary object referenced by local variable
+#if defined(__GNUC__) && (__GNUC__ >= 12)
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wdangling-pointer"
+  #if (__GNUC__ >= 13)
+    #pragma GCC diagnostic ignored "-Wdangling-reference"
+  #endif
+#endif
   const Handle_Geom_Line& hTmpRef (Handle(Geom_Line)::DownCast (aCurve2));
   CHECK(theDI, hTmpRef.get() == aCurve2.get(),  "local reference to temporary object (Handle_)");
 
@@ -188,6 +205,9 @@ static Standard_Integer QAHandleOps (Draw_Interpretor& theDI,
   CHECK(theDI, hTmpRefBase.get() == aCurve2.get(),  "local reference to temporary handle object (Handle_ to base type)");
 #else
   CHECK(theDI, hTmpRefBase.get() != aCurve2.get(),  "local reference to temporary handle object (Handle_ to base type)");
+#endif
+#if defined(__GNUC__) && (__GNUC__ >= 12)
+  #pragma GCC diagnostic pop
 #endif
 
   Handle(Geom_Surface) aSurf;

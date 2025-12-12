@@ -94,6 +94,7 @@
 #if defined(_WIN32)
   #include <WNT_WClass.hxx>
   #include <WNT_Window.hxx>
+  #include <Standard_WarningDisableFunctionCast.hxx>
 #elif defined(HAVE_XLIB)
   #include <Xw_Window.hxx>
   #include <X11/Xlib.h>

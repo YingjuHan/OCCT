@@ -30,6 +30,8 @@
 #include <WNT_WClass.hxx>
 #include <WNT_HIDSpaceMouse.hxx>
 
+#include <Standard_WarningDisableFunctionCast.hxx>
+
 IMPLEMENT_STANDARD_RTTIEXT(WNT_Window, Aspect_Window)
 
 #ifndef MOUSEEVENTF_FROMTOUCH
