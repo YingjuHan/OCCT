@@ -32,6 +32,8 @@
 #include <stdio.h>
 #include <time.h>
 
+extern Standard_Boolean Draw_VirtualWindows;
+
 IMPLEMENT_STANDARD_RTTIEXT(Draw_ProgressIndicator,Message_ProgressIndicator)
 
 //=======================================================================
@@ -41,7 +43,7 @@ IMPLEMENT_STANDARD_RTTIEXT(Draw_ProgressIndicator,Message_ProgressIndicator)
 Draw_ProgressIndicator::Draw_ProgressIndicator (const Draw_Interpretor &di, Standard_Real theUpdateThreshold)
 : myTclMode ( DefaultTclMode() ),
   myConsoleMode ( DefaultConsoleMode() ),
-  myGraphMode ( DefaultGraphMode() ),
+  myGraphMode ( DefaultGraphMode() && !Draw_VirtualWindows ),
   myDraw ( (Draw_Interpretor*)&di ),
   myShown ( Standard_False ),
   myBreak ( Standard_False ),
