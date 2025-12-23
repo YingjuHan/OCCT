@@ -152,7 +152,7 @@ public:
   Standard_EXPORT static void CurveOnSurface (const TopoDS_Edge& E, Handle(Geom2d_Curve)& C, Handle(Geom_Surface)& S, TopLoc_Location& L, Standard_Real& First, Standard_Real& Last);
   
   //! Returns in <C>, <S>, <L> the 2d curve, the surface
-  //! and the location for the edge <E> of rank <Index>.
+  //! and the location for the edge <E> of rank <Index> (starting from 1).
   //! <C> and <S> are null if the index is out of range.
   //! Returns in <First> and <Last> the parameter range.
   Standard_EXPORT static void CurveOnSurface (const TopoDS_Edge& E, Handle(Geom2d_Curve)& C, Handle(Geom_Surface)& S, TopLoc_Location& L, Standard_Real& First, Standard_Real& Last, const Standard_Integer Index);
@@ -173,7 +173,7 @@ public:
   Standard_EXPORT static void PolygonOnSurface (const TopoDS_Edge& E, Handle(Poly_Polygon2D)& C, Handle(Geom_Surface)& S, TopLoc_Location& L);
   
   //! Returns in <C>, <S>, <L> the 2d curve, the surface
-  //! and the location for the edge <E> of rank <Index>.
+  //! and the location for the edge <E> of rank <Index> (starting from 1).
   //! <C> and <S> are null if the index is out of range.
   Standard_EXPORT static void PolygonOnSurface (const TopoDS_Edge& E, Handle(Poly_Polygon2D)& C, Handle(Geom_Surface)& S, TopLoc_Location& L, const Standard_Integer Index);
   

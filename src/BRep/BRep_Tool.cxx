@@ -458,7 +458,7 @@ void  BRep_Tool::CurveOnSurface(const TopoDS_Edge& E,
                                 const Standard_Integer Index)
 {
   if (Index < 1)
-    return;
+    throw Standard_OutOfRange("BRep_Tool::CurveOnSurface() indexation starts with 1");
 
   Standard_Integer i = 0;
   // find the representation
@@ -592,6 +592,9 @@ void BRep_Tool::PolygonOnSurface(const TopoDS_Edge&      E,
                                  TopLoc_Location&        L,
                                  const Standard_Integer  Index)
 {
+  if (Index < 1)
+    throw Standard_OutOfRange("BRep_Tool::PolygonOnSurface() indexation starts with 1");
+
   Standard_Integer i = 0;
 
   // find the representation

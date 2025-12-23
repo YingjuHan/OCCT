@@ -390,7 +390,7 @@ Standard_Boolean  BRepLib::BuildCurve3d(const TopoDS_Edge& AnEdge,
     lc = l ;
     if (!BRep_Tool::Degenerated(AnEdge)) {
       jj = 0 ;
-      for (ii = 0 ; ii < 3 ; ii++ ) {
+      for (ii = 1 ; ii <= 2; ++ii) {
         BRep_Tool::CurveOnSurface(TopoDS::Edge(AnEdge),
           Curve2dPtr,
           SurfacePtr,
