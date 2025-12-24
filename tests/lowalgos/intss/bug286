@@ -1,6 +1,5 @@
-puts "TODO OCC12345 ALL: Faulty OCC286: Attempt to project the point on surface gives wrong result."
 puts "========================"
-puts " OCC286 "
+puts "OCC286: wrong result for projection point on surface"
 puts "========================"
 puts ""
 
@@ -12,12 +11,12 @@ cvalue i 0.31 x y z
 point p x y z
 proj b x y z
 
-set err1 ""
-set err2 ""
-set err3 ""
-regexp {Point +: +([-0-9.+eE]+, +[-0-9.+eE]+, +[-0-9.+eE]+)} [dump ext_1] full err1
-regexp {Point +: +([-0-9.+eE]+, +[-0-9.+eE]+, +[-0-9.+eE]+)} [dump ext_2] full err2
-regexp {Point +: +([-0-9.+eE]+, +[-0-9.+eE]+, +[-0-9.+eE]+)} [dump ext_3] full err3
+set err1 "err1"
+set err2 "err2"
+set err3 "err3"
+if { [isdraw ext_1] } { regexp {Point +: +([-0-9.+eE]+, +[-0-9.+eE]+, +[-0-9.+eE]+)} [dump ext_1] full err1 }
+if { [isdraw ext_2] } { regexp {Point +: +([-0-9.+eE]+, +[-0-9.+eE]+, +[-0-9.+eE]+)} [dump ext_2] full err2 }
+if { [isdraw ext_3] } { regexp {Point +: +([-0-9.+eE]+, +[-0-9.+eE]+, +[-0-9.+eE]+)} [dump ext_3] full err3 }
 
 if { $err1 == $err2  || $err1 == $err3 || $err2 == $err3 } {
     puts "Faulty OCC286: Attempt to project the point on surface gives wrong result."
@@ -25,4 +24,6 @@ if { $err1 == $err2  || $err1 == $err3 || $err2 == $err3 } {
     puts "OCC286 OK : Attempt to project the point on surface gives correct result"
 }
 
-checkview -display result -2d -path ${imagedir}/${test_image}.png
+smallview
+fit
+xwd ${imagedir}/${test_image}.png

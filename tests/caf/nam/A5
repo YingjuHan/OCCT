@@ -39,7 +39,7 @@ set res3 [Select "[set TestLab]:10:3" e2 ""]
 set res4 [Select "[set TestLab]:10:4" v1 "f"]
 explode b E
 set res5 [Select "[set TestLab]:10:5" b_1 "b"]
-puts [dump $res5]
+puts $res5
 explode b V
 set res6 [Select "[set TestLab]:10:6" b_1 "b"]
 explode c E

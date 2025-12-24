@@ -19,7 +19,6 @@ if {${extrema_length} != 18 } {
 }
 
 # Distance check on ext_1
-set info [dump ext_1]
 regexp {Extrema 1 is point : +([-0-9.+eE]+) +([-0-9.+eE]+) +([-0-9.+eE]+)} $extrema_res full x1 y1 z1
 # Point check
 set good_x1 -2.2838350838816694
