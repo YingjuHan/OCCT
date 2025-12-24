@@ -216,10 +216,10 @@ Standard_Boolean BinTools::Write (const TopoDS_Shape& theShape,
 {
   const Handle(OSD_FileSystem)& aFileSystem = OSD_FileSystem::DefaultFileSystem();
   std::shared_ptr<std::ostream> aStream = aFileSystem->OpenOStream (theFile, std::ios::out | std::ios::binary);
-  aStream->precision (15);
-  if (aStream.get() == NULL || !aStream->good())
+  if (aStream.get() == NULL)
     return Standard_False;
 
+  aStream->precision (15);
   Write (theShape, *aStream, theWithTriangles, theWithNormals, theVersion, theRange);
   aStream->flush();
   return aStream->good();

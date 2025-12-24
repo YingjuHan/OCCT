@@ -93,12 +93,12 @@ static Standard_Integer save (Draw_Interpretor& theDI,
   const char* aName = theArgVec[2];
   const Handle(OSD_FileSystem)& aFileSystem = OSD_FileSystem::DefaultFileSystem();
   std::shared_ptr<std::ostream> aStream = aFileSystem->OpenOStream (aName, std::ios::out | std::ios::binary);
-  aStream->precision (15);
-  if (aStream.get() == NULL || !aStream->good())
+  if (aStream.get() == NULL)
   {
     theDI << "Error: cannot open file for writing " << aName;
     return 1;
   }
+  aStream->precision (15);
 
   try
   {
