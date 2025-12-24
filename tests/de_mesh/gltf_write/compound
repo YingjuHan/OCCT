@@ -3,6 +3,8 @@ puts "0032612: Data Exchange, RWGltf_CafReader - lost hierarchy of two nested co
 puts "========"
 
 set aTmpGltf "${imagedir}/${casename}_tmp.glb"
+lappend occ_tmp_files $aTmpGltf
+
 
 box b 1 2 3
 incmesh b 0.1

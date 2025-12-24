@@ -6,6 +6,7 @@ puts "========"
 restore [locate_data_file Ball.brep] b
 incmesh b 0.1
 set aTmpGltf "${imagedir}/${casename}_tmp.glb"
+lappend occ_tmp_files $aTmpGltf
 writegltf b "$aTmpGltf"
 
 ReadGltf D "$aTmpGltf"

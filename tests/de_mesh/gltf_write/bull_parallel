@@ -7,6 +7,7 @@ Close D0 -silent
 ReadGltf D0 [locate_data_file bug32867_bull.glb]
 
 set aGltfFile1 "${imagedir}/${casename}_tmp1.glb"
+lappend occ_tmp_files $aGltfFile1
 
 WriteGltf D0 "$aGltfFile1" -draco on -parallel
 

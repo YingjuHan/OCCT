@@ -3,6 +3,8 @@ puts "0032061: Data Exchange, RWGltf_CafWriter - exporting XBF file produces an 
 puts "========"
 
 set aTmpGltf "${imagedir}/${casename}_tmp.glb"
+lappend occ_tmp_files $aTmpGltf
+
 pload MODELING OCAF XDE VISUALIZATION
 
 # create a document with one shape without triangulation
