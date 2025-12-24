@@ -1,11 +1,8 @@
 puts "============"
 puts "OCC28024 Data Exchange, Configuration - revise XSTEPResource initialization"
+puts "Testing the mechanism for changing options of ShapeHealing from DRAW"
 puts "============"
 puts ""
-#####################################################
-# Testing the mechanism for changing options of ShapeHealing
-# from DRAW
-#####################################################
 
 pload MODELING XDE
 
@@ -15,7 +12,7 @@ if { [info exists imagedir] == 0 } {
        file mkdir ${imagedir}
    }
 }
-set step_file ${imagedir}/inv_triangle.stp
+set step_file ${imagedir}/${casename}_inv_triangle.stp
 
 # Make simple triangle with INNER wire
 vertex v1 0 0 0
