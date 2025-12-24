@@ -40,26 +40,3 @@ vdump $imagedir/${casename}_peel.png
 vcaps -opaqueAlpha 1
 vdump $imagedir/${casename}_peel_rgb.png
 vcaps -opaqueAlpha 0
-
-# VTK viewer, just for comparison
-set hasVtk 0
-if { [vdriver -default] == "TKOpenGl" } {
-  set hasVtk 1
-  if { [catch { pload VIS }] } { set hasVtk 0 }
-}
-if { $hasVtk == 1 } {
-  ivtkinit -msaa 0 -srgb 0
-  ivtkdisplay c b1 b2 b3
-  ivtkaxo
-  ivtksetdispmode 1
-  ivtksetcolor c yellow
-  ivtksetcolor b1 blue
-  ivtksetcolor b2 green
-  ivtksetcolor b3 red
-  ivtksettransparency c  0.4
-  ivtksettransparency b1 0.8
-  ivtksettransparency b2 0.0
-  ivtksettransparency b3 0.5
-  ivtkrenderparams -depthPeeling 4
-  ivtkdump $imagedir/${casename}_vtk.png
-}
