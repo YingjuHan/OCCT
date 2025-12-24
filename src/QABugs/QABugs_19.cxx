@@ -5234,7 +5234,7 @@ static Standard_Integer OCC29412 (Draw_Interpretor& /*theDI*/, Standard_Integer 
     aCtx->Remove (feature, true);
 
     const int aProgress = (m_loopIndex * 100) / aNbIters;
-    if (aProgress != aProgressPrev)
+    if (aProgress != aProgressPrev && aNbIters > 200)
     {
       std::cerr << aProgress << "%\r";
       aProgressPrev = aProgress;
