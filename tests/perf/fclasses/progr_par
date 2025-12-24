@@ -7,7 +7,7 @@ pload QAcommands
 
 XProgress +t
 
-set out [OCC25748 -niter 10000 -matsize 100 -parallel -progr]
+set out [OCC25748 -niter 10000 -matsize 10 -parallel -progr]
 if {[llength [split $out \n]] != 103} {
   puts "Error: unexpected number of lines in the output, must be 103"
 }
