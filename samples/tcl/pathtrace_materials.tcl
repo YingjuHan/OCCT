@@ -215,7 +215,7 @@ vlight -add AMBIENT -name amblight
 vlight -add DIRECTIONAL -direction -0.303949 -0.434084 -0.848048 -smoothAngle 17 -intensity 12 -name dirlight
 
 # Load environment map
-vtextureenv on 1
+vbackground -skydome
 
 puts "Trying path tracing mode..."
 vrenderparams -ray -gi -rayDepth 10

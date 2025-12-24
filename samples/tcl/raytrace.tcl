@@ -40,5 +40,5 @@ vfit
 # set ray tracing
 puts "Trying raytrace mode..."
 if { ! [catch {vrenderparams -raytrace -shadows -reflections -fsaa -rayDepth 5}] } {
-  vtextureenv on 1
+  vbackground -skydome
 }

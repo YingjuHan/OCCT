@@ -65,7 +65,7 @@ vlight -change 0 -smoothAngle 17
 vlight -change 0 -intensity 10.0
 
 # Load environment map
-vtextureenv on 1
+vbackground -skydome
 
 puts "Trying path tracing mode..."
 vrenderparams -ray -gi -rayDepth 10
