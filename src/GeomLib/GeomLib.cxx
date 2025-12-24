@@ -2406,7 +2406,7 @@ Standard_Integer GeomLib::NormEstim (const Handle(Geom_Surface)& theSurf,
 
   Standard_Real Umin, Umax, Vmin, Vmax;
   Standard_Real step = 1.0e-5;
-  Standard_Real eps  = 1.0e-16;
+  Standard_Real eps2 = 1.0e-30;
   Standard_Real sign = -1.0;
   theSurf->Bounds (Umin, Umax, Vmin, Vmax);
 
@@ -2417,12 +2417,12 @@ Standard_Integer GeomLib::NormEstim (const Handle(Geom_Surface)& theSurf,
     gp_Dir aNormal1, aNormal2;
     Standard_Real aConeSingularityAngleEps = 1.0e-4;
     theSurf->D1(theUV.X(), theUV.Y() - sign * step, aDummyPnt, DU, DV);
-    if ((DU.XYZ().SquareModulus() > eps) && (DV.XYZ().SquareModulus() > eps))
+    if ((DU.XYZ().SquareModulus() > eps2) && (DV.XYZ().SquareModulus() > eps2))
     {
       aNormal1 = DU ^ DV;
       theSurf->D1 (theUV.X(), theUV.Y() + sign * step, aDummyPnt, DU, DV);
-      if ((DU.XYZ().SquareModulus() > eps)
-       && (DV.XYZ().SquareModulus() > eps))
+      if ((DU.XYZ().SquareModulus() > eps2)
+       && (DV.XYZ().SquareModulus() > eps2))
       {
         aNormal2 = DU^DV;
         if (aNormal1.IsOpposite (aNormal2, aConeSingularityAngleEps))
@@ -2444,7 +2444,7 @@ Standard_Integer GeomLib::NormEstim (const Handle(Geom_Surface)& theSurf,
 
     theSurf->D1 (theUV.X(), theUV.Y() + sign * step, aDummyPnt, DU, DV);
     gp_Vec Norm = DU ^ DV;
-    if (Norm.SquareMagnitude() < eps)
+    if (Norm.SquareMagnitude() < eps2)
     {
       Standard_Real sign1 = -1.0;
       if ((Umax - theUV.X()) > (theUV.X() - Umin))
@@ -2454,7 +2454,7 @@ Standard_Integer GeomLib::NormEstim (const Handle(Geom_Surface)& theSurf,
       theSurf->D1 (theUV.X() + sign1 * step, theUV.Y() + sign * step, aDummyPnt, DU, DV);
       Norm = DU ^ DV;
     }
-    if (Norm.SquareMagnitude() >= eps
+    if (Norm.SquareMagnitude() >= eps2
      && Norm.Dot (aNormal) < 0.0)
     {
       aNormal.Reverse();
@@ -2472,7 +2472,7 @@ Standard_Integer GeomLib::NormEstim (const Handle(Geom_Surface)& theSurf,
 
     theSurf->D1 (theUV.X() + sign * step, theUV.Y(), aDummyPnt, DU, DV);
     gp_Vec Norm = DU ^ DV;
-    if (Norm.SquareMagnitude() < eps)
+    if (Norm.SquareMagnitude() < eps2)
     {
       Standard_Real sign1 = -1.0;
       if ((Vmax - theUV.Y()) > (theUV.Y() - Vmin))
@@ -2483,7 +2483,7 @@ Standard_Integer GeomLib::NormEstim (const Handle(Geom_Surface)& theSurf,
       theSurf->D1 (theUV.X() + sign * step, theUV.Y() + sign1 * step, aDummyPnt, DU, DV);
       Norm = DU ^ DV;
     }
-    if (Norm.SquareMagnitude() >= eps
+    if (Norm.SquareMagnitude() >= eps2
      && Norm.Dot (aNormal) < 0.0)
     {
       aNormal.Reverse();
