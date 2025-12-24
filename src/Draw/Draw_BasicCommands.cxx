@@ -653,18 +653,20 @@ static Standard_Integer cpulimit(Draw_Interpretor& di, Standard_Integer n, const
 
 #else 
   // Unix & Linux
+  rusage aUsage = {};
+  getrusage(RUSAGE_SELF, &aUsage);
   rlimit rlp;
   rlp.rlim_max = RLIM_INFINITY;
   if (n <= 1)
   {
+    CPU_LIMIT = (clock_t)RLIM_INFINITY;
     rlp.rlim_cur = RLIM_INFINITY;
   }
   else
   {
-    rlp.rlim_cur = GetCpuLimit (a[1]);
+    CPU_LIMIT = (clock_t)GetCpuLimit (a[1]);
+    rlp.rlim_cur = aUsage.ru_utime.tv_sec + (rlim_t)CPU_LIMIT;
   }
-
-  CPU_LIMIT = (clock_t )rlp.rlim_cur;
 
   int aStatus = setrlimit (RLIMIT_CPU, &rlp);
   if (aStatus != 0)
