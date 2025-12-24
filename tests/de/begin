@@ -16,15 +16,19 @@ NewCommand D
 
 # Reads resource file, returns options from file as key-value dict
 proc parse_resource_file {theFileName} {
+    # like CSF_STEPDefaults
+    set aResFolder [dgetenv "CSF_${theFileName}Defaults"]
+    set aResFile "${aResFolder}/${theFileName}"
+
     # Creating empty dictionary
     set aDict [dict create];
     # Check for resource file
-    if { [info exists theFileName] == 0 } {
-       puts "Error: resource file \"${theFileName}\" isn't found"
+    if { [file exists "${aResFile}"] == 0 } {
+       puts "Error: resource file \"${aResFile}\" isn't found"
        return $aDict
    }
    # Open a resource file
-   set aFD [open "${theFileName}" "rb"]
+   set aFD [open "${aResFile}" "rb"]
    set aLineNo 0
    # Read line by line
    while {[gets $aFD aLine] !=-1 } {
@@ -48,12 +52,32 @@ proc parse_resource_file {theFileName} {
 
 # Creates new resource file with options as key-value dict
 proc create_resource_file {theFileName theOptions} {
+   # remember the path to the old resource file
+   set ::bak_resource_path [dgetenv "CSF_${theFileName}Defaults"]
+
+   # create folder for temporary resource file
+   set ::tmp_resource_path "${::imagedir}/${::casename}_tmp"
+   if {![file exists "${::tmp_resource_path}"]} { file mkdir "${::tmp_resource_path}" }
+   dsetenv "CSF_${theFileName}Defaults" "${::tmp_resource_path}"
+   puts "New path to CSF_${theFileName}Defaults resource file is: \"${::tmp_resource_path}\""
+
    # Open a resource file
-   set aFD [open "${theFileName}" "wb"]
+   set aFD [open "${::tmp_resource_path}/${theFileName}" "wb"]
    set aLineNo 0
    # Write line by line
    dict for {aKey aValue} $theOptions {
        puts $aFD "${aKey} : ${aValue}"
    }
    close $aFD
+}
+
+# Remove temporary resource file
+proc delete_resource_file {theFileName} {
+   # delete path to temporary resource file
+   if {[file exists "${::tmp_resource_path}/${theFileName}"]} { file delete -force "${::tmp_resource_path}/${theFileName}" }
+   if {[file exists "${::tmp_resource_path}"]} { file delete -force "${::tmp_resource_path}" }
+
+   # restore path to old resource file
+   dsetenv "CSF_${theFileName}Defaults" "${::bak_resource_path}"
+   puts "Restored path to CSF_${theFileName}Defaults resource file: \"${::bak_resource_path}\""
 }
