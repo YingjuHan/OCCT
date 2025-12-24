@@ -92,8 +92,6 @@ IFSelect_SessionPilot::IFSelect_SessionPilot (const Standard_CString prompt)
   (const TCollection_AsciiString& command)
 {
   Standard_Integer lc = command.Length();
-  if (lc > 200) std::cout<<" Commande TRES LONGUE : "<<lc<<" caracteres :"<<std::endl
-    <<command.ToCString()<<std::endl;
   thecommand = command;
   if (thecommand.Value(lc) <= ' ')  {  thecommand.Remove(lc);  lc --;  }
   thenbwords = 0;
@@ -103,7 +101,12 @@ IFSelect_SessionPilot::IFSelect_SessionPilot (const Standard_CString prompt)
     char val = command.Value(i);
     if (val <= ' ') {
       if (nc == 0) continue;
-      if (thenbwords >= MAXWORDS) {  unarg[nc] = val;  nc ++;  continue;  }
+      if (thenbwords >= MAXWORDS)
+      {
+        std::stringstream aMsg;
+        aMsg << "Nb. of args " << thenbwords << " is greater than " << MAXWORDS << " in command: " << command;
+        throw Standard_OutOfRange(aMsg.str().c_str());
+      }
       unarg[nc] = '\0';
       thewords(thenbwords).Clear();  thewords(thenbwords).AssignCat(unarg);
 #ifdef DEBUG_TRACE
@@ -113,7 +116,12 @@ IFSelect_SessionPilot::IFSelect_SessionPilot (const Standard_CString prompt)
       continue;
     }
     if (nc == 0) thewordeb.SetValue (thenbwords,i);
-    if (nc > MAXCARS) {  std::cout<<"Arg."<<thenbwords<<" > "<<MAXCARS<<" car.s, tronque"<<std::endl; continue;  }
+    if (nc > MAXCARS)
+    {
+      std::stringstream aMsg;
+      aMsg << "Arg. " << thenbwords << " > " << MAXCARS << " characters in command: " << command;
+      throw Standard_OutOfRange(aMsg.str().c_str());
+    }
     unarg[nc] = val;  nc ++;
   }
   if (nc > 0) {
