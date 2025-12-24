@@ -14,10 +14,22 @@ NewCommand D
 
 # store at each object-label sub-labels with two attributes at each
 set creation_time [lindex [time {
+  set aDLogBak  [dlog  status]
+  set aDEchoBak [decho status]
   for {set i 1} {$i <= $labs} {incr i} {
     set lab [Label D 0:1:${i}]
     SetName D ${lab} Object$i
     for {set ii 1} {$ii <= $sublabs} {incr ii} {
+      if { $i == $labs && $ii == $sublabs } {
+        puts "Restore decho state"
+        decho $aDEchoBak
+        dlog  $aDLogBak
+      } elseif { $i == 1 && $ii == 1 } {
+        puts "Suppress decho during the test"
+        decho off
+        dlog  off
+      }
+
       set sublab [Label D ${lab}:$ii]
       SetInteger D ${sublab} 10
       SetReal D ${sublab} 12.3

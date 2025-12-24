@@ -269,7 +269,8 @@ static Standard_Integer dlog(Draw_Interpretor& di, Standard_Integer n, const cha
   {
     Message::SendFail() << "Enable or disable logging: " << a[0] << " {on|off}\n"
                         << "Reset log: " << a[0] << " reset\n"
-                        << "Get log content: " << a[0] << " get";
+                        << "Get log content: " << a[0] << " get\n"
+                        << "Status: " << a[0] << " status";
     return 1;
   }
 
@@ -310,7 +311,8 @@ static Standard_Integer decho(Draw_Interpretor& di, Standard_Integer n, const ch
 {
   if (n != 2)
   {
-    Message::SendFail() << "Enable or disable echoing: " << a[0] << " {on|off}";
+    Message::SendFail() << "Enable or disable echoing: " << a[0] << " {on|off}\n"
+                        << "Status: " << a[0] << " status";
     return 1;
   }
 
@@ -321,6 +323,10 @@ static Standard_Integer decho(Draw_Interpretor& di, Standard_Integer n, const ch
   else if (! strcmp (a[1], "off"))
   {
     di.SetDoEcho (Standard_False);
+  }
+  else if (! strcmp (a[1], "status"))
+  {
+    di << (di.GetDoEcho() ? "on" : "off");
   }
   else {
     Message::SendFail() << "Unrecognized option: " << a[1];
