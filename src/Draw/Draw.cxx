@@ -43,7 +43,6 @@
 extern Standard_Boolean Draw_ParseFailed;
 
 Standard_EXPORT Draw_Viewer dout;
-Standard_EXPORT Draw_Interpretor theCommands;
 Standard_EXPORT Standard_Boolean Draw_Batch = Standard_False;
 Standard_EXPORT Standard_Boolean Draw_Spying = Standard_False;
 Standard_EXPORT Standard_Boolean Draw_Chrono = Standard_False;
@@ -218,6 +217,7 @@ static bool searchResources (TCollection_AsciiString& theCasRoot,
 //=======================================================================
 Draw_Interpretor& Draw::GetInterpretor()
 {
+  static Draw_Interpretor theCommands;
   return theCommands;
 }
 
@@ -369,6 +369,8 @@ void Draw_Appli(int argc, char** argv, const FDraw_InitAppli Draw_InitAppli)
   if ( ! Draw_VirtualWindows && ! Draw_Batch )
     ::SetErrorMode (0);
 #endif
+
+  Draw_Interpretor& theCommands = Draw::GetInterpretor();
 
   // *****************************************************************
   // init X window and create display
@@ -569,6 +571,8 @@ Standard_Boolean Draw_Interprete(const char* com)
   static Standard_Boolean first = Standard_True;
   static Tcl_DString command;
 
+  Draw_Interpretor& theCommands = Draw::GetInterpretor();
+
   if (first) {
     first = Standard_False;
     Tcl_DStringInit(&command);
@@ -642,23 +646,9 @@ Standard_Boolean Draw_Interprete(const char* com)
 //
 // for TCl
 //
-
 Standard_Integer Tcl_AppInit (Tcl_Interp *)
 {
   return 0;
-}
-
-//
-// for debug call
-//
-
-
-
-Standard_Integer  Draw_Call (char *c)
-{
-   Standard_Integer r = theCommands.Eval(c);
-   std::cout << theCommands.Result() << std::endl;
-   return r;
 }
 
 //=================================================================================
