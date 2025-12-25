@@ -59,7 +59,7 @@ public:
   //! have to be fused using the FuseVertices method.
   //! theDMVV contains the vertices that should be fused.
   Standard_EXPORT static Standard_Boolean ConnexIntByInt (const TopoDS_Face& FI,
-                                                          BRepOffset_Offset& OFI,
+                                                          const BRepOffset_Offset& OFI,
                                                           TopTools_DataMapOfShapeShape& MES,
                                                           const TopTools_DataMapOfShapeShape& Build,
                                                           const Handle(BRepAlgo_AsDes)& theAsDes,
@@ -80,7 +80,7 @@ public:
   //! have to be fused using the FuseVertices method.
   //! theDMVV contains the vertices that should be fused.
   Standard_EXPORT static void ConnexIntByIntInVert (const TopoDS_Face& FI,
-                                                    BRepOffset_Offset& OFI,
+                                                    const BRepOffset_Offset& OFI,
                                                     TopTools_DataMapOfShapeShape& MES,
                                                     const TopTools_DataMapOfShapeShape& Build,
                                                     const Handle(BRepAlgo_AsDes)& AsDes,

@@ -635,8 +635,8 @@ void BRepOffset_Inter3d::ConnexIntByInt
       F1 = TopoDS::Face(itF1.Value());
       F2 = TopoDS::Face(itF2.Value());
       //
-      OF1 = TopoDS::Face(MapSF(F1).Face());
-      OF2 = TopoDS::Face(MapSF(F2).Face());
+      OF1 = TopoDS::Face(MapSF.FindFromKey(F1).Face());
+      OF2 = TopoDS::Face(MapSF.FindFromKey(F2).Face());
       if (!MES.IsBound(OF1)) {
         Standard_Boolean enlargeU = Standard_True;
         Standard_Boolean enlargeVfirst = Standard_True, enlargeVlast = Standard_True;
@@ -863,8 +863,8 @@ void BRepOffset_Inter3d::ConnexIntByInt
       continue;
     }
     //
-    const TopoDS_Shape& aNF1 = MES(MapSF(aF1).Face());
-    const TopoDS_Shape& aNF2 = MES(MapSF(aF2).Face());
+    const TopoDS_Shape& aNF1 = MES(MapSF.FindFromKey(aF1).Face());
+    const TopoDS_Shape& aNF2 = MES(MapSF.FindFromKey(aF2).Face());
     //
     TopTools_ListIteratorOfListOfShape aItLCB(aLCBE);
     for (aItLCB.Next(); aItLCB.More(); aItLCB.Next()) {
@@ -1056,10 +1056,11 @@ void BRepOffset_Inter3d::ContextIntByInt
       itF.Initialize(Anc);
       for (; itF.More(); itF.Next()) {
         const TopoDS_Face& F = TopoDS::Face(itF.Value());
-        OF = TopoDS::Face(MapSF(F).Face());
-        TopoDS_Shape aLocalShape = MapSF(F).Generated(E);
+        const BRepOffset_Offset& anOffsetShape = MapSF.FindFromKey(F);
+        OF = TopoDS::Face(anOffsetShape.Face());
+        TopoDS_Shape aLocalShape = anOffsetShape.Generated(E);
         OE = TopoDS::Edge(aLocalShape);
-//      OE = TopoDS::Edge(MapSF(F).Generated(E));
+//      OE = TopoDS::Edge(anOffsetShape.Generated(E));
         if (!MES.IsBound(OF)) {
           BRepOffset_Tool::EnLargeFace(OF,NF,1,1);
           MES.Bind(OF,NF);

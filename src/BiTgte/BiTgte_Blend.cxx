@@ -630,10 +630,10 @@ static TopoDS_Edge FindCreatedEdge
   Standard_Boolean Find = Standard_False;
   for ( ; itl.More() && !Find; itl.Next()) {
     const TopoDS_Edge& ET = TopoDS::Edge(itl.Value());
-    if ( MapSF.IsBound(ET)) {
-      TopoDS_Shape aLocalShape = MapSF(ET).Generated(V1);
+    if (const BRepOffset_Offset* anOffsetShape = MapSF.Seek(ET)) {
+      TopoDS_Shape aLocalShape = anOffsetShape->Generated(V1);
       E1 = TopoDS::Edge(aLocalShape);
-//      E1 = TopoDS::Edge(MapSF(ET).Generated(V1));
+//      E1 = TopoDS::Edge(anOffsetShape->Generated(V1));
       MapOnV.Add(E1);
       Find = Standard_True;
     }
@@ -659,10 +659,10 @@ static TopoDS_Edge FindCreatedEdge
       TopTools_ListIteratorOfListOfShape it2(Tang2);
       for ( ; it2.More() ; it2.Next()) {
 	const TopoDS_Edge& ET2 = TopoDS::Edge(it2.Value());
-	if ( MapSF.IsBound(ET2)) {
-	  TopoDS_Shape aLocalShape = MapSF(ET2).Generated(U1);
+    if (const BRepOffset_Offset* anOffsetShape2 = MapSF.Seek(ET2)) {
+      TopoDS_Shape aLocalShape = anOffsetShape2->Generated(U1);
 	  MapOnV.Add(TopoDS::Edge(aLocalShape));
-//	  MapOnV.Add(TopoDS::Edge(MapSF(ET2).Generated(U1)));
+//	  MapOnV.Add(TopoDS::Edge(anOffsetShape2->Generated(U1)));
 	}
       }
     }
@@ -674,8 +674,8 @@ static TopoDS_Edge FindCreatedEdge
       TangE = CenterAnalyse.Ancestors(V1);
       itl.Initialize(TangE);
       for ( ; itl.More() && !Find; itl.Next()) {
-	if ( MapSF.IsBound(itl.Value())) {
-	  MapOnV.Add(MapSF(itl.Value()).Generated(V1));
+    if (const BRepOffset_Offset* anOffsetShape = MapSF.Seek(itl.Value())) {
+      MapOnV.Add(anOffsetShape->Generated(V1));
 	}
       }
     }
@@ -1144,7 +1144,7 @@ void BiTgte_Blend::CenterLines(TopTools_ListOfShape& LC) const
 Handle(Geom_Surface) BiTgte_Blend::Surface(const TopoDS_Shape& CenterLine) 
 const
 { 
-  const TopoDS_Face& F = myMapSF(CenterLine).Face();
+  const TopoDS_Face& F = myMapSF.FindFromKey(CenterLine).Face();
   return BRep_Tool::Surface(F);
 }
 
@@ -1155,11 +1155,12 @@ const
 
 const TopoDS_Face& BiTgte_Blend::Face(const TopoDS_Shape& CenterLine) const
 {
-  if ( !myMapSF.IsBound(CenterLine)) {
+  const BRepOffset_Offset* anOffsetShape = myMapSF.Seek(CenterLine);
+  if (anOffsetShape == nullptr) {
     throw Standard_DomainError("BiTgte_Blend::Face");
   }
 
-  return myMapSF(CenterLine).Face();
+  return anOffsetShape->Face();
 }
 
 //=======================================================================
@@ -1275,7 +1276,7 @@ Handle(Geom_Curve) BiTgte_Blend::CurveOnShape1
 (const Standard_Integer Index) const
 {
   const TopoDS_Edge& CurE = TopoDS::Edge(myCenters(Index));
-  const TopoDS_Shape& F = myMapSF(CurE).Face();
+  const TopoDS_Shape& F = myMapSF.FindFromKey(CurE).Face();
 
   // somewhat brutal method based ONLY on the construction of the fillet:
   // the first edge of the tube is exactly the edge on Shape1.
@@ -1301,7 +1302,7 @@ Handle(Geom_Curve) BiTgte_Blend::CurveOnShape2
 (const Standard_Integer Index) const
 {
   const TopoDS_Edge& CurE = TopoDS::Edge(myCenters(Index));
-  const TopoDS_Shape& F = myMapSF(CurE).Face();
+  const TopoDS_Shape& F = myMapSF.FindFromKey(CurE).Face();
 
   // somewhat brutal method based ONLY on the construction of the fillet:
   // the first edge of the tube is exactly the edge on Shape2.
@@ -1393,7 +1394,7 @@ Standard_Integer BiTgte_Blend::NbBranches()
   Standard_Integer i;
   for ( i = 1; i <= NbFaces; i++) {
     const TopoDS_Shape& CenterLine = myCenters(i);
-    Glue.Add(myMapSF(CenterLine).Face()); 
+    Glue.Add(myMapSF.FindFromKey(CenterLine).Face());
   }
 
   const TopoDS_Shape Shells = Glue.Shells();
@@ -1429,7 +1430,7 @@ Standard_Integer BiTgte_Blend::NbBranches()
 
       for ( i = 1; i <= NbFaces; i++) {
 	const TopoDS_Shape& Center = myCenters(i);
-	const TopoDS_Shape& Rakk   = myMapSF(Center).Face();
+    const TopoDS_Shape& Rakk   = myMapSF.FindFromKey(Center).Face();
 	// Rakk = the ith generated connection face
 	if (CurF.IsEqual(Rakk)) {
 	  tmpMap.Add(Center);
@@ -1547,7 +1548,7 @@ void BiTgte_Blend::ComputeCenters()
       //for (it.Initialize(myFaces); it.More(); it.Next()) {
       for (i = 1; i <= myFaces.Extent(); i++) {
 	const TopoDS_Shape& AS = myFaces(i);
-	if ( myMapSF.IsBound(AS)) continue;
+    if (myMapSF.Contains(AS)) continue;
 
 	BRepOffset_Offset OF1;
 	TopoDS_Face BigF;
@@ -1621,9 +1622,9 @@ void BiTgte_Blend::ComputeCenters()
 	// ---------------------------------------------
 	Fini = !Intersect(AS,F1,MapSBox,OF1,Inter);
 
-	if (AS.ShapeType() == TopAbs_FACE) B.Add(Co,AS);
+    if (AS.ShapeType() == TopAbs_FACE) B.Add(Co,AS);
 
-	myMapSF.Bind(AS, OF1);
+    myMapSF.Add(AS, OF1);
 
       }
     } // end of : while ( !Fini)
@@ -1645,18 +1646,18 @@ void BiTgte_Blend::ComputeCenters()
     TopExp_Explorer exp(Co,TopAbs_EDGE);
     for ( ; exp.More(); exp.Next()) {
       const TopoDS_Edge& E = TopoDS::Edge(exp.Current());
-      if ( myMapSF.IsBound(E)) continue;
+      if (myMapSF.Contains(E)) continue;
       
       const TopTools_ListOfShape& Anc = Map.FindFromKey(E);
       if (Anc.Extent() == 2) {
 	const BRepOffset_ListOfInterval& L = myAnalyse.Type(E);
 	if (!L.IsEmpty() && L.First().Type() == OT) {
-	  TopoDS_Shape aLocalShapeGen = myMapSF(Anc.First()).Generated(E);
+      TopoDS_Shape aLocalShapeGen = myMapSF.FindFromKey(Anc.First()).Generated(E);
 	  TopoDS_Edge EOn1 = TopoDS::Edge(aLocalShapeGen);
-    aLocalShapeGen = myMapSF(Anc.Last()) .Generated(E);
+    aLocalShapeGen = myMapSF.FindFromKey(Anc.Last()).Generated(E);
 	  TopoDS_Edge EOn2 = TopoDS::Edge(aLocalShapeGen);
-//	  TopoDS_Edge EOn1 = TopoDS::Edge(myMapSF(Anc.First()).Generated(E));
-//	  TopoDS_Edge EOn2 = TopoDS::Edge(myMapSF(Anc.Last()) .Generated(E));
+//	  TopoDS_Edge EOn1 = TopoDS::Edge(myMapSF.FindFromKey(Anc.First()).Generated(E));
+//	  TopoDS_Edge EOn2 = TopoDS::Edge(myMapSF.FindFromKey(Anc.Last()) .Generated(E));
 	  // find if exits tangent edges in the original shape
 	  TopoDS_Edge E1f, E1l;
 	  TopoDS_Vertex V1f, V1l;
@@ -1667,10 +1668,10 @@ void BiTgte_Blend::ComputeCenters()
 	  TopTools_ListIteratorOfListOfShape itl(TangE);
 	  Standard_Boolean Find = Standard_False;
 	  for ( ; itl.More() && !Find; itl.Next()) {
-	    if ( myMapSF.IsBound(itl.Value())) {
-	      TopoDS_Shape aLocalShape = myMapSF(itl.Value()).Generated(V1f);
+        if (const BRepOffset_Offset* anOffsetShape = myMapSF.Seek(itl.Value())) {
+          TopoDS_Shape aLocalShape = anOffsetShape->Generated(V1f);
 	      E1f  = TopoDS::Edge(aLocalShape);
-//	      E1f  = TopoDS::Edge(myMapSF(itl.Value()).Generated(V1f));
+//	      E1f  = TopoDS::Edge(anOffsetShape->Generated(V1f));
 	      Find = Standard_True;
 	    }
 	  }
@@ -1680,10 +1681,10 @@ void BiTgte_Blend::ComputeCenters()
 	  itl.Initialize(TangE);
 	  Find = Standard_False;
 	  for ( ; itl.More() && !Find; itl.Next()) {
-	    if ( myMapSF.IsBound(itl.Value())) {
-	      TopoDS_Shape aLocalShape = myMapSF(itl.Value()).Generated(V1l);
+        if (const BRepOffset_Offset* anOffsetShape = myMapSF.Seek(itl.Value())) {
+          TopoDS_Shape aLocalShape = anOffsetShape->Generated(V1l);
 	      E1l  = TopoDS::Edge(aLocalShape);
-//	      E1l  = TopoDS::Edge(myMapSF(itl.Value()).Generated(V1l));
+//	      E1l  = TopoDS::Edge(anOffsetShape->Generated(V1l));
 	      Find = Standard_True;
 	    }
 	  }
@@ -1704,7 +1705,7 @@ void BiTgte_Blend::ComputeCenters()
 	  Standard_Boolean IsOnRest = Intersect(E,F1,MapSBox,OF1,Inter);
 	  JenRajoute = JenRajoute || IsOnRest;
 
-	  myMapSF.Bind(E,OF1);
+      myMapSF.Add(E,OF1);
 	}
       }
     }
@@ -1733,9 +1734,10 @@ void BiTgte_Blend::ComputeCenters()
     // tube on free border, it is undesirable.
     if ( myStopFaces.Contains(CurS)) continue;
 
-    if ( !myMapSF.IsBound(CurS)) continue; // inverted or degenerated
+    const BRepOffset_Offset* anOffsetShape = myMapSF.Seek(CurS);
+    if (anOffsetShape == nullptr) continue; // inverted or degenerated
 
-    const TopoDS_Face& CurOF = myMapSF(CurS).Face();
+    const TopoDS_Face& CurOF = anOffsetShape->Face();
     LOF.Append(CurOF);
 
     if (CurS.ShapeType() == TopAbs_FACE) {
@@ -1751,7 +1753,7 @@ void BiTgte_Blend::ComputeCenters()
 	const BRepOffset_ListOfInterval& L = myAnalyse.Type(CurE);
 	if (!L.IsEmpty() && L.First().Type() != OT) {
 	  // a priori doe s not disappear, so it is set
-	  TopoDS_Shape aLocalShape = myMapSF(CurF).Generated(CurE);
+      TopoDS_Shape aLocalShape = myMapSF.FindFromKey(CurF).Generated(CurE);
 	  const TopoDS_Edge& CurOE = TopoDS::Edge(aLocalShape);
 //	  const TopoDS_Edge& CurOE = 
 //	    TopoDS::Edge(myMapSF(CurF).Generated(CurE));
@@ -1763,7 +1765,7 @@ void BiTgte_Blend::ComputeCenters()
 	      || !myFaces    .Contains(Lanc.Last ())
 	      ||  myStopFaces.Contains(Lanc.First()) 
 	      ||  myStopFaces.Contains(Lanc.Last ())) {
-	    TopoDS_Shape aLocalShape = myMapSF(CurF).Generated(CurE);
+        TopoDS_Shape aLocalShape = myMapSF.FindFromKey(CurF).Generated(CurE);
 	    const TopoDS_Edge& CurOE = TopoDS::Edge(aLocalShape);
 //	    const TopoDS_Edge& CurOE = 
 //	      TopoDS::Edge(myMapSF(CurF).Generated(CurE));
@@ -1781,7 +1783,7 @@ void BiTgte_Blend::ComputeCenters()
   // It is also required to make 2D intersections with generated tubes
   // (Useful for unwinding)
   // ----------------------------------------------------------------
-  BRepOffset_DataMapIteratorOfDataMapOfShapeOffset It(myMapSF);
+  BRepOffset_DataMapOfShapeOffset::Iterator It(myMapSF);
   for ( ; It.More(); It.Next()) {
     const TopoDS_Shape& CurS = It.Key();
     if ( CurS.ShapeType() == TopAbs_FACE) continue;
@@ -2160,7 +2162,7 @@ void BiTgte_Blend::ComputeSurfaces()
 
       BRepOffset_Offset AnOffset(CurCutE,E1,E2,-myRadius,E1f,E1l,
 				 myNubs, myTol, GeomAbs_C2);
-      myMapSF.Bind(CurCutE,AnOffset);
+      myMapSF.Add(CurCutE, AnOffset);
       myCenters.Add(CurCutE);
       B.Add(Co, CurCutE);
 
@@ -2259,13 +2261,13 @@ void BiTgte_Blend::ComputeSurfaces()
     for (it.Initialize(Map(j)) ; it.More(); it.Next()) {
       Standard_Boolean Reverse = Standard_True;
       if ( Reverse) 
-	LOE.Append(myMapSF(it.Value()).Generated(V).Reversed());
+    LOE.Append(myMapSF.FindFromKey(it.Value()).Generated(V).Reversed());
       else 
-	LOE.Append(myMapSF(it.Value()).Generated(V));
+    LOE.Append(myMapSF.FindFromKey(it.Value()).Generated(V));
     }
     
     BRepOffset_Offset OFT(V,LOE,-myRadius,myNubs, myTol, GeomAbs_C2);
-    myMapSF.Bind(V,OFT);
+    myMapSF.Add(V, OFT);
     myCenters.Add(V);
 
     B.Add(myResult,OFT.Face());
@@ -2334,10 +2336,10 @@ void BiTgte_Blend::ComputeShape()
     if ( !myFaces.Contains(CurF)) continue; // so the face is not touched
 
     // so the faces are unwinded
-    if ( !myMapSF.IsBound(CurF)) continue; // inverted or degenerated
+    const BRepOffset_Offset* anOffset = myMapSF.Seek(CurF);
+    if (anOffset == nullptr) continue; // inverted or degenerated
     
-    const BRepOffset_Offset& Offset = myMapSF(CurF);
-    const TopoDS_Face& CurOF = myMapSF(CurF).Face();
+    const TopoDS_Face& CurOF = anOffset->Face();
     
     if ( !myImageOffset.HasImage(CurOF)) // face disappears in unwinding
       continue;
@@ -2345,9 +2347,9 @@ void BiTgte_Blend::ComputeShape()
     TopExp_Explorer exp2(CurF,TopAbs_EDGE);
     for ( ;exp2.More(); exp2.Next()) {
       const TopoDS_Edge& CurE  = TopoDS::Edge(exp2.Current());
-      TopoDS_Shape aLocalShape = Offset.Generated(CurE);
+      TopoDS_Shape aLocalShape = anOffset->Generated(CurE);
       const TopoDS_Edge& CurOE = TopoDS::Edge(aLocalShape);
-//      const TopoDS_Edge& CurOE = TopoDS::Edge(Offset.Generated(CurE));
+//      const TopoDS_Edge& CurOE = TopoDS::Edge(anOffset->Generated(CurE));
 
       if (!myImageOffset.HasImage(CurOE)) continue; 
       // CurOE disappears
@@ -2377,9 +2379,10 @@ void BiTgte_Blend::ComputeShape()
     }
     else { // so the faces are unwindeds
 
-      if ( !myMapSF.IsBound(CurF)) continue; // inverted or degenerated
+      const BRepOffset_Offset* anOffset = myMapSF.Seek(CurF);
+      if (anOffset == nullptr) continue; // inverted or degenerated
 
-      const TopoDS_Face& CurOF = myMapSF(CurF).Face();
+      const TopoDS_Face& CurOF = anOffset->Face();
       
       if ( !myImageOffset.HasImage(CurOF)) // face disappears in unwinding
 	continue;
@@ -2568,7 +2571,7 @@ Standard_Boolean BiTgte_Blend::Intersect
       myStopFaces.Contains(InitShape1);
 
   TopTools_MapOfShape Done;
-  BRepOffset_DataMapIteratorOfDataMapOfShapeOffset It(myMapSF);
+  BRepOffset_DataMapOfShapeOffset::Iterator It(myMapSF);
   for ( ; It.More(); It.Next()) {
     const BRepOffset_Offset& OF2 = It.Value();
     const TopoDS_Face&       F2  = OF2.Face();

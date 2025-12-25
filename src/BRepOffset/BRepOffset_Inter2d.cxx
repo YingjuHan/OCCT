@@ -1656,7 +1656,7 @@ void BRepOffset_Inter2d::Compute (const Handle(BRepAlgo_AsDes)&     AsDes,
 //=======================================================================
 Standard_Boolean BRepOffset_Inter2d::ConnexIntByInt
  (const TopoDS_Face&            FI,
-  BRepOffset_Offset&            OFI,
+  const BRepOffset_Offset&      OFI,
   TopTools_DataMapOfShapeShape& MES,
   const TopTools_DataMapOfShapeShape& Build,
   const Handle(BRepAlgo_AsDes)& theAsDes,
@@ -1870,7 +1870,7 @@ Standard_Boolean BRepOffset_Inter2d::ConnexIntByInt
 //=======================================================================
 void BRepOffset_Inter2d::ConnexIntByIntInVert
  (const TopoDS_Face&            FI,
-  BRepOffset_Offset&            OFI,
+  const BRepOffset_Offset&      OFI,
   TopTools_DataMapOfShapeShape& MES,
   const TopTools_DataMapOfShapeShape& Build,
   const Handle(BRepAlgo_AsDes)& AsDes,

@@ -20,10 +20,9 @@
 #include <TopoDS_Shape.hxx>
 #include <BRepOffset_Offset.hxx>
 #include <TopTools_ShapeMapHasher.hxx>
-#include <NCollection_DataMap.hxx>
+#include <NCollection_IndexedDataMap.hxx>
 
-typedef NCollection_DataMap<TopoDS_Shape,BRepOffset_Offset,TopTools_ShapeMapHasher> BRepOffset_DataMapOfShapeOffset;
-typedef NCollection_DataMap<TopoDS_Shape,BRepOffset_Offset,TopTools_ShapeMapHasher>::Iterator BRepOffset_DataMapIteratorOfDataMapOfShapeOffset;
+typedef NCollection_IndexedDataMap<TopoDS_Shape,BRepOffset_Offset,TopTools_ShapeMapHasher> BRepOffset_DataMapOfShapeOffset;
 
 
 #endif
