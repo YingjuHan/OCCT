@@ -635,10 +635,18 @@ static Standard_Integer cpulimit(Draw_Interpretor& di, Standard_Integer n, const
   unsigned int __stdcall CpuFunc (void *);
   unsigned aThreadID;
 
-  if (n <= 1){
+  if (n <= 1)
+  {
     CPU_LIMIT = RLIM_INFINITY;
-  } else {
+  }
+  else
+  {
     CPU_LIMIT = GetCpuLimit (a[1]);
+    if (CPU_LIMIT <= 0) // protect from invalid usage
+      CPU_LIMIT = RLIM_INFINITY;
+  }
+  if (CPU_LIMIT != RLIM_INFINITY)
+  {
     Standard_Real anUserSeconds, aSystemSeconds;
     OSD_Chronometer::GetProcessCPU (anUserSeconds, aSystemSeconds);
     CPU_CURRENT = clock_t(anUserSeconds + aSystemSeconds);
@@ -665,7 +673,15 @@ static Standard_Integer cpulimit(Draw_Interpretor& di, Standard_Integer n, const
   else
   {
     CPU_LIMIT = (clock_t)GetCpuLimit (a[1]);
-    rlp.rlim_cur = aUsage.ru_utime.tv_sec + (rlim_t)CPU_LIMIT;
+    if (CPU_LIMIT <= 0) // protect from invalid usage
+    {
+      CPU_LIMIT = (clock_t)RLIM_INFINITY;
+      rlp.rlim_cur = RLIM_INFINITY;
+    }
+    else
+    {
+      rlp.rlim_cur = aUsage.ru_utime.tv_sec + (rlim_t)CPU_LIMIT;
+    }
   }
 
   int aStatus = setrlimit (RLIMIT_CPU, &rlp);

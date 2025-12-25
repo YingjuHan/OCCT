@@ -41,6 +41,6 @@ while { [llength [array names jobs]] > 0 } {
 puts "Releasing worker"
 tpool::release $worker
 
-catch {cpulimit 0}
+catch {cpulimit}
 
 puts "TEST COMPLETED"
