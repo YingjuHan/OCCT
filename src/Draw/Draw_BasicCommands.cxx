@@ -593,7 +593,7 @@ static unsigned int __stdcall CpuFunc (void * /*param*/)
 static void cpulimitSignalHandler (int)
 {
   std::cout << "Process killed by CPU limit  (" << CPU_LIMIT << " sec)" << std::endl;
-  exit(2);
+  std::abort();
 }
 static void *CpuFunc(void* /*threadarg*/)
 {
@@ -604,7 +604,7 @@ static void *CpuFunc(void* /*threadarg*/)
     anElapCurrent = clock_t(aTimer.ElapsedTime());
     if (CPU_LIMIT >0 && (anElapCurrent) >= CPU_LIMIT) {
       std::cout << "Process killed by elapsed limit  (" << CPU_LIMIT << " sec)" << std::endl;
-      exit(2);
+      std::abort();
     }
   }
   return NULL;
