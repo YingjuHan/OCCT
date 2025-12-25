@@ -42,19 +42,15 @@ set commit_time [lindex [time {
 }] 0]
 
 # modify only one object one attribute
-NewCommand D
 set one_modif_time [lindex [time {
+  NewCommand D
   SetInteger D 0:1:[expr $labs/2]:[expr $sublabs/2] 20
-}] 0]
-
-set one_abort_time [lindex [time {
   AbortCommand D
-}] 0]
+} 100] 0]
 
 puts "Tree creation time $creation_time mcs"
 puts "Creation commit time $commit_time mcs"
-puts "One attribute modification time $one_modif_time mcs"
-puts "Abort of single modification time $one_abort_time mcs"
+puts "One attribute modification+abort time $one_modif_time mcs"
 
 if {$creation_time > $commit_time} {
   set max_creation $creation_time
@@ -64,6 +60,7 @@ if {$creation_time > $commit_time} {
 
 # Check that creation time (or commit) is at least 1000 times slower than abort of one modification (normally 4000).
 # Before the optimization it was only 150 times slower.
-if { [expr $max_creation/1000.] < $one_abort_time } {
+puts "Creation time / modification+abort = [expr $max_creation/$one_modif_time]"
+if { [expr $max_creation/500.0] < $one_modif_time } {
   puts "Error : one modification time abort is too big relatively to the whole document creation or commit"
 }

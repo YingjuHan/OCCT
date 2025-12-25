@@ -24,19 +24,19 @@ set aNb1 100
 
 # display 100x100 connected instances of single presentation
 puts "Creating [expr $aNb1*$aNb1] instances..."
-set t1 [time {for {set i 0} {$i < $aNb1} {incr i} {for {set j 0} {$j < $aNb1} {incr j} {vconnectto s_${i}_${j} ${i} ${j} 0 s -noupdate}}}]
+dchrono t1 -restart
+for {set i 0} {$i < $aNb1} {incr i} {
+  for {set j 0} {$j < $aNb1} {incr j} {vconnectto s_${i}_${j} ${i} ${j} 0 s -noupdate}
+}
+set t1_sec [dchrono t1 -stop -userCPU]
 
 # the following command is slow
-set t2 [time {vclear}]
+dchrono t2 -restart
+vclear
+set t2_sec [dchrono t2 -stop -userCPU]
 
-set d1 [lindex $t1 0]
-puts "vconnectto done in $d1 microseconds!\n"
-
-set d2 [lindex $t2 0]
-puts "vclear done in $d2 microseconds!\n"
-
-set t1_sec [expr $d1 * 1.e-6]
-set t2_sec [expr $d2 * 1.e-6]
+puts "vconnectto done in $t1_sec seconds!\n"
+puts "vclear     done in $t2_sec seconds!\n"
 
 if { [regexp {Debug mode} [dversion]] } {
   if { [regexp {Windows} [dversion]] } {

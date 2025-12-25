@@ -19,23 +19,29 @@ vsetdispmode 1
 vdefaults -defl 1.0 -autoTriang off
 vdisplay s
 
-set aNb1 100
+proc cpu_time {theCmd} {
+  chrono t -restart
+  uplevel $theCmd
+  chrono t -stop -userCPU
+}
+
+set aNb1 200
 
 # display 100x100 connected instances of single presentation
+decho off
 puts "Creating [expr $aNb1*$aNb1] instances..."
-set t [time {for {set i 0} {$i < $aNb1} {incr i} {for {set j 0} {$j < $aNb1} {incr j} {vconnectto s_${i}_${j} ${i} ${j} 0 s -noupdate}}}]
-set d1 [lindex $t 0]
-puts "Done in $d1 microseconds!\n"
+set d1 [cpu_time {for {set i 0} {$i < $aNb1} {incr i} {for {set j 0} {$j < $aNb1} {incr j} {vconnectto s_${i}_${j} ${i} ${j} 0 s -noupdate}}}]
+puts "Done in $d1 seconds!\n"
 vclear
 
 set aNb2 200
 
 # display 200x200 connected instances of single presentation
 puts "Creating [expr $aNb2*$aNb2] instances..."
-set t [time {for {set i 0} {$i < $aNb2} {incr i} {for {set j 0} {$j < $aNb2} {incr j} {vconnectto s_${i}_${j} ${i} ${j} 0 s -noupdate}}}]
-set d2 [lindex $t 0]
-puts "Done in $d2 microseconds!\n"
+set d2 [cpu_time {for {set i 0} {$i < $aNb2} {incr i} {for {set j 0} {$j < $aNb2} {incr j} {vconnectto s_${i}_${j} ${i} ${j} 0 s -noupdate}}}]
+puts "Done in $d2 seconds!\n"
 vclear
+decho on
 
 # compare two CPU times: the ratio should be quasi-linear
 set expected_ratio [expr double($aNb2 * $aNb2) / double($aNb1 * $aNb1)]

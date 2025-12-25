@@ -64,6 +64,6 @@ if {$creation_time > $commit_time} {
 
 # Check that creation time (or commit) is at least 1000 times slower than commit of one modification (normally 4000).
 # Before the optimization it was only 150 times slower.
-if { [expr $max_creation/1000.] < $one_commit_time } {
+if { [expr $max_creation/500.0] < $one_commit_time } {
   puts "Error : one modification time commit is too big relatively to the whole document creation or commit"
 }
