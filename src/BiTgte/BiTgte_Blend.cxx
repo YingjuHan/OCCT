@@ -1879,7 +1879,7 @@ void BiTgte_Blend::ComputeSurfaces()
 #endif
 
   TopTools_ListOfShape Empty;
-  TopTools_DataMapOfShapeListOfShape EmptyMap;
+  TopTools_IndexedDataMapOfShapeListOfShape EmptyMap;
 
   Handle(Geom_Surface) GS1, GS2;
   Handle(Geom_Curve)   GC1, GC2;
@@ -2112,13 +2112,13 @@ void BiTgte_Blend::ComputeSurfaces()
       }
       // Increment of the Map of Created if reconstruction of the Shape is required
       if ( myBuildShape) {
-	myCreated.Bind(CurCutE,EmptyMap);
+        myCreated.Add(CurCutE, EmptyMap);
 
-	myCreated(CurCutE).Bind(Or1,Empty);
-	myCreated(CurCutE)(Or1).Append(E1);
+        myCreated.ChangeFromKey(CurCutE).Add(Or1, Empty);
+        myCreated.ChangeFromKey(CurCutE).ChangeFromKey(Or1).Append(E1);
 
-	myCreated(CurCutE).Bind(Or2,Empty);
-	myCreated(CurCutE)(Or2).Append(E2);
+        myCreated.ChangeFromKey(CurCutE).Add(Or2, Empty);
+        myCreated.ChangeFromKey(CurCutE).ChangeFromKey(Or2).Append(E2);
       }
 
       // ----------------------------------------------------------
@@ -2316,10 +2316,8 @@ void BiTgte_Blend::ComputeShape()
 #endif
   // end debug
 
-  TopTools_DataMapOfShapeShape Created;
-
   TopTools_ListOfShape Empty;
-  TopTools_DataMapOfShapeListOfShape EmptyMap;
+  TopTools_IndexedDataMapOfShapeListOfShape EmptyMap;
   
   BRep_Builder B;
 
@@ -2357,9 +2355,9 @@ void BiTgte_Blend::ComputeShape()
       const TopoDS_Edge& ImE = 
 	TopoDS::Edge(myImageOffset.Image(CurOE).First());
       if (ImE.IsSame(CurOE)) {
-	myCreated.Bind(CurOE,EmptyMap);      
-	myCreated(CurOE).Bind(CurF,Empty);
-	myCreated(CurOE)(CurF).Append(CurE);
+        myCreated.Add(CurOE, EmptyMap);
+        myCreated.ChangeFromKey(CurOE).Add(CurF, Empty);
+        myCreated.ChangeFromKey(CurOE).ChangeFromKey(CurF).Append(CurE);
       }
     }
   }
@@ -2412,19 +2410,19 @@ void BiTgte_Blend::ComputeShape()
 	  const TopoDS_Edge& E = TopoDS::Edge(exp2.Current());
 	  TopoDS_Vertex V1,V2,OV1,OV2;
 	  TopExp::Vertices(E ,V1 ,V2 );
-	  if (myCreated.IsBound(E)) {
-	    if (myCreated(E).IsBound(CurF)) {
-	      const TopoDS_Edge& OE = TopoDS::Edge(myCreated(E)(CurF).First());
-	      TopExp::Vertices(OE,OV1,OV2);
-	      if ( !myCreated.IsBound(V1)) myCreated.Bind(V1,EmptyMap);
-	      if ( !myCreated.IsBound(V2)) myCreated.Bind(V2,EmptyMap);
-	      if ( !myCreated(V1).IsBound(CurF))  {
-		myCreated(V1).Bind(CurF,Empty);
-		myCreated(V1)(CurF).Append(OV1);
-	      }
-	      if ( !myCreated(V2).IsBound(CurF))  {
-		myCreated(V2).Bind(CurF,Empty);
-		myCreated(V2)(CurF).Append(OV2);
+          if (myCreated.Contains(E)) {
+            if (myCreated.FindFromKey(E).Contains(CurF)) {
+              const TopoDS_Edge& OE = TopoDS::Edge(myCreated.FindFromKey(E).FindFromKey(CurF).First());
+	          TopExp::Vertices(OE,OV1,OV2);
+              if ( !myCreated.Contains(V1)) myCreated.Add(V1, EmptyMap);
+              if ( !myCreated.Contains(V2)) myCreated.Add(V2, EmptyMap);
+              if ( !myCreated.FindFromKey(V1).Contains(CurF))  {
+                myCreated.ChangeFromKey(V1).Add(CurF, Empty);
+                myCreated.ChangeFromKey(V1).ChangeFromKey(CurF).Append(OV1);
+ 	      }
+              if ( !myCreated.FindFromKey(V2).Contains(CurF))  {
+                myCreated.ChangeFromKey(V2).Add(CurF, Empty);
+                myCreated.ChangeFromKey(V2).ChangeFromKey(CurF).Append(OV2);
 	      }
 	    }
 	  }
@@ -2460,17 +2458,17 @@ void BiTgte_Blend::ComputeShape()
 	    }
 	    else {
 	      // Is there an image in the Map of Created ?
-	      if ( myCreated.IsBound(E)) {
-		if ( myCreated(E).IsBound(CurF)) {
-		  OE = TopoDS::Edge(myCreated(E)(CurF).First());
+	      if ( myCreated.Contains(E)) {
+		if ( myCreated.FindFromKey(E).Contains(CurF)) {
+		  OE = TopoDS::Edge(myCreated.FindFromKey(E).FindFromKey(CurF).First());
 		}
 	      }
 	      else {
 		B.MakeEdge(OE);
 		TopoDS_Vertex V1,V2,OV1,OV2;
 		TopExp::Vertices(E,V1,V2);
-		if ( myCreated.IsBound(V1) && myCreated(V1).IsBound(CurF)) {
-		  OV1 = TopoDS::Vertex(myCreated(V1)(CurF).First());
+		if ( myCreated.Contains(V1) && myCreated.FindFromKey(V1).Contains(CurF)) {
+		  OV1 = TopoDS::Vertex(myCreated.FindFromKey(V1).FindFromKey(CurF).First());
 		}
 		else {
 		  B.MakeVertex(OV1);
@@ -2480,12 +2478,12 @@ void BiTgte_Blend::ComputeShape()
 		  S->D0(P2d.X(),P2d.Y(),P);
 		  P.Transform(L.Transformation());
 		  B.UpdateVertex(OV1,P,BRep_Tool::Tolerance(V1));
-		  myCreated.Bind(V1,EmptyMap);
-		  myCreated(V1).Bind(CurF,Empty);
-		  myCreated(V1)(CurF).Append(OV1);
+		  myCreated.Add(V1, EmptyMap);
+		  myCreated.ChangeFromKey(V1).Add(CurF, Empty);
+		  myCreated.ChangeFromKey(V1).ChangeFromKey(CurF).Append(OV1);
 		}
-		if ( myCreated.IsBound(V2) && myCreated(V2).IsBound(CurF)) {
-		  OV2 = TopoDS::Vertex(myCreated(V2)(CurF).First());
+		if ( myCreated.Contains(V2) && myCreated.FindFromKey(V2).Contains(CurF)) {
+		  OV2 = TopoDS::Vertex(myCreated.FindFromKey(V2).FindFromKey(CurF).First());
 		}
 		else {
 		  B.MakeVertex(OV2);
@@ -2495,9 +2493,9 @@ void BiTgte_Blend::ComputeShape()
 		  S->D0(P2d.X(),P2d.Y(),P);
 		  P.Transform(L.Transformation());
 		  B.UpdateVertex(OV2,P,BRep_Tool::Tolerance(V2));
-		  myCreated.Bind(V2,EmptyMap);
-		  myCreated(V2).Bind(CurF,Empty);
-		  myCreated(V2)(CurF).Append(OV2);
+		  myCreated.Add(V2, EmptyMap);
+		  myCreated.ChangeFromKey(V2).Add(CurF, Empty);
+		  myCreated.ChangeFromKey(V2).ChangeFromKey(CurF).Append(OV2);
 		}
 		B.Add(OE,OV1.Oriented(V1.Orientation()));
 		B.Add(OE,OV2.Oriented(V2.Orientation()));

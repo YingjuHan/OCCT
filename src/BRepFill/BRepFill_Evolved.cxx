@@ -774,8 +774,8 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
       //-----------------------------------------------
       // Return two faces separated by the bissectrice.
       //-----------------------------------------------
-      F [0] = TopoDS::Face(myMap(S[0])(ProfExp.Current()).First());
-      F [1] = TopoDS::Face(myMap(S[1])(ProfExp.Current()).First());
+      F [0] = TopoDS::Face(myMap.FindFromKey(S[0]).FindFromKey(ProfExp.Current()).First());
+      F [1] = TopoDS::Face(myMap.FindFromKey(S[1]).FindFromKey(ProfExp.Current()).First());
 
       //------------------------------------
       // Return parallel edges on each face.
@@ -784,10 +784,10 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
 
       EdgeVertices(ProfExp.Current(),VF,VL);
 
-      E [0] = TopoDS::Edge(myMap(S[0])(VF).First());
-      E [1] = TopoDS::Edge(myMap(S[0])(VL).First());
-      E [2] = TopoDS::Edge(myMap(S[1])(VF).First());
-      E [3] = TopoDS::Edge(myMap(S[1])(VL).First());
+      E [0] = TopoDS::Edge(myMap.FindFromKey(S[0]).FindFromKey(VF).First());
+      E [1] = TopoDS::Edge(myMap.FindFromKey(S[0]).FindFromKey(VL).First());
+      E [2] = TopoDS::Edge(myMap.FindFromKey(S[1]).FindFromKey(VF).First());
+      E [3] = TopoDS::Edge(myMap.FindFromKey(S[1]).FindFromKey(VL).First());
 
       Standard_Boolean Inv0[2];
       Standard_Boolean Inv1[2];
@@ -1047,19 +1047,18 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
   //----------------------------------
   // Construction of parallel edges.
   //----------------------------------
-  BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape ite1;
   TopoDS_Shape           CurrentProf,PrecProf;
   TopoDS_Face            CurrentFace;
   TopoDS_Shape           CurrentSpine;
   TopoDS_Vertex          VCF,VCL;
 
-  for (ite1.Initialize(myMap); ite1.More(); ite1.Next()) {
+  for (BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape ite1(myMap); ite1.More(); ite1.Next()) {
     CurrentSpine = ite1.Key();
 
     for (ProfExp.Init(myProfile); ProfExp.More(); ProfExp.Next()){	
       CurrentProf = ProfExp.Current();
       EdgeVertices(TopoDS::Edge(CurrentProf),VCF,VCL);
-      CurrentEdge  = TopoDS::Edge(myMap(CurrentSpine)(VCF).First());
+      CurrentEdge  = TopoDS::Edge(ite1.Value().FindFromKey(VCF).First());
 
       //-------------------------------------------------------------
       //RQ : Current Edge is oriented relatively to the face (oriented forward)
@@ -1077,11 +1076,11 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
         TopoDS_Shape     FaceControle;
         Standard_Boolean YaFace = Standard_True;
 
-        FaceControle = myMap(CurrentSpine)(CurrentProf).First();
+        FaceControle = ite1.Value().FindFromKey(CurrentProf).First();
         if (!MapBis.IsBound(FaceControle)){
           YaFace = Standard_False;
           if (!PrecProf.IsNull()) {
-            FaceControle = myMap(CurrentSpine)(PrecProf).First();
+            FaceControle = ite1.Value().FindFromKey(PrecProf).First();
             if (MapBis.IsBound(FaceControle)){
               YaFace = Standard_True;
             }
@@ -1099,7 +1098,7 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
             MapVerPar(CurrentEdge) , aSeqOfShape);
 
           for ( k = 1; k <= aSeqOfShape.Length(); k++) {
-            myMap(CurrentSpine)(VCF).Append(aSeqOfShape.Value(k));
+            ite1.ChangeValue().ChangeFromKey(VCF).Append(aSeqOfShape.Value(k));
 
 #ifdef DRAW	    
             if (AffichEdge) {
@@ -1117,19 +1116,19 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
     //------------------------------------------------------------
     // Construction of the parallel edge from the last vertex of myProfile.
     //------------------------------------------------------------
-    CurrentEdge  = TopoDS::Edge(myMap(CurrentSpine)(VCL).First());
+    CurrentEdge  = TopoDS::Edge(ite1.Value().FindFromKey(VCL).First());
 
     if (MapBis.IsBound(CurrentEdge)) {
       Standard_Boolean YaFace = Standard_True;
       TopoDS_Shape     FaceControle;
 
-      FaceControle = myMap(CurrentSpine)(CurrentProf).First();
+      FaceControle = ite1.Value().FindFromKey(CurrentProf).First();
       if (!MapBis.IsBound(FaceControle)){
         YaFace = Standard_False;
       }
       // the number of element of the list allows to know
       // if the edges have already been done (closed profile) .
-      if (YaFace && myMap(CurrentSpine)(VCL).Extent()<= 1) {
+      if (YaFace && ite1.Value().FindFromKey(VCL).Extent() <= 1) {
         TopTools_SequenceOfShape aSeqOfShape;
         TrimEdge (CurrentEdge, 
           MapBis   (FaceControle), 
@@ -1137,7 +1136,7 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
           MapVerPar(CurrentEdge) , aSeqOfShape);
 
         for ( k = 1; k <= aSeqOfShape.Length(); k++) {
-          myMap(CurrentSpine)(VCL).Append(aSeqOfShape.Value(k));
+          ite1.ChangeValue().ChangeFromKey(VCL).Append(aSeqOfShape.Value(k));
 
 #ifdef DRAW	    
           if (AffichEdge) {	  
@@ -1160,13 +1159,13 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
   //-------------------------------------------------------------------
   // Cut faces by edges.
   //-------------------------------------------------------------------
-  for (ite1.Initialize(myMap); ite1.More(); ite1.Next()) {
+  for (BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape ite1(myMap); ite1.More(); ite1.Next()) {
     CurrentSpine = ite1.Key();
 
     for (ProfExp.Init(myProfile); ProfExp.More(); ProfExp.Next()){
       CurrentProf = ProfExp.Current();
-      CurrentFace = TopoDS::Face(myMap(CurrentSpine)(CurrentProf).First());
-      myMap(CurrentSpine)(CurrentProf).Clear();
+      CurrentFace = TopoDS::Face(ite1.Value().FindFromKey(CurrentProf).First());
+      ite1.ChangeValue().ChangeFromKey(CurrentProf).Clear();
 
       if (MapBis.IsBound(CurrentFace)) {
         //----------------------------------------------------------
@@ -1181,7 +1180,7 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
         EdgeVertices(TopoDS::Edge(CurrentProf),VCF,VCL);
 
         TopTools_ListIteratorOfListOfShape itl;
-        const TopTools_ListOfShape& LF = myMap(CurrentSpine)(VCF);
+        const TopTools_ListOfShape& LF = ite1.Value().FindFromKey(VCF);
 
         TopAbs_Orientation Ori = BRepTools::OriEdgeInFace(TopoDS::Edge(LF.First()),
           CurrentFace);
@@ -1189,7 +1188,7 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
           TopoDS_Edge RE = TopoDS::Edge(itl.Value());
           MapBis(CurrentFace).Append(RE.Oriented(Ori));
         }
-        const TopTools_ListOfShape& LL = myMap(CurrentSpine)(VCL);	  
+        const TopTools_ListOfShape& LL = ite1.Value().FindFromKey(VCL);
         Ori = BRepTools::OriEdgeInFace(TopoDS::Edge(LL.First()),CurrentFace);
         for (itl.Initialize(LL), itl.Next() ; itl.More(); itl.Next()) {	 
           TopoDS_Edge RE = TopoDS::Edge(itl.Value());
@@ -1203,7 +1202,7 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
 
         for (Standard_Integer ii = 1; ii <= aSeqOfShape.Length(); ii++) {
           myBuilder.Add (myShape, aSeqOfShape.Value(ii));
-          myMap(CurrentSpine)(CurrentProf).Append(aSeqOfShape.Value(ii));
+          ite1.ChangeValue().ChangeFromKey(CurrentProf).Append(aSeqOfShape.Value(ii));
         }
       }
     }
@@ -1216,7 +1215,7 @@ void BRepFill_Evolved::ElementaryPerform (const TopoDS_Face&              Sp,
 
     for ( ; Explo.More(); Explo.Next()){
       if (vmap.Add(Explo.Current())) {
-        myMap(CurrentSpine)(Explo.Current()).RemoveFirst();
+        ite1.ChangeValue().ChangeFromKey(Explo.Current()).RemoveFirst();
       }
     }
   }	 
@@ -1254,7 +1253,7 @@ void BRepFill_Evolved::PlanarPerform (const TopoDS_Face&              Sp,
 
   BRepTools_WireExplorer             ProfExp;
   TopExp_Explorer                    Exp,exp1,exp2;
-  TopTools_DataMapOfShapeListOfShape EmptyMap;
+  TopTools_IndexedDataMapOfShapeListOfShape EmptyMap;
   TopTools_ListOfShape               EmptyList;
   TopTools_DataMapOfShapeShape       MapVP;
   BRepFill_OffsetWire                Paral;
@@ -1289,10 +1288,10 @@ void BRepFill_Evolved::PlanarPerform (const TopoDS_Face&              Sp,
           Exp.Next()) {
             const TopoDS_Edge& WC = TopoDS::Edge(Exp.Current());
             const TopoDS_Shape& GS = OffAnc.Ancestor(WC);
-            if ( !myMap.IsBound(GS)) 
-              myMap.Bind(GS, EmptyMap);
-            if ( !myMap(GS).IsBound(V[i]))
-              myMap(GS).Bind(V[i],Paral.GeneratedShapes(GS));
+            if ( !myMap.Contains(GS))
+              myMap.Add(GS, EmptyMap);
+            if ( !myMap.FindFromKey(GS).Contains(V[i]))
+              myMap.ChangeFromKey(GS).Add(V[i], Paral.GeneratedShapes(GS));
         }
       }
       TopoDS_Shape Rest = MapVP(V[i]);
@@ -1359,11 +1358,11 @@ void BRepFill_Evolved::PlanarPerform (const TopoDS_Face&              Sp,
         const TopoDS_Edge& CE = TopoDS::Edge(Exp.Current());
         if (OffAnc.HasAncestor(CE)) {
           const TopoDS_Shape& InitE = OffAnc.Ancestor(CE);
-          if ( !myMap.IsBound(InitE)) 
-            myMap.Bind(InitE, EmptyMap);
-          if ( !myMap(InitE).IsBound(E))
-            myMap(InitE).Bind(E,EmptyList);
-          myMap(InitE)(E).Append(F);
+          if ( !myMap.Contains(InitE))
+            myMap.Add(InitE, EmptyMap);
+          if ( !myMap.FindFromKey(InitE).Contains(E))
+            myMap.ChangeFromKey(InitE).Add(E, EmptyList);
+          myMap.ChangeFromKey(InitE).ChangeFromKey(E).Append(F);
         }
       }
     }
@@ -1399,7 +1398,7 @@ void BRepFill_Evolved::VerticalPerform (const TopoDS_Face&              Sp,
 
   Standard_Boolean First = Standard_True;
   TopoDS_Shape     Base;
-  TopTools_DataMapOfShapeListOfShape  EmptyMap;
+  TopTools_IndexedDataMapOfShapeListOfShape EmptyMap;
 
   for (ProfExp.Init(myProfile); ProfExp.More(); ProfExp.Next()){
     const TopoDS_Edge& E = ProfExp.Current();
@@ -1420,14 +1419,14 @@ void BRepFill_Evolved::VerticalPerform (const TopoDS_Face&              Sp,
       for (Exp.Init(Base,TopAbs_EDGE); Exp.More(); Exp.Next()) {
         const TopoDS_Edge&  anEdge = TopoDS::Edge(Exp.Current());
         const TopoDS_Shape& AE =  OffAnc.Ancestor(anEdge);
-        if (!myMap.IsBound(AE)) {
-          myMap.Bind(AE,EmptyMap);
+        if (!myMap.Contains(AE)) {
+          myMap.Add(AE, EmptyMap);
         }
-        if (!myMap(AE).IsBound(V1)) {
+        if (!myMap.FindFromKey(AE).Contains(V1)) {
           TopTools_ListOfShape L;
-          myMap(AE).Bind(V1,L);
+          myMap.ChangeFromKey(AE).Add(V1, L);
         }
-        myMap(AE)(V1).Append(anEdge);
+        myMap.ChangeFromKey(AE).ChangeFromKey(V1).Append(anEdge);
       }
       First = Standard_False;
     }
@@ -1461,22 +1460,22 @@ void BRepFill_Evolved::VerticalPerform (const TopoDS_Face&              Sp,
       it(myMap);
 
     for (; it.More(); it.Next()) {
-      const TopTools_ListOfShape& LOF = it.Value()(V1);
+      const TopTools_ListOfShape& LOF = it.Value().FindFromKey(V1);
       TopTools_ListIteratorOfListOfShape itLOF(LOF);
-      if (!myMap(it.Key()).IsBound(V2)) {
+      if (!it.Value().Contains(V2)) {
         TopTools_ListOfShape L;
-        myMap(it.Key()).Bind(V2,L);
+        it.ChangeValue().Add(V2, L);
       }
 
-      if (!myMap(it.Key()).IsBound(E)) {
+      if (!it.Value().Contains(E)) {
         TopTools_ListOfShape L;
-        myMap(it.Key()).Bind(E,L);
+        it.ChangeValue().Add(E, L);
       }
 
       for (; itLOF.More(); itLOF.Next()) {
         const TopoDS_Shape& OS = itLOF.Value();
-        myMap(it.Key())(V2).Append(PS.LastShape(OS));
-        myMap(it.Key())(E).Append(PS.Shape(OS));
+        it.ChangeValue().ChangeFromKey(V2).Append(PS.LastShape(OS));
+        it.ChangeValue().ChangeFromKey(E).Append(PS.Shape(OS));
       }
     }
   }
@@ -1745,14 +1744,13 @@ const TopTools_ListOfShape&  BRepFill_Evolved::GeneratedShapes (
   const TopoDS_Shape& ProfShape )
   const 
 {
-  if (myMap            .IsBound(SpineShape) &&
-    myMap(SpineShape).IsBound(ProfShape)     ) {
-      return myMap(SpineShape)(ProfShape);
+  if (myMap.Contains(SpineShape) &&
+      myMap.FindFromKey(SpineShape).Contains(ProfShape)) {
+    return myMap.FindFromKey(SpineShape).FindFromKey(ProfShape);
   }
-  else {
-    static TopTools_ListOfShape Empty;
-    return Empty;
-  }
+
+  static const TopTools_ListOfShape Empty;
+  return Empty;
 }
 
 //=======================================================================
@@ -1796,8 +1794,6 @@ void BRepFill_Evolved::Add(      BRepFill_Evolved& Vevo,
 
 {  
   BRepFill_DataMapOfShapeDataMapOfShapeListOfShape& MapVevo = Vevo.Generated();
-  TopTools_DataMapIteratorOfDataMapOfShapeListOfShape                  iteP;
-  BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape    iteS;
   TopoDS_Shape CurrentSpine, CurrentProf;
 
   if (Vevo.Shape().IsNull()) return;
@@ -1825,12 +1821,12 @@ void BRepFill_Evolved::Add(      BRepFill_Evolved& Vevo,
       Commun);
 
     if (Commun) {
-      for (iteS.Initialize(myMap); iteS.More(); iteS.Next()) {
+      for (BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape iteS(myMap); iteS.More(); iteS.Next()) {
         const TopoDS_Shape& SP = iteS.Key();
-        if (iteS.Value().IsBound(VV) && 
-          MapVevo.IsBound(SP) && MapVevo(SP).IsBound(VV)) {
+        if (iteS.Value().Contains(VV) &&
+          MapVevo.Contains(SP) && MapVevo.FindFromKey(SP).Contains(VV)) {
 
-            const TopTools_ListOfShape& MyList   = myMap(SP)(VV);
+            const TopTools_ListOfShape& MyList   = iteS.Value().FindFromKey(VV);
             const TopTools_ListOfShape& VevoList = Vevo.GeneratedShapes(SP,VV);
             TopTools_ListIteratorOfListOfShape MyIte  (MyList);
             TopTools_ListIteratorOfListOfShape VevoIte(VevoList);
@@ -1853,31 +1849,31 @@ void BRepFill_Evolved::Add(      BRepFill_Evolved& Vevo,
   //----------------------------------------------------------
   // Add map of elements generate in Vevo in myMap.
   //----------------------------------------------------------
-  TopTools_DataMapOfShapeListOfShape        EmptyMap;
+  TopTools_IndexedDataMapOfShapeListOfShape EmptyMap;
   TopTools_ListOfShape                      EmptyList;
 
-  for (iteS.Initialize(MapVevo); iteS.More() ; iteS.Next()) {
+  for (BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape iteS(MapVevo); iteS.More() ; iteS.Next()) {
     CurrentSpine = iteS.Key();
-    for (iteP.Initialize(MapVevo(CurrentSpine)); iteP.More(); iteP.Next()) {
+    for (TopTools_IndexedDataMapOfShapeListOfShape::Iterator iteP(MapVevo.FindFromKey(CurrentSpine)); iteP.More(); iteP.Next()) {
       CurrentProf  = iteP.Key();
-      if (!myMap.IsBound(CurrentSpine)) {
+      if (!myMap.Contains(CurrentSpine)) {
         //------------------------------------------------
         // The element of spine is not yet present .
         // => previous profile not on the border.
         //-------------------------------------------------
-        myMap.Bind(CurrentSpine,EmptyMap);
+        myMap.Add(CurrentSpine, EmptyMap);
       }
-      if (!myMap(CurrentSpine).IsBound(CurrentProf)) {
-        myMap(CurrentSpine).Bind(CurrentProf,EmptyList);      
+      if (!myMap.FindFromKey(CurrentSpine).Contains(CurrentProf)) {
+        myMap.ChangeFromKey(CurrentSpine).Add(CurrentProf, EmptyList);
         const TopTools_ListOfShape& GenShapes 
-          = MapVevo (CurrentSpine)(CurrentProf);
+          = MapVevo.FindFromKey(CurrentSpine).FindFromKey(CurrentProf);
         TopTools_ListIteratorOfListOfShape itl (GenShapes);
         for (; itl.More(); itl.Next()) {
           // during Glue.Add the shared shapes are recreated.
           if (Glue.IsCopied(itl.Value())) 
-            myMap(CurrentSpine)(CurrentProf).Append(Glue.Copy(itl.Value()));
+            myMap.ChangeFromKey(CurrentSpine).ChangeFromKey(CurrentProf).Append(Glue.Copy(itl.Value()));
           else
-            myMap(CurrentSpine)(CurrentProf).Append(itl.Value());
+            myMap.ChangeFromKey(CurrentSpine).ChangeFromKey(CurrentProf).Append(itl.Value());
         }
       }
     }
@@ -1931,39 +1927,34 @@ void BRepFill_Evolved::Transfert(      BRepFill_Evolved&             Vevo,
   //--------------------------------------------------------------
   // Transfer of myMap of Vevo into myMap.
   //--------------------------------------------------------------
-  BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape iteS;
-  TopTools_DataMapIteratorOfDataMapOfShapeListOfShape               iteP; 
-  TopTools_DataMapOfShapeListOfShape EmptyMap;
+  TopTools_IndexedDataMapOfShapeListOfShape EmptyMap;
   TopTools_ListOfShape               EmptyList;
   TopoDS_Shape                       InitialSpine, InitialProf;
 
   BRepFill_DataMapOfShapeDataMapOfShapeListOfShape& MapVevo 
     = Vevo.Generated();
 
-  for (iteS.Initialize(MapVevo); iteS.More(); iteS.Next()) {
+  for (BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape iteS(MapVevo); iteS.More(); iteS.Next()) {
     InitialSpine = MapSpine(iteS.Key());
     InitialSpine.Move(LS);
 
-    for (iteP.Initialize(MapVevo(iteS.Key())); iteP.More(); iteP.Next()) {
+    for (TopTools_IndexedDataMapOfShapeListOfShape::Iterator iteP(iteS.Value()); iteP.More(); iteP.Next()) {
       InitialProf  = MapProf (iteP.Key());
       InitialProf.Location(InitLP);
 
-      TopTools_ListOfShape& GenShapes = 
-        MapVevo.ChangeFind(iteS.Key()).ChangeFind(iteP.Key());
-
-      TopTools_ListIteratorOfListOfShape itl;
-      for (itl.Initialize(GenShapes); itl.More(); itl.Next()) {
+      TopTools_ListOfShape& GenShapes = iteP.ChangeValue();
+      for (TopTools_ListIteratorOfListOfShape itl(GenShapes); itl.More(); itl.Next()) {
         itl.Value().Move(LS);
       }
 
-      if (!myMap.IsBound(InitialSpine)) {
-        myMap.Bind(InitialSpine,EmptyMap);
+      if (!myMap.Contains(InitialSpine)) {
+        myMap.Add(InitialSpine, EmptyMap);
       }
 
-      if (!myMap(InitialSpine).IsBound(InitialProf)) {
-        myMap(InitialSpine).Bind(InitialProf,EmptyList);
+      if (!myMap.FindFromKey(InitialSpine).Contains(InitialProf)) {
+        myMap.ChangeFromKey(InitialSpine).Add(InitialProf, EmptyList);
       }
-      myMap(InitialSpine)(InitialProf).Append(GenShapes);
+      myMap.ChangeFromKey(InitialSpine).ChangeFromKey(InitialProf).Append(GenShapes);
     }
   }
   //--------------------------------------------------------------
@@ -2217,9 +2208,9 @@ void BRepFill_Evolved::MakePipe(const TopoDS_Edge& SE,
   TopTools_ListOfShape   L;
   TopoDS_Vertex          VF,VL,VFG,VLG;
   Standard_Boolean       FirstVertex = Standard_True;
-  TopTools_DataMapOfShapeListOfShape  P;
+  TopTools_IndexedDataMapOfShapeListOfShape P;
 
-  myMap.Bind(SE,P);
+  myMap.Add(SE, P);
 
   for (ProfExp.Init(myProfile),GenProfExp.Init(GenProf);
     ProfExp.More();
@@ -2229,14 +2220,14 @@ void BRepFill_Evolved::MakePipe(const TopoDS_Edge& SE,
       EdgeVertices(GenProfExp.Current(),VFG,VLG);
 
       if (FirstVertex) {
-        myMap(SE).Bind(VF,L);
-        myMap(SE)(VF).Append(Pipe.Edge(SE,VFG)); 
+        myMap.ChangeFromKey(SE).Add(VF, L);
+        myMap.ChangeFromKey(SE).ChangeFromKey(VF).Append(Pipe.Edge(SE, VFG));
         FirstVertex = Standard_False;
       }
-      myMap(SE).Bind(VL,L);
-      myMap(SE)(VL).Append(Pipe.Edge(SE,VLG));
-      myMap(SE).Bind(ProfExp.Current(),L);
-      myMap(SE)(ProfExp.Current()).Append
+      myMap.ChangeFromKey(SE).Add(VL, L);
+      myMap.ChangeFromKey(SE).ChangeFromKey(VL).Append(Pipe.Edge(SE, VLG));
+      myMap.ChangeFromKey(SE).Add(ProfExp.Current(), L);
+      myMap.ChangeFromKey(SE).ChangeFromKey(ProfExp.Current()).Append
         (Pipe.Face(SE,GenProfExp.Current()));
   }
 }
@@ -2300,9 +2291,9 @@ void BRepFill_Evolved::MakeRevol(const TopoDS_Edge&   SE,
   TopTools_ListOfShape   L;
   TopoDS_Vertex          VF,VL,VFG,VLG;
   Standard_Boolean       FirstVertex = Standard_True;
-  TopTools_DataMapOfShapeListOfShape  R;
+  TopTools_IndexedDataMapOfShapeListOfShape R;
 
-  myMap.Bind(VLast,R);
+  myMap.Add(VLast, R);
 
   for (ProfExp.Init(myProfile),GenProfExp.Init(GenProf);
     ProfExp.More();
@@ -2314,23 +2305,23 @@ void BRepFill_Evolved::MakeRevol(const TopoDS_Edge&   SE,
       TopAbs_Orientation Or = GenProfExp.Current().Orientation();
 
       if (FirstVertex) {
-        myMap(VLast).Bind(VF,L);
+        myMap.ChangeFromKey(VLast).Add(VF, L);
         const TopoDS_Shape& RV = Rev.Shape(VFG);
         //      TopAbs_Orientation OO = TopAbs::Compose(RV.Orientation(),Or);
         TopAbs_Orientation OO = RV.Orientation();
-        myMap(VLast)(VF).Append(RV.Oriented(OO));
+        myMap.ChangeFromKey(VLast).ChangeFromKey(VF).Append(RV.Oriented(OO));
         FirstVertex = Standard_False;
       }
-      myMap(VLast).Bind(ProfExp.Current(),L);	
+      myMap.ChangeFromKey(VLast).Add(ProfExp.Current(), L);
       const TopoDS_Shape& RF = Rev.Shape(GenProfExp.Current());
       TopAbs_Orientation  OO = TopAbs::Compose(RF.Orientation(),Or);
 
-      myMap(VLast)(ProfExp.Current()).Append(RF.Oriented(OO));
-      myMap(VLast).Bind(VL,L);
+      myMap.ChangeFromKey(VLast).ChangeFromKey(ProfExp.Current()).Append(RF.Oriented(OO));
+      myMap.ChangeFromKey(VLast).Add(VL, L);
       const TopoDS_Shape& RV = Rev.Shape(VLG);
       //    OO = TopAbs::Compose(RV.Orientation(),Or);
       OO = RV.Orientation();
-      myMap(VLast)(VL).Append(RV.Oriented(OO));
+      myMap.ChangeFromKey(VLast).ChangeFromKey(VL).Append(RV.Oriented(OO));
   }
 }
 
@@ -2405,7 +2396,6 @@ void BRepFill_Evolved::TransformInitWork(const TopLoc_Location& LS,
 void  BRepFill_Evolved::ContinuityOnOffsetEdge (const TopTools_ListOfShape&) 
 {
   BRepTools_WireExplorer WExp ; 
-  BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape iteS;
   TopoDS_Vertex          VF,VL,V;
   TopoDS_Edge            PrecE,CurE,FirstE;
   BRep_Builder           B;
@@ -2433,16 +2423,16 @@ void  BRepFill_Evolved::ContinuityOnOffsetEdge (const TopTools_ListOfShape&)
         //-----------------------------------------------------
         //Code continuity for all edges generated by V.
         //-----------------------------------------------------
-        for (iteS.Initialize(myMap); iteS.More(); iteS.Next()) {
+        for (BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape iteS(myMap); iteS.More(); iteS.Next()) {
           const TopoDS_Shape& SP = iteS.Key(); 
-          if (myMap (SP).IsBound(V) 
-            && myMap (SP).IsBound(CurE) &&  myMap (SP).IsBound(PrecE)){
-              if (!myMap(SP)(V)    .IsEmpty() &&
-                !myMap(SP)(CurE) .IsEmpty() &&
-                !myMap(SP)(PrecE).IsEmpty()   ) 
-                B.Continuity (TopoDS::Edge(myMap(SP)(V)    .First()),
-                TopoDS::Face(myMap(SP)(CurE) .First()),
-                TopoDS::Face(myMap(SP)(PrecE).First()),
+          if (myMap.FindFromKey(SP).Contains(V)
+            && myMap.FindFromKey(SP).Contains(CurE) && myMap.FindFromKey(SP).Contains(PrecE)){
+              if (!myMap.FindFromKey(SP).FindFromKey(V)    .IsEmpty() &&
+                !myMap.FindFromKey(SP).FindFromKey(CurE) .IsEmpty() &&
+                !myMap.FindFromKey(SP).FindFromKey(PrecE).IsEmpty())
+                B.Continuity (TopoDS::Edge(myMap.FindFromKey(SP).FindFromKey(V).First()),
+                TopoDS::Face(myMap.FindFromKey(SP).FindFromKey(CurE) .First()),
+                TopoDS::Face(myMap.FindFromKey(SP).FindFromKey(PrecE).First()),
                 Continuity);
           }
         }
@@ -2465,16 +2455,16 @@ void  BRepFill_Evolved::ContinuityOnOffsetEdge (const TopTools_ListOfShape&)
       //---------------------------------------------
       //Code continuity for all edges generated by V.
       //---------------------------------------------
-      for (iteS.Initialize(myMap); iteS.More(); iteS.Next()) {
+      for (BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape iteS(myMap); iteS.More(); iteS.Next()) {
         const TopoDS_Shape& SP = iteS.Key(); 
-        if (myMap (SP).IsBound(VF) 
-          && myMap (SP).IsBound(CurE) &&  myMap (SP).IsBound(FirstE)){
-            if (!myMap(SP)(VF)    .IsEmpty() &&
-              !myMap(SP)(CurE)  .IsEmpty() &&
-              !myMap(SP)(FirstE).IsEmpty()   ) 
-              B.Continuity (TopoDS::Edge(myMap(SP)(VF)    .First()),
-              TopoDS::Face(myMap(SP)(CurE)  .First()),
-              TopoDS::Face(myMap(SP)(FirstE).First()),
+        if (myMap.FindFromKey(SP).Contains(VF)
+          && myMap.FindFromKey(SP).Contains(CurE) && myMap.FindFromKey(SP).Contains(FirstE)){
+            if (!myMap.FindFromKey(SP).FindFromKey(VF).IsEmpty() &&
+              !myMap.FindFromKey(SP).FindFromKey(CurE).IsEmpty() &&
+              !myMap.FindFromKey(SP).FindFromKey(FirstE).IsEmpty())
+              B.Continuity (TopoDS::Edge(myMap.FindFromKey(SP).FindFromKey(VF).First()),
+              TopoDS::Face(myMap.FindFromKey(SP).FindFromKey(CurE)  .First()),
+              TopoDS::Face(myMap.FindFromKey(SP).FindFromKey(FirstE).First()),
               Continuity);
         }
       }

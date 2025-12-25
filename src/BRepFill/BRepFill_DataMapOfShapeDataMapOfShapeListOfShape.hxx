@@ -18,12 +18,12 @@
 #define BRepFill_DataMapOfShapeDataMapOfShapeListOfShape_HeaderFile
 
 #include <TopoDS_Shape.hxx>
-#include <TopTools_DataMapOfShapeListOfShape.hxx>
+#include <TopTools_IndexedDataMapOfShapeListOfShape.hxx>
 #include <TopTools_ShapeMapHasher.hxx>
-#include <NCollection_DataMap.hxx>
+#include <NCollection_IndexedDataMap.hxx>
 
-typedef NCollection_DataMap<TopoDS_Shape,TopTools_DataMapOfShapeListOfShape,TopTools_ShapeMapHasher> BRepFill_DataMapOfShapeDataMapOfShapeListOfShape;
-typedef NCollection_DataMap<TopoDS_Shape,TopTools_DataMapOfShapeListOfShape,TopTools_ShapeMapHasher>::Iterator BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape;
+typedef NCollection_IndexedDataMap<TopoDS_Shape,TopTools_IndexedDataMapOfShapeListOfShape,TopTools_ShapeMapHasher> BRepFill_DataMapOfShapeDataMapOfShapeListOfShape;
+typedef BRepFill_DataMapOfShapeDataMapOfShapeListOfShape::Iterator BRepFill_DataMapIteratorOfDataMapOfShapeDataMapOfShapeListOfShape;
 
 
 #endif
