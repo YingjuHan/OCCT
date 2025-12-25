@@ -205,16 +205,16 @@ private:
   //! current one.
   Standard_EXPORT Standard_Integer CommitTransaction (const TDF_Label& aLabel, const Handle(TDF_Delta)& aDelta, const Standard_Boolean withDelta);
 
-  TDF_LabelNodePtr myRoot;
-  Standard_Integer myTransaction;
-  Standard_Integer myNbTouchedAtt;
-  Standard_Boolean myNotUndoMode;
-  Standard_Integer myTime;
+  TDF_LabelNodePtr myRoot = nullptr;
   TColStd_ListOfInteger myTimes;
   TDF_HAllocator myLabelNodeAllocator;
-  Standard_Boolean myAllowModification;
-  Standard_Boolean myAccessByEntries;
   NCollection_DataMap<TCollection_AsciiString, TDF_Label> myAccessByEntriesTable;
+  Standard_Integer myTransaction = 0;
+  Standard_Integer myNbTouchedAtt = 0;
+  Standard_Integer myTime = 0;
+  Standard_Boolean myNotUndoMode = true;
+  Standard_Boolean myAllowModification = true;
+  Standard_Boolean myAccessByEntries = false;
 };
 
 

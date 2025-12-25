@@ -147,16 +147,16 @@ private:
   TopTools_MapOfShape myReversedEdges;
   BRepFill_DataMapOfShapeHArray2OfShape myTapes;
   BRepFill_DataMapOfShapeHArray2OfShape myRails;
-  Standard_Integer myCurIndexOfSectionEdge;
+  Standard_Integer myCurIndexOfSectionEdge = 1;
   TopoDS_Shape myFirst;
   TopoDS_Shape myLast;
   TopTools_DataMapOfShapeListOfShape myGenMap;
-  Standard_Integer myDegmax;
-  Standard_Integer mySegmax;
-  GeomAbs_Shape myContinuity;
-  GeomFill_Trihedron myMode;
-  Standard_Boolean myForceApproxC1;
-  Standard_Real myErrorOnSurf;
+  Standard_Integer myDegmax = 11;
+  Standard_Integer mySegmax = 100;
+  GeomAbs_Shape myContinuity = GeomAbs_C2;
+  GeomFill_Trihedron myMode = GeomFill_IsCorrectedFrenet;
+  Standard_Boolean myForceApproxC1 = false;
+  Standard_Real myErrorOnSurf = 0.0;
 
 
 };

@@ -148,13 +148,7 @@ static void UpdateTolFromTopOrBottomPCurve(const TopoDS_Face& aFace,
 
 BRepFill_Pipe::BRepFill_Pipe()
 {
-  myDegmax = 11;
-  mySegmax = 100;
-  myContinuity = GeomAbs_C2;
-  myMode = GeomFill_IsCorrectedFrenet;
-  myForceApproxC1 = Standard_False;
-
-  myCurIndexOfSectionEdge = 1;
+  //
 }
 
 
@@ -170,16 +164,11 @@ BRepFill_Pipe::BRepFill_Pipe(const TopoDS_Wire&  Spine,
 			     const Standard_Boolean KPart)
                              
 {
-  myDegmax = 11;
-  mySegmax = 100;
-  
-  myMode = GeomFill_IsCorrectedFrenet;
   if (aMode == GeomFill_IsFrenet ||
       aMode == GeomFill_IsCorrectedFrenet ||
       aMode == GeomFill_IsDiscreteTrihedron)
     myMode = aMode;
 
-  myContinuity = GeomAbs_C2;
   if (myMode == GeomFill_IsDiscreteTrihedron)
     myContinuity = GeomAbs_C0;
   

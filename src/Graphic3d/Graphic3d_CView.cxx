@@ -17,7 +17,6 @@
 #include <Aspect_OpenVRSession.hxx>
 #include <Graphic3d_CubeMapPacked.hxx>
 #include <Graphic3d_Layer.hxx>
-#include <Graphic3d_MapIteratorOfMapOfStructure.hxx>
 #include <Graphic3d_StructureManager.hxx>
 
 IMPLEMENT_STANDARD_RTTIEXT(Graphic3d_CView,Graphic3d_DataStructureManager)
@@ -101,7 +100,7 @@ void Graphic3d_CView::Activate()
     // displayed and if the view accepts it in its context.
     Graphic3d_MapOfStructure aDisplayedStructs;
     myStructureManager->DisplayedStructures (aDisplayedStructs);
-    for (Graphic3d_MapIteratorOfMapOfStructure aStructIter (aDisplayedStructs); aStructIter.More(); aStructIter.Next())
+    for (Graphic3d_MapOfStructure::Iterator aStructIter (aDisplayedStructs); aStructIter.More(); aStructIter.Next())
     {
       const Handle(Graphic3d_Structure)& aStruct = aStructIter.Key();
       if (IsDisplayed (aStruct))
@@ -138,7 +137,7 @@ void Graphic3d_CView::Deactivate()
     // displayed and if the view accepts it in its context.
     Graphic3d_MapOfStructure aDisplayedStructs;
     myStructureManager->DisplayedStructures (aDisplayedStructs);
-    for (Graphic3d_MapIteratorOfMapOfStructure aStructIter (aDisplayedStructs); aStructIter.More(); aStructIter.Next())
+    for (Graphic3d_MapOfStructure::Iterator aStructIter (aDisplayedStructs); aStructIter.More(); aStructIter.Next())
     {
       const Handle(Graphic3d_Structure)& aStruct = aStructIter.Key();
       if (!IsDisplayed (aStruct))
@@ -185,7 +184,7 @@ void Graphic3d_CView::Remove()
   }
 
   Graphic3d_MapOfStructure aDisplayedStructs (myStructsDisplayed);
-  for (Graphic3d_MapIteratorOfMapOfStructure aStructIter (aDisplayedStructs); aStructIter.More(); aStructIter.Next())
+  for (Graphic3d_MapOfStructure::Iterator aStructIter (aDisplayedStructs); aStructIter.More(); aStructIter.Next())
   {
     Erase (aStructIter.Value());
   }
@@ -618,7 +617,7 @@ Bnd_Box Graphic3d_CView::MinMaxValues (const Graphic3d_MapOfStructure& theSet,
     Window()->Size (aWinWidth, aWinHeight);
   }
 
-  for (Graphic3d_MapIteratorOfMapOfStructure aStructIter (theSet); aStructIter.More(); aStructIter.Next())
+  for (Graphic3d_MapOfStructure::Iterator aStructIter (theSet); aStructIter.More(); aStructIter.Next())
   {
     const Handle(Graphic3d_Structure)& aStructure = aStructIter.Key();
     if (aStructure->IsEmpty()

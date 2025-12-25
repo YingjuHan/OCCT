@@ -76,11 +76,7 @@ Handle(TDocStd_Document) TDocStd_Document::Get (const TDF_Label& acces)
 TDocStd_Document::TDocStd_Document(const TCollection_ExtendedString& aStorageFormat) :
 myStorageFormat(aStorageFormat),
 myData (new TDF_Data()),
-myUndoLimit(0),
 myUndoTransaction ("UNDO"),
-mySaveTime(0),
-myIsNestedTransactionMode(0),
-mySaveEmptyLabels(Standard_False),
 myStorageFormatVersion(TDocStd_FormatVersion_CURRENT)
 {
   myUndoTransaction.Initialize (myData);

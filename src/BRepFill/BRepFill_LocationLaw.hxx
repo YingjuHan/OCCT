@@ -137,7 +137,7 @@ protected:
   Standard_EXPORT void BiNormalIsMain();
 
   TopoDS_Wire myPath;
-  Standard_Real myTol;
+  Standard_Real myTol = 0.0;
   Handle(GeomFill_HArray1OfLocationLaw) myLaws;
   Handle(TColStd_HArray1OfReal) myLength;
   Handle(TopTools_HArray1OfShape) myEdges;
@@ -147,7 +147,7 @@ protected:
 private:
 
 
-  Standard_Integer myType;
+  Standard_Integer myType = 0;
 
 
 };

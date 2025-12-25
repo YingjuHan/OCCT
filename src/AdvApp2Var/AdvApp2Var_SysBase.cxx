@@ -2499,10 +2499,14 @@ int mcrgetv_(integer *sz,
 	     integer *ier)                                            
 
 {
-  
   *ier = 0;
-  *iad = (intptr_t)Standard::Allocate(*sz);
-  if ( !*iad ) *ier = 1;
+  void* aPtr = Standard::Allocate(*sz);
+  *iad = (intptr_t)aPtr;
+  if (aPtr != nullptr)
+    memset(aPtr, 0, *sz);
+  else
+    *ier = 1;
+
   return 0;
 }
 

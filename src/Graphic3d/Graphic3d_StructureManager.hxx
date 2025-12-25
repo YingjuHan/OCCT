@@ -119,7 +119,7 @@ public:
   Standard_EXPORT virtual void ChangeZLayer (const Handle(Graphic3d_Structure)& theStructure, const Graphic3d_ZLayerId theLayerId);
 
   //! Returns the graphic driver of <me>.
-  Standard_EXPORT const Handle(Graphic3d_GraphicDriver)& GraphicDriver() const;
+  const Handle(Graphic3d_GraphicDriver)& GraphicDriver() const { return myGraphicDriver; }
 
   //! Attaches the view to this structure manager and sets its identification number within the manager.
   Standard_EXPORT Standard_Integer Identification (Graphic3d_CView* theView);

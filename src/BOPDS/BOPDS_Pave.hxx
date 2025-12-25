@@ -35,7 +35,7 @@ public:
   
 
   //! Empty constructor
-    BOPDS_Pave();
+  BOPDS_Pave() {}
 
   //! Modifier
   //! Sets the index of vertex <theIndex>
@@ -91,8 +91,8 @@ protected:
 
 
 
-  Standard_Integer myIndex;
-  Standard_Real myParameter;
+  Standard_Integer myIndex = -1;
+  Standard_Real myParameter = 99.0;
 
 
 private:

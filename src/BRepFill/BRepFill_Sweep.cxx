@@ -1845,22 +1845,12 @@ static void ReverseModifiedEdges(TopoDS_Wire&               theWire,
 //======================================================================
 BRepFill_Sweep::BRepFill_Sweep(const Handle(BRepFill_SectionLaw)& Section,
 			       const Handle(BRepFill_LocationLaw)& Location,
-			       const Standard_Boolean WithKPart) : 
-			       isDone(Standard_False),
-			       KPart(WithKPart)
+			       const Standard_Boolean WithKPart)
+: KPart(WithKPart),
+  myLoc(Location),
+  mySec(Section)
 {
- mySec = Section;
- myLoc = Location;
- 
- SetTolerance(1.e-4);
- SetAngularControl();
- myAuxShape.Clear();
-
- myApproxStyle = GeomFill_Location;
- myContinuity  = GeomAbs_C2;
- myDegmax      = 11;
- mySegmax      = 30;
- myForceApproxC1 = Standard_False;
+  //
 }
 
 //=======================================================================

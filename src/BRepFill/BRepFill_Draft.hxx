@@ -89,10 +89,10 @@ private:
 
 
   gp_Dir myDir;
-  Standard_Real myAngle;
-  Standard_Real angmin;
-  Standard_Real angmax;
-  Standard_Real myTol;
+  Standard_Real myAngle = 0.0;
+  Standard_Real angmin = 0.01;
+  Standard_Real angmax = 3.0;
+  Standard_Real myTol = 1.e-4;
   Handle(BRepFill_DraftLaw) myLoc;
   Handle(BRepFill_SectionLaw) mySec;
   Handle(TopTools_HArray2OfShape) mySections;
@@ -102,10 +102,10 @@ private:
   TopoDS_Shape myTop;
   TopoDS_Shell myShell;
   TopoDS_Wire myWire;
-  GeomAbs_Shape myCont;
-  BRepFill_TransitionStyle myStyle;
-  Standard_Boolean IsInternal;
-  Standard_Boolean myDone;
+  GeomAbs_Shape myCont = GeomAbs_C1;
+  BRepFill_TransitionStyle myStyle = BRepFill_Right;
+  Standard_Boolean IsInternal = false;
+  Standard_Boolean myDone = false;
 
 
 };

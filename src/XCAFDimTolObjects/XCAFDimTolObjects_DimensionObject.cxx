@@ -24,10 +24,7 @@ IMPLEMENT_STANDARD_RTTIEXT(XCAFDimTolObjects_DimensionObject,Standard_Transient)
 
 XCAFDimTolObjects_DimensionObject::XCAFDimTolObjects_DimensionObject()
 {
-  myHasPlane = Standard_False;
-  myHasPntText = Standard_False;
-  myHasPoint1 = Standard_False;
-  myHasPoint2 = Standard_False;
+  //
 }
 
 //=======================================================================

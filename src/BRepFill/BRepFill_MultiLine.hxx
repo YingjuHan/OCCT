@@ -102,11 +102,11 @@ private:
   Geom2dAdaptor_Curve myV1;
   Geom2dAdaptor_Curve myU2;
   Geom2dAdaptor_Curve myV2;
-  Standard_Boolean myIsoU1;
-  Standard_Boolean myIsoU2;
+  Standard_Boolean myIsoU1 = false;
+  Standard_Boolean myIsoU2 = false;
   Geom2dAdaptor_Curve myBis;
-  Standard_Integer myKPart;
-  GeomAbs_Shape myCont;
+  Standard_Integer myKPart = 0;
+  GeomAbs_Shape myCont = GeomAbs_C0;
 };
 
 #endif // _BRepFill_MultiLine_HeaderFile

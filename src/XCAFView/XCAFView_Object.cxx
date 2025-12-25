@@ -24,10 +24,6 @@ IMPLEMENT_STANDARD_RTTIEXT(XCAFView_Object,Standard_Transient)
 XCAFView_Object::XCAFView_Object()
 {
   myClippingExpression = new TCollection_HAsciiString();
-  myFrontPlaneClipping = Standard_False;
-  myBackPlaneClipping = Standard_False;
-  myViewVolumeSidesClipping = Standard_False;
-  myGDTPoints = NULL;
 }
 
 //=======================================================================

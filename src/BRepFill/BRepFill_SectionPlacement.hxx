@@ -63,8 +63,8 @@ private:
   Handle(BRepFill_LocationLaw) myLaw;
   TopoDS_Shape mySection;
   gp_Trsf myTrsf;
-  Standard_Real myParam;
-  Standard_Integer myIndex;
+  Standard_Real myParam = 0.0;
+  Standard_Integer myIndex = 0;
 
 
 };

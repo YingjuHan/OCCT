@@ -221,23 +221,23 @@ private:
   TColStd_SequenceOfInteger  myIndOfSec;
   TopTools_DataMapOfShapeListOfShape myEdgeNewEdges;
   TopTools_DataMapOfShapeListOfShape myGenMap;
-  Standard_Real myTol3d;
-  Standard_Real myBoundTol;
-  Standard_Real myTolAngular;
-  Standard_Real angmin;
-  Standard_Real angmax;
-  Standard_Integer myMaxDegree;
-  Standard_Integer myMaxSegments;
-  Standard_Boolean myForceApproxC1;
+  Standard_Real myTol3d = 1.0e-4;
+  Standard_Real myBoundTol = 1.0e-4;
+  Standard_Real myTolAngular = 1.0e-2;
+  Standard_Real angmin = 0.0;
+  Standard_Real angmax = 0.0;
+  Standard_Integer myMaxDegree = 11;
+  Standard_Integer myMaxSegments = 100;
+  Standard_Boolean myForceApproxC1 = false;
   Handle(Law_Function) myLaw;
-  Standard_Boolean myIsAutomaticLaw;
+  Standard_Boolean myIsAutomaticLaw = false;
   Handle(BRepFill_LocationLaw) myLocation;
   Handle(BRepFill_SectionLaw) mySection;
   Handle(TopTools_HArray2OfShape) myFaces;
-  GeomFill_Trihedron myTrihedron;
-  BRepFill_TransitionStyle myTransition;
-  GeomFill_PipeError myStatus;
-  Standard_Real myErrorOnSurf;
+  GeomFill_Trihedron myTrihedron = GeomFill_IsCorrectedFrenet;
+  BRepFill_TransitionStyle myTransition = BRepFill_Modified;
+  GeomFill_PipeError myStatus = GeomFill_PipeOk;
+  Standard_Real myErrorOnSurf = 0.0;
 
 
 };

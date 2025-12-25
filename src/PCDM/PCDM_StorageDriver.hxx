@@ -50,7 +50,9 @@ class PCDM_StorageDriver : public PCDM_Writer
 
 public:
 
-  
+  //! Empty constructor.
+  Standard_EXPORT PCDM_StorageDriver();
+
   //! raises NotImplemented.
   Standard_EXPORT virtual Handle(PCDM_Document) Make (const Handle(CDM_Document)& aDocument);
   
@@ -99,8 +101,8 @@ private:
 
 
   TCollection_ExtendedString myFormat;
-  Standard_Boolean myIsError;
-  PCDM_StoreStatus myStoreStatus;
+  PCDM_StoreStatus myStoreStatus = PCDM_SS_OK;
+  Standard_Boolean myIsError = false;
 
 
 };

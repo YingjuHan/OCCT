@@ -83,13 +83,7 @@ if (withDelta) { \
 //purpose  : empty constructor
 //=======================================================================
 
-TDF_Data::TDF_Data() :
-myTransaction           (0),
-myNbTouchedAtt          (0),
-myNotUndoMode           (Standard_True),
-myTime                  (0),
-myAllowModification     (Standard_True),
-myAccessByEntries       (Standard_False)
+TDF_Data::TDF_Data()
 {
   const Handle(NCollection_IncAllocator) anIncAllocator=
     new NCollection_IncAllocator (16000);

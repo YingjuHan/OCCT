@@ -286,15 +286,15 @@ private:
   Standard_EXPORT static void AppendDeltaToTheFirst (const Handle(TDocStd_CompoundDelta)& theDelta1, const Handle(TDF_Delta)& theDelta2);
 
   Handle(TDF_Data) myData;
-  Standard_Integer myUndoLimit;
+  Standard_Integer myUndoLimit = 0;
   TDF_Transaction myUndoTransaction;
   Handle(TDF_Delta) myFromUndo;
   Handle(TDF_Delta) myFromRedo;
-  Standard_Integer mySaveTime;
-  Standard_Boolean myIsNestedTransactionMode;
+  Standard_Integer mySaveTime = 0;
+  Standard_Boolean myIsNestedTransactionMode = false;
   TDF_DeltaList myUndoFILO;
-  Standard_Boolean myOnlyTransactionModification;
-  Standard_Boolean mySaveEmptyLabels;
+  Standard_Boolean myOnlyTransactionModification = false;
+  Standard_Boolean mySaveEmptyLabels = false;
   TDocStd_FormatVersion myStorageFormatVersion;
 
 };

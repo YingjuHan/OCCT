@@ -115,16 +115,16 @@ private:
 
   TopoDS_Face mySpine;
   TopoDS_Face myWorkSpine;
-  Standard_Real myOffset;
-  Standard_Boolean myIsOpenResult;
+  Standard_Real myOffset = 0.0;
+  Standard_Boolean myIsOpenResult = false;
   TopoDS_Shape myShape;
-  Standard_Boolean myIsDone;
-  GeomAbs_JoinType myJoinType;
+  Standard_Boolean myIsDone = false;
+  GeomAbs_JoinType myJoinType = GeomAbs_Arc;
   BRepFill_IndexedDataMapOfOrientedShapeListOfShape myMap;
   BRepMAT2d_BisectingLocus myBilo;
   BRepMAT2d_LinkTopoBilo myLink;
   TopTools_DataMapOfShapeShape myMapSpine;
-  Standard_Boolean myCallGen;
+  Standard_Boolean myCallGen = false;
 
 
 };

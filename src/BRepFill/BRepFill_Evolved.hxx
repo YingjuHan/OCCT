@@ -151,9 +151,9 @@ private:
   TopoDS_Face mySpine;
   TopoDS_Wire myProfile;
   TopoDS_Shape myShape;
-  Standard_Boolean myIsDone;
-  Standard_Boolean mySpineType;
-  GeomAbs_JoinType myJoinType;
+  Standard_Boolean myIsDone = false;
+  Standard_Boolean mySpineType = true;
+  GeomAbs_JoinType myJoinType = GeomAbs_Arc;
   BRepFill_DataMapOfShapeDataMapOfShapeListOfShape myMap;
   TopoDS_Shape myTop;
   TopoDS_Shape myBottom;

@@ -81,8 +81,8 @@ private:
   
   Standard_EXPORT void Init (const TColStd_SequenceOfReal& P, const Standard_Boolean B);
 
-  Standard_Real VFirst;
-  Standard_Real VLast;
+  Standard_Real VFirst = 0.0;
+  Standard_Real VLast = 1.0;
   TopTools_SequenceOfShape myShapes;
   GeomFill_SequenceOfTrsf myTrsfs;
   TColStd_SequenceOfReal myParams;

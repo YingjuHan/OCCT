@@ -64,13 +64,13 @@ private:
 
 
 
-  Standard_Boolean isPoint1;
-  Standard_Boolean isPoint2;
+  Standard_Boolean isPoint1 = false;
+  Standard_Boolean isPoint2 = false;
   gp_Pnt2d myP1;
   gp_Pnt2d myP2;
   Handle(Geom2d_Curve) myC1;
   Handle(Geom2d_Curve) myC2;
-  Standard_Real myOffset;
+  Standard_Real myOffset = 0.0;
   Bisector_Bisec myBisec;
   Geom2dAdaptor_Curve myBis;
 

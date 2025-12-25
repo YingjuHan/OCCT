@@ -113,22 +113,22 @@ private:
   TColStd_SequenceOfReal myfirstparam;
   TColStd_SequenceOfReal mylastparam;
   AppParCurves_MultiCurve TheMultiCurve;
-  Standard_Boolean alldone;
-  Standard_Boolean tolreached;
+  Standard_Boolean alldone = false;
+  Standard_Boolean tolreached = false;
   TColStd_SequenceOfReal Tolers3d;
   TColStd_SequenceOfReal Tolers2d;
-  Standard_Integer mydegremin;
-  Standard_Integer mydegremax;
-  Standard_Real mytol3d;
-  Standard_Real mytol2d;
-  Standard_Real currenttol3d;
-  Standard_Real currenttol2d;
-  Standard_Boolean mycut;
+  Standard_Integer mydegremin = 0;
+  Standard_Integer mydegremax = 0;
+  Standard_Real mytol3d = 0.0;
+  Standard_Real mytol2d = 0.0;
+  Standard_Real currenttol3d = 0.0;
+  Standard_Real currenttol2d = 0.0;
+  Standard_Boolean mycut = false;
   AppParCurves_Constraint myfirstC;
   AppParCurves_Constraint mylastC;
-  Standard_Integer myMaxSegments;
-  Standard_Boolean myInvOrder;
-  Standard_Boolean myHangChecking;
+  Standard_Integer myMaxSegments = 0;
+  Standard_Boolean myInvOrder = false;
+  Standard_Boolean myHangChecking = false;
 
 };
 

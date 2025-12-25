@@ -307,23 +307,23 @@ public:
 
 private: 
 
-  XCAFDimTolObjects_DimensionType myType;
+  XCAFDimTolObjects_DimensionType myType = XCAFDimTolObjects_DimensionType_Location_None;
   Handle(TColStd_HArray1OfReal) myVal;
-  XCAFDimTolObjects_DimensionQualifier myQualifier;
-  XCAFDimTolObjects_AngularQualifier myAngularQualifier;
-  Standard_Boolean myIsHole;
-  XCAFDimTolObjects_DimensionFormVariance myFormVariance;
-  XCAFDimTolObjects_DimensionGrade myGrade;
-  Standard_Integer myL;
-  Standard_Integer myR;
+  XCAFDimTolObjects_DimensionQualifier myQualifier = XCAFDimTolObjects_DimensionQualifier_None;
+  XCAFDimTolObjects_AngularQualifier myAngularQualifier = XCAFDimTolObjects_AngularQualifier_None;
+  Standard_Boolean myIsHole = false;
+  XCAFDimTolObjects_DimensionFormVariance myFormVariance = XCAFDimTolObjects_DimensionFormVariance_None;
+  XCAFDimTolObjects_DimensionGrade myGrade = XCAFDimTolObjects_DimensionGrade_IT01;
+  Standard_Integer myL = 0;
+  Standard_Integer myR = 0;
   XCAFDimTolObjects_DimensionModifiersSequence myModifiers;
   TopoDS_Edge myPath;
   gp_Dir myDir;
   gp_Pnt myPnt1, myPnt2;
-  Standard_Boolean myHasPoint1, myHasPoint2;
+  Standard_Boolean myHasPoint1 = false, myHasPoint2 = false;
   gp_Ax2 myPlane;
-  Standard_Boolean myHasPlane;
-  Standard_Boolean myHasPntText;
+  Standard_Boolean myHasPlane = false;
+  Standard_Boolean myHasPntText = false;
   gp_Pnt myPntText;
   TopoDS_Shape myPresentation;
   Handle(TCollection_HAsciiString) mySemanticName;

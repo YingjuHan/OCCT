@@ -86,14 +86,14 @@ public:
   Standard_EXPORT void DumpJson (Standard_OStream& theOStream, Standard_Integer theDepth = -1) const;
 
 private:
-  TNaming_NameType myType;
-  TopAbs_ShapeEnum myShapeType;
+  TNaming_NameType myType = TNaming_UNKNOWN;
+  TopAbs_ShapeEnum myShapeType = TopAbs_SHAPE;
   TNaming_ListOfNamedShape myArgs;
   Handle(TNaming_NamedShape) myStop;
-  Standard_Integer myIndex;
+  Standard_Integer myIndex = -1;
   TopoDS_Shape myShape;
   TDF_Label myContextLabel;
-  TopAbs_Orientation myOrientation;
+  TopAbs_Orientation myOrientation = TopAbs_FORWARD;
 };
 
 #endif // _TNaming_Name_HeaderFile

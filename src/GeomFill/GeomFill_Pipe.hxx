@@ -276,19 +276,19 @@ private:
   
   Standard_EXPORT Standard_Boolean KPartT4();
 
-  GeomFill_PipeError myStatus;//!< Execution status
-  Standard_Real myRadius;
-  Standard_Real myError;
+  GeomFill_PipeError myStatus = GeomFill_PipeNotOk; //!< Execution status
+  Standard_Real myRadius = 0.0;
+  Standard_Real myError = 0.0;
   Handle(Adaptor3d_Curve) myAdpPath;
   Handle(Adaptor3d_Curve) myAdpFirstSect;
   Handle(Adaptor3d_Curve) myAdpLastSect;
   Handle(Geom_Surface) mySurface;
   Handle(GeomFill_LocationLaw) myLoc;
   Handle(GeomFill_SectionLaw) mySec;
-  Standard_Integer myType;
-  Standard_Boolean myExchUV;
-  Standard_Boolean myKPart;
-  Standard_Boolean myPolynomial;
+  Standard_Integer myType = 0;
+  Standard_Boolean myExchUV = false;
+  Standard_Boolean myKPart = true;
+  Standard_Boolean myPolynomial = false;
 };
 
 

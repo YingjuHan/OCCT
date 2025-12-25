@@ -804,9 +804,8 @@ Handle(Geom_Surface) Geom_OffsetSurface::Surface() const
 
   constexpr Standard_Real Tol = Precision::Confusion();
   Handle(Geom_Surface) Result, Base;
-  Result.Nullify();
   Handle(Standard_Type) TheType = basisSurf->DynamicType();
-  Standard_Boolean IsTrimmed;
+  Standard_Boolean IsTrimmed = false;
   Standard_Real U1 = 0., V1 = 0., U2 = 0., V2 = 0.;
 
   // Preambule pour les surface trimmes
@@ -819,7 +818,6 @@ Handle(Geom_Surface) Geom_OffsetSurface::Surface() const
     IsTrimmed = Standard_True;
   }
   else {
-    IsTrimmed = Standard_False;
     Base = basisSurf;
   }
 
@@ -862,7 +860,7 @@ Handle(Geom_Surface) Geom_OffsetSurface::Surface() const
     gp_Ax3 anAxis = C->Position();
     Standard_Boolean isDirect = anAxis.Direct();
     Standard_Real anAlpha = C->SemiAngle();
-    Standard_Real aRadius;
+    Standard_Real aRadius = 0.0;
     if (isDirect)
     {
       aRadius = C->RefRadius() + offsetValue * Cos (anAlpha);

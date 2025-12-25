@@ -74,8 +74,8 @@ protected:
 private:
 
 
-  Standard_Real myFirst;
-  Standard_Real myLast;
+  Standard_Real myFirst = 0.0;
+  Standard_Real myLast = 0.0;
 
 
 };

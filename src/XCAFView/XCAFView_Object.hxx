@@ -222,19 +222,19 @@ public:
 private:
 
   Handle(TCollection_HAsciiString) myName;
-  XCAFView_ProjectionType myType;
+  XCAFView_ProjectionType myType = XCAFView_ProjectionType_NoCamera;
   gp_Pnt myProjectionPoint;
   gp_Dir myViewDirection;
   gp_Dir myUpDirection;
-  Standard_Real myZoomFactor;
-  Standard_Real myWindowHorizontalSize;
-  Standard_Real myWindowVerticalSize;
+  Standard_Real myZoomFactor = 0.0;
+  Standard_Real myWindowHorizontalSize = 0.0;
+  Standard_Real myWindowVerticalSize = 0.0;
   Handle(TCollection_HAsciiString) myClippingExpression;
-  Standard_Boolean myFrontPlaneClipping;
-  Standard_Real myFrontPlaneDistance;
-  Standard_Boolean myBackPlaneClipping;
-  Standard_Real myBackPlaneDistance;
-  Standard_Boolean myViewVolumeSidesClipping;
+  Standard_Boolean myFrontPlaneClipping = false;
+  Standard_Real myFrontPlaneDistance = 0.0;
+  Standard_Boolean myBackPlaneClipping = false;
+  Standard_Real myBackPlaneDistance = 0.0;
+  Standard_Boolean myViewVolumeSidesClipping = false;
   Handle(TColgp_HArray1OfPnt) myGDTPoints; // Point for each GDT to describe position of GDT frame in View.
 };
 

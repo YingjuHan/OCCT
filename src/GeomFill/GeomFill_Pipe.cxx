@@ -196,7 +196,7 @@ static Standard_Boolean CheckSense(const TColGeom_SequenceOfCurve& Seq1,
 //purpose  : constructor with no parameters. 
 //=======================================================================
 
-GeomFill_Pipe::GeomFill_Pipe() : myStatus(GeomFill_PipeNotOk), myExchUV(Standard_False),myKPart(Standard_False)
+GeomFill_Pipe::GeomFill_Pipe()
 {
   Init();
 }
@@ -209,7 +209,6 @@ GeomFill_Pipe::GeomFill_Pipe() : myStatus(GeomFill_PipeNotOk), myExchUV(Standard
 
 GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom_Curve)& Path, 
                              const Standard_Real Radius) 
-     : myStatus(GeomFill_PipeNotOk), myExchUV(Standard_False),myKPart(Standard_False)
 {
   Init();
   Init(Path, Radius);
@@ -223,7 +222,6 @@ GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom_Curve)& Path,
 GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom_Curve)& Path,
                              const Handle(Geom_Curve)& FirstSect,
                              const GeomFill_Trihedron Option) 
-     : myStatus(GeomFill_PipeNotOk), myExchUV(Standard_False),myKPart(Standard_False)
 {
   Init();
   Init(Path, FirstSect, Option);
@@ -237,7 +235,6 @@ GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom_Curve)& Path,
 GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom2d_Curve)& Path,
                              const Handle(Geom_Surface)& Support,
                              const Handle(Geom_Curve)& FirstSect) 
-     : myStatus(GeomFill_PipeNotOk), myExchUV(Standard_False),myKPart(Standard_False)
 {
   Init();
   Init(Path, Support, FirstSect);
@@ -251,7 +248,6 @@ GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom2d_Curve)& Path,
 GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom_Curve)& Path,
                              const Handle(Geom_Curve)& FirstSect,
                              const Handle(Geom_Curve)& LastSect)
-     : myStatus(GeomFill_PipeNotOk), myExchUV(Standard_False),myKPart(Standard_False)
 {
   Init();
   Init(Path, FirstSect, LastSect);
@@ -265,7 +261,6 @@ GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom_Curve)& Path,
 
 GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom_Curve)& Path,
                              const TColGeom_SequenceOfCurve& NSections)
-     : myStatus(GeomFill_PipeNotOk), myExchUV(Standard_False),myKPart(Standard_False)
 {
   Init();
   Init(Path, NSections);
@@ -279,7 +274,6 @@ GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom_Curve)& Path,
 GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom_Curve)& Path,
                              const Handle(Geom_Curve)& Curve1,
                              const gp_Dir& Direction)
-     : myStatus(GeomFill_PipeNotOk), myExchUV(Standard_False), myKPart(Standard_False)
 {
  Init(Path, Curve1, Direction); 
 }
@@ -292,7 +286,6 @@ GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom_Curve)& Path,
                              const Handle(Geom_Curve)& Curve1,
                              const Handle(Geom_Curve)& Curve2,
                              const Standard_Real       Radius)
-     : myStatus(GeomFill_PipeNotOk), myExchUV(Standard_False),myKPart(Standard_False)
 {
   Init();
   Handle(GeomAdaptor_Curve) AdpPath = 
@@ -315,7 +308,6 @@ GeomFill_Pipe::GeomFill_Pipe(const Handle(Adaptor3d_Curve)& Path,
                              const Handle(Adaptor3d_Curve)& Curve1,
                              const Handle(Adaptor3d_Curve)& Curve2,
                              const Standard_Real Radius)
-     : myStatus(GeomFill_PipeNotOk), myExchUV(Standard_False),myKPart(Standard_False)
 {
   Init();
   Init(Path,Curve1,Curve2,Radius);
@@ -335,7 +327,6 @@ GeomFill_Pipe::GeomFill_Pipe(const Handle(Geom_Curve)& Path,
 			     const Handle(Geom_Curve)& FirstSect,
 			     const Standard_Boolean byACR,
 			     const Standard_Boolean rotat)
-     : myStatus(GeomFill_PipeNotOk), myExchUV(Standard_False),myKPart(Standard_False)
 // Path : trajectoire
 // Guide : courbe guide
 // FirstSect : section

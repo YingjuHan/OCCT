@@ -477,8 +477,8 @@ void LocOpe_Spliter::Perform(const Handle(LocOpe_WiresOnShape)& PW)
 	  Mapebord.Remove(exp.Current());
 	}
       }
-      mapV.Remove(fac);
       myLeft.Append(fac);
+      mapV.Remove(fac);
     }
     else {
       Mapebord.Remove(edg);

@@ -675,7 +675,6 @@ static void BuildConnectedEdges(const TopoDS_Wire& aWire,
 //=======================================================================
 
 BRepFill_CompatibleWires::BRepFill_CompatibleWires() 
-:myStatus(BRepFill_ThruSectionErrorStatus_NotDone)
 {
 }
 

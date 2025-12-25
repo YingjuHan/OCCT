@@ -207,21 +207,8 @@ static Standard_Boolean IsSameOriented(const TopoDS_Shape& aFace,
 //purpose  : 
 //=======================================================================
 BRepFill_PipeShell::BRepFill_PipeShell(const TopoDS_Wire& Spine)
-                      :  mySpine(Spine), 
-                         myForceApproxC1(Standard_False),
-                         myIsAutomaticLaw(Standard_False),
-                         myTrihedron(GeomFill_IsCorrectedFrenet),
-                         myTransition(BRepFill_Modified),
-                         myStatus(GeomFill_PipeOk)
+:  mySpine(Spine)
 {
-  myLocation.Nullify();
-  mySection.Nullify();
-  myLaw.Nullify();
-  SetTolerance();
-
-  myMaxDegree = 11;
-  myMaxSegments = 100;
-
   // Attention to closed non-declared wire !
   if (!mySpine.Closed()) {
     TopoDS_Vertex Vf, Vl;

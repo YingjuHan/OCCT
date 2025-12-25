@@ -210,9 +210,6 @@ static void EdgeVertices (const TopoDS_Edge&   E,
 //=======================================================================
 
 BRepFill_Evolved::BRepFill_Evolved() 
-  :
-myIsDone   (Standard_False),
-  mySpineType(Standard_True)
 {
 }
 
@@ -227,8 +224,6 @@ BRepFill_Evolved::BRepFill_Evolved(const TopoDS_Wire&      Spine,
   const gp_Ax3&           AxeProf,
   const GeomAbs_JoinType  Join,
   const Standard_Boolean  Solid)
-
-  : myIsDone(Standard_False)
 {
   Perform( Spine, Profile, AxeProf, Join, Solid);
 }
@@ -244,7 +239,6 @@ BRepFill_Evolved::BRepFill_Evolved(const TopoDS_Face&     Spine,
   const gp_Ax3&          AxeProf,
   const GeomAbs_JoinType Join,
   const Standard_Boolean Solid)
-  : myIsDone(Standard_False)
 {
   Perform( Spine, Profile, AxeProf, Join, Solid);
 }

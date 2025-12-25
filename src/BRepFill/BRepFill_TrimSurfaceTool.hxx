@@ -76,8 +76,8 @@ private:
   TopoDS_Face myFace2;
   TopoDS_Edge myEdge1;
   TopoDS_Edge myEdge2;
-  Standard_Boolean myInv1;
-  Standard_Boolean myInv2;
+  Standard_Boolean myInv1 = false;
+  Standard_Boolean myInv2 = false;
   Handle(Geom2d_Curve) myBis;
 
 

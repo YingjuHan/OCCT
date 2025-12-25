@@ -210,11 +210,6 @@ static Standard_Boolean GoodOrientation(const Bnd_Box& B,
 				const gp_Dir& Dir,
 				const Standard_Real Angle)
 {
-  myLoc.Nullify();
-  mySec.Nullify();
-  myFaces.Nullify();
-  mySections.Nullify(); 
-   
   switch (S.ShapeType()) {
   case TopAbs_WIRE :
     {
@@ -283,11 +278,6 @@ static Standard_Boolean GoodOrientation(const Bnd_Box& B,
   myAngle = Abs(Angle);
   myDir = Dir;
   myTop = S;
-  myDone = Standard_False;
-  myTol = 1.e-4;
-  myCont = GeomAbs_C1;
-  SetOptions();
-  SetDraft();
 }
 
 //=======================================================================

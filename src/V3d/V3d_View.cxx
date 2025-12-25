@@ -25,7 +25,6 @@
 #include <gp_Pln.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
 #include <Graphic3d_Group.hxx>
-#include <Graphic3d_MapIteratorOfMapOfStructure.hxx>
 #include <Graphic3d_MapOfStructure.hxx>
 #include <Graphic3d_Structure.hxx>
 #include <Graphic3d_TextureEnv.hxx>
@@ -63,10 +62,7 @@ namespace
 //purpose  :
 //=============================================================================
 V3d_View::V3d_View (const Handle(V3d_Viewer)& theViewer, const V3d_TypeOfView theType)
-: myIsInvalidatedImmediate (Standard_True),
-  MyViewer (theViewer.operator->()),
-  SwitchSetFront (Standard_False),
-  myZRotation (Standard_False),
+: MyViewer (theViewer.operator->()),
   MyTrsf (1, 4, 1, 4)
 {
   myView = theViewer->Driver()->CreateView (theViewer->StructureManager());
@@ -112,10 +108,7 @@ V3d_View::V3d_View (const Handle(V3d_Viewer)& theViewer, const V3d_TypeOfView th
 //purpose  :
 //=============================================================================
 V3d_View::V3d_View (const Handle(V3d_Viewer)& theViewer, const Handle(V3d_View)& theView)
-: myIsInvalidatedImmediate (Standard_True),
-  MyViewer (theViewer.operator->()),
-  SwitchSetFront(Standard_False),
-  myZRotation (Standard_False),
+: MyViewer (theViewer.operator->()),
   MyTrsf (1, 4, 1, 4)
 {
   myView = theViewer->Driver()->CreateView (theViewer->StructureManager());
@@ -2128,7 +2121,7 @@ gp_Pnt V3d_View::GravityPoint() const
   myView->DisplayedStructures (aSetOfStructures);
 
   Standard_Boolean hasSelection = Standard_False;
-  for (Graphic3d_MapIteratorOfMapOfStructure aStructIter (aSetOfStructures);
+  for (Graphic3d_MapOfStructure::Iterator aStructIter (aSetOfStructures);
        aStructIter.More(); aStructIter.Next())
   {
     if (aStructIter.Key()->IsHighlighted()
@@ -2142,7 +2135,7 @@ gp_Pnt V3d_View::GravityPoint() const
   Standard_Real Xmin, Ymin, Zmin, Xmax, Ymax, Zmax;
   Standard_Integer aNbPoints = 0;
   gp_XYZ aResult (0.0, 0.0, 0.0);
-  for (Graphic3d_MapIteratorOfMapOfStructure aStructIter (aSetOfStructures);
+  for (Graphic3d_MapOfStructure::Iterator aStructIter (aSetOfStructures);
        aStructIter.More(); aStructIter.Next())
   {
     const Handle(Graphic3d_Structure)& aStruct = aStructIter.Key();

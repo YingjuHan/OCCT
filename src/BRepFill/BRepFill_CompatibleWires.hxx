@@ -104,10 +104,10 @@ private:
 
   TopTools_SequenceOfShape myInit;
   TopTools_SequenceOfShape myWork;
-  Standard_Real myPercent;
-  Standard_Boolean myDegen1;
-  Standard_Boolean myDegen2;
-  BRepFill_ThruSectionErrorStatus myStatus;
+  Standard_Real myPercent = 0.01;
+  Standard_Boolean myDegen1 = false;
+  Standard_Boolean myDegen2 = false;
+  BRepFill_ThruSectionErrorStatus myStatus = BRepFill_ThruSectionErrorStatus_NotDone;
   TopTools_DataMapOfShapeListOfShape myMap;
 
 

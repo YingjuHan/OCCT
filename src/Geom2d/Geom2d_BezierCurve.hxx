@@ -340,13 +340,12 @@ private:
   void Init (const Handle(TColgp_HArray1OfPnt2d)& Poles, const Handle(TColStd_HArray1OfReal)& Weights);
 
 
-  Standard_Boolean rational;
-  Standard_Boolean closed;
   Handle(TColgp_HArray1OfPnt2d) poles;
   Handle(TColStd_HArray1OfReal) weights;
-  Standard_Real maxderivinv;
-  Standard_Boolean maxderivinvok;
-
+  Standard_Real maxderivinv = 0.0;
+  Standard_Boolean maxderivinvok = false;
+  Standard_Boolean rational = false;
+  Standard_Boolean closed = false;
 
 };
 

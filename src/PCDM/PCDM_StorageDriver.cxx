@@ -35,8 +35,19 @@ IMPLEMENT_STANDARD_RTTIEXT(PCDM_StorageDriver,PCDM_Writer)
 
 #define STORAGE_VERSION "STORAGE_VERSION:"
 
+//=======================================================================
+//function : PCDM_StorageDriver
+//purpose  :
+//=======================================================================
+PCDM_StorageDriver::PCDM_StorageDriver()
+{
+  //
+}
 
-
+//=======================================================================
+//function : Write
+//purpose  :
+//=======================================================================
 void PCDM_StorageDriver::Write (const Handle(CDM_Document)& aDocument,
                                 const TCollection_ExtendedString&  aFileName, 
                                 const Message_ProgressRange &/*theRange*/) 

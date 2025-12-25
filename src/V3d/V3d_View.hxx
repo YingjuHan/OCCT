@@ -1035,39 +1035,39 @@ private:
 
 protected:
 
-  Standard_Real myOldMouseX;
-  Standard_Real myOldMouseY;
+  Standard_Real myOldMouseX = 0.0;
+  Standard_Real myOldMouseY = 0.0;
   gp_Dir myCamStartOpUp;
   gp_Dir myCamStartOpDir;
   gp_Pnt myCamStartOpEye;
   gp_Pnt myCamStartOpCenter;
   Handle(Graphic3d_Camera) myDefaultCamera;
   Handle(Graphic3d_CView) myView;
-  Standard_Boolean myImmediateUpdate;
-  mutable Standard_Boolean myIsInvalidatedImmediate;
+  Standard_Boolean myImmediateUpdate = false;
+  mutable Standard_Boolean myIsInvalidatedImmediate = true;
 
 private:
 
-  V3d_Viewer* MyViewer;
+  V3d_Viewer* MyViewer = nullptr;
 
   NCollection_Sequence<Handle(V3d_View)> mySubviews;
-  V3d_View* myParentView;
+  V3d_View* myParentView = nullptr;
 
   V3d_ListOfLight myActiveLights;
   gp_Dir myDefaultViewAxis;
   gp_Pnt myDefaultViewPoint;
   Handle(Aspect_Window) MyWindow;
   V3d_ListOfLight::Iterator myActiveLightsIterator;
-  Standard_Integer sx;
-  Standard_Integer sy;
-  Standard_Real rx;
-  Standard_Real ry;
+  Standard_Integer sx = 0;
+  Standard_Integer sy = 0;
+  Standard_Real rx = 0.0;
+  Standard_Real ry = 0.0;
   gp_Pnt myRotateGravity;
-  Standard_Boolean myComputedMode;
-  Standard_Boolean SwitchSetFront;
-  Standard_Boolean myZRotation;
-  Standard_Integer MyZoomAtPointX;
-  Standard_Integer MyZoomAtPointY;
+  Standard_Boolean myComputedMode = false;
+  Standard_Boolean SwitchSetFront = false;
+  Standard_Boolean myZRotation = false;
+  Standard_Integer MyZoomAtPointX = 0;
+  Standard_Integer MyZoomAtPointY = 0;
   Handle(V3d_Trihedron) myTrihedron;
   Handle(Aspect_Grid) MyGrid;
   gp_Ax3 MyPlane;
@@ -1079,8 +1079,8 @@ private:
   gp_Vec myZscreenAxis;
   gp_Dir myViewAxis;
   Graphic3d_Vertex myGravityReferencePoint;
-  Standard_Boolean myAutoZFitIsOn;
-  Standard_Real myAutoZFitScaleFactor;
+  Standard_Boolean myAutoZFitIsOn = false;
+  Standard_Real myAutoZFitScaleFactor = 0.0;
 
 };
 

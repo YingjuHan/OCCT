@@ -192,18 +192,18 @@ private:
   TopTools_ListOfShape myGenerated;
   TopoDS_Face myFace;
   TopoDS_Face myInitFace;
-  Standard_Real myTol2d;
-  Standard_Real myTol3d;
-  Standard_Real myTolAng;
-  Standard_Real myTolCurv;
-  Standard_Integer myMaxDeg;
-  Standard_Integer myMaxSegments;
-  Standard_Integer myDegree;
-  Standard_Integer myNbPtsOnCur;
-  Standard_Integer myNbIter;
-  Standard_Boolean myAnisotropie;
-  Standard_Boolean myIsInitFaceGiven;
-  Standard_Boolean myIsDone;
+  Standard_Real myTol2d = 0.0;
+  Standard_Real myTol3d = 0.0;
+  Standard_Real myTolAng = 0.0;
+  Standard_Real myTolCurv = 0.0;
+  Standard_Integer myMaxDeg = 0;
+  Standard_Integer myMaxSegments = 0;
+  Standard_Integer myDegree = 0;
+  Standard_Integer myNbPtsOnCur = 0;
+  Standard_Integer myNbIter = 0;
+  Standard_Boolean myAnisotropie = false;
+  Standard_Boolean myIsInitFaceGiven = false;
+  Standard_Boolean myIsDone = false;
 
 };
 

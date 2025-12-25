@@ -351,13 +351,12 @@ private:
   //! if nbpoles < 2 or nbboles > MaDegree + 1
   void Init (const Handle(TColgp_HArray1OfPnt)& Poles, const Handle(TColStd_HArray1OfReal)& Weights);
 
-  Standard_Boolean rational;
-  Standard_Boolean closed;
   Handle(TColgp_HArray1OfPnt) poles;
   Handle(TColStd_HArray1OfReal) weights;
-  Standard_Real maxderivinv;
-  Standard_Boolean maxderivinvok;
-
+  Standard_Real maxderivinv = 0.0;
+  Standard_Boolean maxderivinvok = false;
+  Standard_Boolean rational = false;
+  Standard_Boolean closed = false;
 
 };
 

@@ -134,19 +134,19 @@ private:
   
 
 
-  Standard_Boolean isDone;
-  Standard_Boolean KPart;
-  Standard_Real myTol3d;
-  Standard_Real myBoundTol;
-  Standard_Real myTol2d;
-  Standard_Real myTolAngular;
-  Standard_Real myAngMin;
-  Standard_Real myAngMax;
-  GeomFill_ApproxStyle myApproxStyle;
-  GeomAbs_Shape myContinuity;
-  Standard_Integer myDegmax;
-  Standard_Integer mySegmax;
-  Standard_Boolean myForceApproxC1;
+  Standard_Boolean isDone = false;
+  Standard_Boolean KPart = false;
+  Standard_Real myTol3d = 1.0e-4;
+  Standard_Real myBoundTol = 1.0;
+  Standard_Real myTol2d = 1.0e-5;
+  Standard_Real myTolAngular = 1.0e-2;
+  Standard_Real myAngMin = 0.01;
+  Standard_Real myAngMax = 6.0;
+  GeomFill_ApproxStyle myApproxStyle = GeomFill_Location;
+  GeomAbs_Shape myContinuity = GeomAbs_C2;
+  Standard_Integer myDegmax = 11;
+  Standard_Integer mySegmax = 30;
+  Standard_Boolean myForceApproxC1 = false;
   TopoDS_Shape myShape;
   Handle(BRepFill_LocationLaw) myLoc;
   Handle(BRepFill_SectionLaw) mySec;
@@ -156,7 +156,7 @@ private:
   Handle(TopTools_HArray2OfShape) myFaces;
   TopTools_ListOfShape myAuxShape;
   Handle(TopTools_HArray1OfShape) myTapes;
-  Standard_Real Error;
+  Standard_Real Error = 0.0;
   TopoDS_Wire FirstShape;
   TopoDS_Wire LastShape;
 

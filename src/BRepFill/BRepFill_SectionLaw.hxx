@@ -82,9 +82,9 @@ protected:
 
 
   Handle(GeomFill_HArray1OfSectionLaw) myLaws;
-  Standard_Boolean uclosed;
-  Standard_Boolean vclosed;
-  Standard_Boolean myDone;
+  Standard_Boolean uclosed = false;
+  Standard_Boolean vclosed = false;
+  Standard_Boolean myDone = false;
   TopTools_DataMapOfShapeInteger myIndices;
 
 
