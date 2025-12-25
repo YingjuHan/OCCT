@@ -181,12 +181,8 @@ void MeshVS_NodalColorPrsBuilder::Build ( const Handle(Prs3d_Presentation)& Prs,
   {
     aMaterial[i].SetSpecularColor (Quantity_NOC_BLACK);
     aMaterial[i].SetEmissiveColor (Quantity_NOC_BLACK);
-    if ( !IsReflect )
+    if (IsReflect)
     {
-      aMaterial[i].SetAmbientColor (Quantity_NOC_BLACK);
-      aMaterial[i].SetDiffuseColor (Quantity_NOC_BLACK);
-    }
-    else{
       // OCC20644 Using the material with reflection properties same as in
       // ElementalColorPrsBuilder, to get the same colors.
       // Additionally, ambient and diffuse coefficients are used below to scale incoming colors,
@@ -426,7 +422,6 @@ void MeshVS_NodalColorPrsBuilder::Build ( const Handle(Prs3d_Presentation)& Prs,
     anAsp->SetFrontMaterial( aMaterial[ 0 ] );
     anAsp->SetBackMaterial( aMaterial[ 1 ] );
 
-
     Handle(Graphic3d_Texture2D) aTexture = CreateTexture();
     if ( aTexture.IsNull() )
       return;
@@ -447,6 +442,8 @@ void MeshVS_NodalColorPrsBuilder::Build ( const Handle(Prs3d_Presentation)& Prs,
 
   anAsp->SetDistinguishOff();
   anAsp->SetEdgeOff();
+  if (!IsReflect)
+    anAsp->SetShadingModel(Graphic3d_TypeOfShadingModel_Unlit);
 
   Handle(Graphic3d_AspectLine3d) anLAsp =
     new Graphic3d_AspectLine3d( anEdgeColor, anEdgeType, anEdgeWidth );

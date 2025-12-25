@@ -506,17 +506,11 @@ void PrsDim_Dimension::drawText (const Handle(Prs3d_Presentation)& thePresentati
     {
       // Setting text shading and color parameters
       if (!myDrawer->HasOwnShadingAspect())
-      {
         myDrawer->SetShadingAspect (new Prs3d_ShadingAspect());
-      }
 
-      Graphic3d_MaterialAspect aShadeMat (Graphic3d_NameOfMaterial_DEFAULT);
-      aShadeMat.SetAmbientColor (Quantity_NOC_BLACK);
-      aShadeMat.SetDiffuseColor (Quantity_NOC_BLACK);
-      aShadeMat.SetSpecularColor(Quantity_NOC_BLACK);
+      myDrawer->ShadingAspect()->Aspect()->SetShadingModel (Graphic3d_TypeOfShadingModel_Unlit);
       myDrawer->ShadingAspect()->Aspect()->SetInteriorColor (aColor);
       myDrawer->ShadingAspect()->Aspect()->SetBackInteriorColor (aColor);
-      myDrawer->ShadingAspect()->SetMaterial (aShadeMat);
 
       // drawing text
       StdPrs_ShadedShape::Add (thePresentation, aTextShape, myDrawer);
