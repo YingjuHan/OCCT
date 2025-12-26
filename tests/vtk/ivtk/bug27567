@@ -62,6 +62,5 @@ for {set i 1} {${i} <= ${i_max}} {incr i} {
   unset b$i
 
   lappend listmem [meminfo h]
-  checktrend $listmem 0 120000 "Memory leak detected"
 }
-
+checktrend $listmem 0 120000 "Memory leak detected"

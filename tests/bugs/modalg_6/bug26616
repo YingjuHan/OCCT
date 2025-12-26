@@ -16,5 +16,5 @@ for {set i 1} {$i < 10} {incr i} {
     bfuse res t0 t1
 
     lappend listmem [meminfo h]
-    checktrend $listmem 0 64 "Memory leak detected"
 }
+checktrend $listmem 0 64 "Memory leak detected"

@@ -28,5 +28,5 @@ for {set i 1} {${i} <= ${NCycles}} {incr i } {
     bopcommon r
 
     lappend listmem [meminfo h]
-    checktrend $listmem 0 100 "Memory leak detected"
 }
+checktrend $listmem 0 100 "Memory leak detected"

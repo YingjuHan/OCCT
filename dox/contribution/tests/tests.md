@@ -1209,13 +1209,11 @@ set listmem {}
 for {set i 1} {$i < 100} {incr i} {
     # run suspect operation 
     …
-    # check memory usage (with tolerance equal to half page size)
+    # collect memory usage (working set)
     lappend listmem [expr [meminfo w] / 1024]
-    if { [checktrend $listmem 0 256 "Memory leak detected"] } {
-        puts "No memory leak, $i iterations"
-        break
-    }
 }
+# check memory usage (with tolerance equal to half page size)
+checktrend $listmem 0 256 "Memory leak detected"
 ~~~~
 
 @subsubsection testmanual_5_3_5 Visualization
