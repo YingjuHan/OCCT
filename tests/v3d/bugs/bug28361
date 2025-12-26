@@ -7,8 +7,8 @@ pload MODELING VISUALIZATION
 vclear
 vinit View1
 box b 10 10 10
-vdisplay b -trsfPers zoomRotate -trsfPersPos 90 90 90
+vdisplay b -trsfPers zoomRotate -trsfPersPos 90 90 90 -highMode 1
 vmoveto 266 164
-if { [vreadpixel 256 174 rgb name] != "CYAN" } { puts "Error: the box is not highlighted" }
+if { [vreadpixel 260 170 rgb name] != "WHITE" } { puts "Error: the box is not highlighted" }
 
 vdump $imagedir/${casename}.png
