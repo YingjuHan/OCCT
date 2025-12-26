@@ -2099,17 +2099,22 @@ static int StackOverflow (int i = -1)
 }
 #endif
 
-// this code does not work with optimize mode on Windows
-#if defined(_MSC_VER) && !defined(__clang__)
-#pragma optimize( "", off )
+// this code does not work with optimize mode
+#if defined(__clang__)
+  #pragma clang optimize off
+#elif defined(_MSC_VER)
+  #pragma optimize("", off)
+#elif defined(__GNUC__)
+  #pragma GCC push_options
+  #pragma GCC optimize("O0")
 #endif
 static Standard_Integer OCC6143 (Draw_Interpretor& di, Standard_Integer argc, const char ** argv)
 {
   if (argc != 1)
-    {
-      std::cout << "Usage : " << argv[0] << "\n";
-      return 1;
-    }
+  {
+    std::cout << "Usage : " << argv[0] << "\n";
+    return 1;
+  }
   Standard_Boolean Succes;
   
   Succes = Standard_True;
@@ -2414,8 +2419,12 @@ static Standard_Integer OCC30775 (Draw_Interpretor& theDI, Standard_Integer theN
   return 0;
 }
 
-#if defined(_MSC_VER) && !defined(__clang__)
-#pragma optimize( "", on )
+#if defined(__clang__)
+  #pragma clang optimize on
+#elif defined(_MSC_VER)
+  #pragma optimize( "", on)
+#elif defined(__GNUC__)
+  #pragma GCC pop_options
 #endif
 
 // try disabling compiler optimizations and function inlining for proper stack
