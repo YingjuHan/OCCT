@@ -29,6 +29,7 @@
 #include <Storage_TypedCallBack.hxx>
 #include <TCollection_AsciiString.hxx>
 #include <TColStd_HSequenceOfAsciiString.hxx>
+#include <Message.hxx>
 
 #include <stdio.h>
 IMPLEMENT_STANDARD_RTTIEXT(Storage_Schema,Standard_Transient)
@@ -713,89 +714,108 @@ void Storage_Schema::Clear() const
 }
 
 #ifdef DATATYPE_MIGRATION
+//! Fill-in hard-code migration table for known types.
+static void initDefaultMigrationMap(DataMapOfAStringAString& theMap)
+{
+  theMap.Bind("TDataStd_Shape", "TDataXtd_Shape");
+  theMap.Bind("TDataStd_Constraint", "TDataXtd_Constraint");
+  theMap.Bind("TDataStd_Geometry", "TDataXtd_Geometry");
+  theMap.Bind("TDataStd_Axis", "TDataXtd_Axis");
+  theMap.Bind("TDataStd_Point", "TDataXtd_Point");
+  theMap.Bind("TDataStd_Plane", "TDataXtd_Plane");
+  theMap.Bind("TDataStd_Position", "TDataXtd_Position");
+  theMap.Bind("TDataStd_Placement", "TDataXtd_Placement");
+  theMap.Bind("TDataStd_PatternStd", "TDataXtd_PatternStd");
+  theMap.Bind("TPrsStd_AISPresentation", "TDataXtd_Presentation");
+  theMap.Bind("PDataStd_Shape", "PDataXtd_Shape");
+  theMap.Bind("PDataStd_Constraint", "PDataXtd_Constraint");
+  theMap.Bind("PDataStd_Geometry", "PDataXtd_Geometry");
+  theMap.Bind("PDataStd_Axis", "PDataXtd_Axis");
+  theMap.Bind("PDataStd_Point", "PDataXtd_Point");
+  theMap.Bind("PDataStd_Plane", "PDataXtd_Plane");
+  theMap.Bind("PDataStd_Position", "PDataXtd_Position");
+  theMap.Bind("PDataStd_Placement", "PDataXtd_Placement");
+  theMap.Bind("PDataStd_PatternStd", "PDataXtd_PatternStd");
+}
+
+//! Read migration map from file.
+static bool readMigrationFile(DataMapOfAStringAString& theMap)
+{
+  OSD_Environment aMigEnv("CSF_MIGRATION_TYPES");
+  TCollection_AsciiString aFileName = aMigEnv.Value();
+  if (aFileName.IsEmpty())
+  {
+    OSD_Environment aResEnv("CSF_OCCTResourcePath");
+    TCollection_AsciiString aResPath = aResEnv.Value();
+    aFileName = aResEnv.Value() + "/StdResource/MigrationSheet.txt";
+    if (aResPath.IsEmpty() || !OSD_File(aFileName).Exists())
+      return false;
+  }
+
+  OSD_Path aPath(aFileName, OSD_Default);
+  OSD_File aFile;
+  aFile.SetPath(aPath);
+  if (!aFile.Exists())
+  {
+    Message::SendFail() << "Error: $CSF_MIGRATION_TYPES points to non-existing file '" << aFileName << "'";
+    return false;
+  }
+
+  OSD_Protection aProt(OSD_R, OSD_R, OSD_R, OSD_R);
+  aFile.Open(OSD_ReadOnly, aProt);
+  if (!aFile.IsOpen() || !aFile.IsReadable())
+  {
+    Message::SendFail() << "Error: $CSF_MIGRATION_TYPES points to inaccessible file '" << aFileName << "'";
+    return false;
+  }
+
+  TCollection_AsciiString aLine;
+  for (;;)
+  {
+    Standard_Integer aNbReaded = 0;
+    aFile.ReadLine(aLine, 80, aNbReaded);
+    if (aFile.IsAtEnd() || aNbReaded == 0)
+    {
+      aFile.Close();
+      return true;
+    }
+
+#ifdef OCCT_DEBUG
+    std::cout << "Storage_Sheme:: Line: = " << aLine << std::endl;
+#endif
+    const TCollection_AsciiString aKey   = aLine.Token();
+    const TCollection_AsciiString aValue = aLine.Token(" \t\n\r", 2);
+    theMap.Bind(aKey, aValue);
+  }
+}
+
+//! Initialize migration map.
+static std::unique_ptr<DataMapOfAStringAString> initMigrationMap()
+{
+  std::unique_ptr<DataMapOfAStringAString> aMap(new DataMapOfAStringAString());
+  if (!readMigrationFile(*aMap))
+    initDefaultMigrationMap(*aMap);
+
+  return aMap;
+}
+
 //=======================================================================
 // environment variable CSF_MIGRATION_TYPES should define full path of a file
 // containing migration types table: oldtype - newtype
 //=======================================================================
-Standard_Boolean Storage_Schema::CheckTypeMigration(
-                                  const TCollection_AsciiString&  oldName,
-				  TCollection_AsciiString&  newName)
+Standard_Boolean Storage_Schema::CheckTypeMigration(const TCollection_AsciiString& oldName,
+                                                    TCollection_AsciiString& newName)
 {
-  static Standard_Boolean isChecked(Standard_False);
-  static DataMapOfAStringAString aDMap;
-  Standard_Boolean aMigration(Standard_False);
-  
-  if(!isChecked) {
-    isChecked = Standard_True;
-//    TCollection_AsciiString aFileName = getenv("CSF_MIGRATION_TYPES");
-    OSD_Environment csf(TCollection_AsciiString("CSF_MIGRATION_TYPES"));
-    TCollection_AsciiString aFileName = csf.Value();
-    if(aFileName.Length() > 0) {
-      OSD_Path aPath(aFileName,OSD_Default);
-      OSD_File aFile;
-      aFile.SetPath(aPath);
-      if(aFile.Exists()) {
-	OSD_Protection aProt(OSD_R,OSD_R,OSD_R,OSD_R);
-	aFile.Open(OSD_ReadOnly, aProt);
-	if(aFile.IsOpen() && aFile.IsReadable()) {
-	  TCollection_AsciiString aLine;
-	  Standard_Integer aNbReaded(0);
-	  for (;;) {
-	    aFile.ReadLine(aLine, 80, aNbReaded);
-	    if(aFile.IsAtEnd() || !aNbReaded) {
-	      aFile.Close();
-	      break;
-	    }
+  static std::unique_ptr<DataMapOfAStringAString> aDMap = initMigrationMap();
+  if (const TCollection_AsciiString* aNewName = aDMap->Seek(oldName))
+  {
+    newName = *aNewName;
 #ifdef OCCT_DEBUG
-	    std::cout << "Storage_Sheme:: Line: = " << aLine <<std::endl;
+    std::cout << " newName = " << newName << std::endl;
 #endif
-	    TCollection_AsciiString aKey, aValue;
-	    aKey = aLine.Token();
-	    aValue = aLine.Token(" \t\n\r", 2);
-	    aDMap.Bind(aKey, aValue);
-	  }
-        }
-      }
-      else
-      {
-        // hard-code migration table for known types	
-	aDMap.Bind("TDataStd_Shape",          "TDataXtd_Shape");
-	aDMap.Bind("TDataStd_Constraint",     "TDataXtd_Constraint");
-        aDMap.Bind("TDataStd_Geometry",       "TDataXtd_Geometry");
-	aDMap.Bind("TDataStd_Axis",           "TDataXtd_Axis");
-	aDMap.Bind("TDataStd_Point",          "TDataXtd_Point");
-	aDMap.Bind("TDataStd_Plane",          "TDataXtd_Plane");
-	aDMap.Bind("TDataStd_Position",       "TDataXtd_Position");
-	aDMap.Bind("TDataStd_Placement",      "TDataXtd_Placement");
-	aDMap.Bind("TDataStd_PatternStd",     "TDataXtd_PatternStd");
-	aDMap.Bind("TPrsStd_AISPresentation", "TDataXtd_Presentation");
-        aDMap.Bind("PDataStd_Shape",          "PDataXtd_Shape");
-        aDMap.Bind("PDataStd_Constraint",     "PDataXtd_Constraint");
-        aDMap.Bind("PDataStd_Geometry",       "PDataXtd_Geometry");
-        aDMap.Bind("PDataStd_Axis",           "PDataXtd_Axis");
-        aDMap.Bind("PDataStd_Point",          "PDataXtd_Point");
-        aDMap.Bind("PDataStd_Plane",          "PDataXtd_Plane");
-        aDMap.Bind("PDataStd_Position",       "PDataXtd_Position");
-        aDMap.Bind("PDataStd_Placement",      "PDataXtd_Placement");
-        aDMap.Bind("PDataStd_PatternStd",     "PDataXtd_PatternStd");
-      }
-#ifdef OCCT_DEBUG
-      std::cout << "Storage_Sheme:: aDataMap.Size = " << aDMap.Extent() << std::endl;
-#endif
-    }
+    return true;
   }
-
-  if(aDMap.Extent()) {
-    if(aDMap.IsBound(oldName)) {
-      newName.Clear();
-      newName = aDMap.Find(oldName);
-      aMigration = Standard_True;
-#ifdef OCCT_DEBUG
-      std::cout << " newName = " << newName << std::endl;
-#endif
-    }
-  } 
-  return aMigration;
+  return false;
 }
 #endif
 
