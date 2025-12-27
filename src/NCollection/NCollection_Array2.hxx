@@ -266,7 +266,9 @@ public:
   {
     Standard_OutOfRange_Raise_if (theRow < myLowerRow || theRow > myUpperRow ||
                                   theCol < myLowerCol || theCol > myUpperCol, "NCollection_Array2::Value");
+Standard_DISABLE_ARRAYBOUNDS_WARNINGS
     return myData[theRow][theCol];
+Standard_RESTORE_ARRAYBOUNDS_WARNINGS
   }
 
   //! operator() - alias to ChangeValue
@@ -280,7 +282,9 @@ public:
   {
     Standard_OutOfRange_Raise_if (theRow < myLowerRow || theRow > myUpperRow ||
                                   theCol < myLowerCol || theCol > myUpperCol, "NCollection_Array2::ChangeValue");
+Standard_DISABLE_ARRAYBOUNDS_WARNINGS
     return myData[theRow][theCol];
+Standard_RESTORE_ARRAYBOUNDS_WARNINGS
   }
 
   //! operator() - alias to ChangeValue
@@ -295,7 +299,9 @@ public:
   {
     Standard_OutOfRange_Raise_if (theRow < myLowerRow || theRow > myUpperRow ||
                                   theCol < myLowerCol || theCol > myUpperCol, "NCollection_Array2::SetValue");
+Standard_DISABLE_ARRAYBOUNDS_WARNINGS
     myData[theRow][theCol] = theItem;
+Standard_RESTORE_ARRAYBOUNDS_WARNINGS
   }
 
   //! Resizes the array to specified bounds.

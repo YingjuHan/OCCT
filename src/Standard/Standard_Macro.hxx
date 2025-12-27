@@ -187,6 +187,32 @@
   #define Standard_ENABLE_DEPRECATION_WARNINGS
 #endif
 
+//! @def Standard_DISABLE_ARRAYBOUNDS_WARNINGS
+//! Suppresses GCC warnings -Warray-bounds generated for NCollection arrays with non-zero starting index.
+//! @def Standard_RESTORE_ARRAYBOUNDS_WARNINGS
+//! Restores GCC warnings -Warray-bounds.
+#if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
+  #define Standard_DISABLE_ARRAYBOUNDS_WARNINGS _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Warray-bounds\"")
+  #define Standard_RESTORE_ARRAYBOUNDS_WARNINGS _Pragma("GCC diagnostic pop")
+#else
+  #define Standard_DISABLE_ARRAYBOUNDS_WARNINGS
+  #define Standard_RESTORE_ARRAYBOUNDS_WARNINGS
+#endif
+
+//! @def Standard_DISABLE_FREENONHEAP_WARNINGS
+//! Suppresses GCC warnings -Wfree-nonheap-object generated on deletion of NCollection arrays with non-zero starting index.
+//! @def Standard_RESTORE_FREENONHEAP_WARNINGS
+//! Restores GCC warnings -Wfree-nonheap-object.
+#if defined(__GNUC__) && (__GNUC__ >= 11)
+  #define Standard_DISABLE_FREENONHEAP_WARNINGS _Pragma("GCC diagnostic push") \
+    _Pragma("GCC diagnostic ignored \"-Wfree-nonheap-object\"")
+  #define Standard_RESTORE_FREENONHEAP_WARNINGS _Pragma("GCC diagnostic pop")
+#else
+  #define Standard_DISABLE_FREENONHEAP_WARNINGS
+  #define Standard_RESTORE_FREENONHEAP_WARNINGS
+#endif
+
 # ifdef _WIN32
 
 // We must be careful including windows.h: it is really poisonous stuff!

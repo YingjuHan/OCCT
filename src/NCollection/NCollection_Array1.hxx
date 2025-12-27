@@ -425,9 +425,11 @@ public:
 
   //! Destructor - releases the memory
   ~NCollection_Array1 (void)
-  { 
+  {
+Standard_DISABLE_FREENONHEAP_WARNINGS
     if (myDeletable) 
       delete [] &(myData[myLowerBound]);
+Standard_RESTORE_FREENONHEAP_WARNINGS
   }
 
  protected:

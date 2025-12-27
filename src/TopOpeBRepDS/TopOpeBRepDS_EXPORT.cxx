@@ -2051,7 +2051,7 @@ Standard_EXPORT Standard_Boolean FUN_ds_hasFEI(const TopOpeBRepDS_PDataStructure
   for (TopOpeBRepDS_ListIteratorOfListOfInterference it(LI); it.More(); it.Next()){
     const Handle(TopOpeBRepDS_Interference)& I = it.Value();
     const TopOpeBRepDS_Transition& T = I->Transition();
-    TopOpeBRepDS_Kind GT,ST; Standard_Integer G,S; FDS_data(I,GT,G,ST,S);
+    TopOpeBRepDS_Kind GT,ST; Standard_Integer G(0), S(0); FDS_data(I,GT,G,ST,S);
     Standard_Boolean found = (G == GI) && (T.Index() == ITRA);
     if (found) return Standard_True;
   }

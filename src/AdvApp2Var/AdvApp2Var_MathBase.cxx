@@ -470,7 +470,9 @@ int AdvApp2Var_MathBase::mmapcmp_(integer *ndim,
     /* Parameter adjustments */
     crvold_dim1 = *ncofmx;
     crvold_offset = crvold_dim1;
+Standard_DISABLE_ARRAYBOUNDS_WARNINGS
     crvold -= crvold_offset;
+Standard_RESTORE_ARRAYBOUNDS_WARNINGS
     crvnew_dim1 = (*ncoeff - 1) / 2 + 1;
     crvnew_offset = crvnew_dim1 << 1;
     crvnew -= crvnew_offset;
@@ -3392,10 +3394,12 @@ int mmdrvcb_(integer *ideriv,
 /*   Name of the routine */
 
     /* Parameter adjustments */
+Standard_DISABLE_ARRAYBOUNDS_WARNINGS
     tabpnt_dim1 = *ndim;
     --tabpnt;
     courbe_dim1 = *ndim;
     --courbe;
+Standard_RESTORE_ARRAYBOUNDS_WARNINGS
 
     /* Function Body */
     ibb = AdvApp2Var_SysBase::mnfndeb_();
