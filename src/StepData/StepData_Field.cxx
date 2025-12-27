@@ -488,11 +488,11 @@ static Standard_Integer TrueKind (const Standard_Integer kind)
   Handle(Standard_Transient) item;
   if ((thekind & KindArity) == KindList) {
     DeclareAndCast(TColStd_HArray1OfTransient,ht,theany);
-    if (!ht.IsNull()) return kind;
+    if (ht.IsNull()) return kind;
     item = ht->Value(n1);
   } else if ((thekind & KindArity) == KindList2) {
     DeclareAndCast(TColStd_HArray2OfTransient,ht,theany);
-    if (!ht.IsNull()) return kind;
+    if (ht.IsNull()) return kind;
     item = ht->Value(n1,n2);
   }
   if (item.IsNull()) return 0;
