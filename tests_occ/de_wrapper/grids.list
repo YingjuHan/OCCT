@@ -1,0 +1,7 @@
+# This test group is aimed to demonstrate how test cases are created,
+# and test the test system itself
+
+003 gltf
+005 obj
+006 ply
+008 stl

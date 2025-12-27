@@ -1,0 +1,2 @@
+SKIPPED /Error: glTF reader is unavailable - OCCT has been built without RapidJSON support/ OCCT is built without RapidJSON, GLTF is not available
+SKIPPED /Error: cannot use Draco compression, Draco library missing/ OCCT is built without Draco compression
