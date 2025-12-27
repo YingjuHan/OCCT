@@ -1,0 +1,18 @@
+# This workflow runs regression tests for OCCT.
+#
+# The 'test' workflow is separated from 'build' for two reasons:
+# - 'build' workflow already defines a plenty of jobs,
+#   so that mail notification truncates results with failures.
+# - to be able to developer about regressions in automated tests
+#   without waiting for the longest jobs in 'build' on slow runners.
+name: Test (All)
+
+on: [push]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ubuntu:
+    uses: ./.github/workflows/test_ubuntu.yml

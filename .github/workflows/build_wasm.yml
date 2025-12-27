@@ -1,0 +1,80 @@
+name: Build (Emscripten)
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Clone Tree
+      uses: actions/checkout@v6
+      with:
+        path: occt.git
+        fetch-depth: 1
+    - name: Clone Tcl
+      uses: actions/checkout@v6
+      with:
+        repository: gkv311/tcl
+        path: tcl.git
+        ref: 'core-8-6-11-wasm'
+        fetch-depth: 1
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          g++ cmake ninja-build
+    - name: Setup emsdk
+      uses: mymindstorm/setup-emsdk@v14
+      with:
+        version: 4.0.5
+        actions-cache-folder: 'emsdk-cache'
+        no-cache: true
+    - name: Build Tcl
+      run: |
+        emcc -v
+        aNbJobs="$(getconf _NPROCESSORS_ONLN)"
+        mkdir -p "build"
+        aTcl="$PWD/tcl-wasm"
+        aTclMake="$PWD/tcl-make"
+        cp -r -f "./tcl.git" "$aTclMake"
+        pushd "$aTclMake/unix"
+        emconfigure ./configure --host wasm32 --prefix=$aTcl --enable-shared=no --enable-threads=no
+        emmake make -j$aNbJobs
+        emmake make install
+        popd
+        cp "${aTcl}/lib/libtcl8.6.a" "${aTcl}/lib/libtcl.a"
+    - name: Configure project
+      env:
+        OCCT_CONFIG: |
+          include($ENV{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake)
+          set(BUILD_RELEASE_DISABLE_EXCEPTIONS OFF CACHE BOOL "")
+          set(BUILD_DOC_Overview OFF CACHE BOOL "")
+          set(BUILD_MODULE_Draw  ON CACHE BOOL "")
+          set(USE_FREETYPE       OFF CACHE BOOL "")
+          set(USE_FREEIMAGE      OFF CACHE BOOL "")
+          set(USE_TK             OFF CACHE BOOL "")
+          set(CMAKE_BUILD_TYPE "Release")
+          set(CMAKE_C_FLAGS    "-Werror")
+          set(CMAKE_CXX_FLAGS  "-Werror")
+          set(INSTALL_DIR      "${CMAKE_CURRENT_LIST_DIR}/occt-install" CACHE PATH "")
+      run: |
+        emcc -v
+        aTcl="$PWD/tcl-wasm"
+        echo "${OCCT_CONFIG}" | tee ./occt-make.cmake
+        cmake -S ./occt.git -B ./occt-make -G Ninja --toolchain "$PWD/occt-make.cmake" \
+          -D BUILD_LIBRARY_TYPE:STRING=Static \
+          -D 3RDPARTY_TCL_DIR:PATH="${aTcl}" \
+          -D 3RDPARTY_TCL_INCLUDE_DIR:PATH="${aTcl}/include" \
+          -D 3RDPARTY_TCL_LIBRARY_DIR:PATH="${aTcl}/lib" \
+          -D 3RDPARTY_TCL_LIBRARY:FILEPATH="${aTcl}/lib/libtcl.a"
+    - name: Build project
+      run: |
+        cmake --build ./occt-make
+    - name: Install build
+      run: |
+        cmake --install ./occt-make --prefix ./occt-install
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: occt-draw-wasm32
+        path: occt-install/bin

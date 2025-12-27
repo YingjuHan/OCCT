@@ -1,0 +1,20 @@
+# This workflow performs building of OCCT on multiple platforms
+name: Build (All)
+
+on: [push]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    uses: ./.github/workflows/build_ubuntu.yml
+  mac:
+    uses: ./.github/workflows/build_mac.yml
+  wnt:
+    uses: ./.github/workflows/build_wnt.yml
+  wasm:
+    uses: ./.github/workflows/build_wasm.yml
+  android:
+    uses: ./.github/workflows/build_android.yml

@@ -1,0 +1,302 @@
+# This workflow performs Draw Harness regressions tests on Linux platform.
+name: Test (Ubuntu/GCC)
+on:
+  workflow_call:
+
+jobs:
+  # Build OCCT using the fastest configuration.
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Clone Tree
+      uses: actions/checkout@v6
+      with:
+        path: occt.git
+        fetch-depth: 1
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          g++ cmake ninja-build \
+          libfontconfig-dev libfreetype-dev \
+          rapidjson-dev libdraco-dev \
+          libx11-dev libwayland-dev \
+          libfreeimage-dev \
+          libgl-dev libegl-dev libgles2-mesa-dev \
+          tcllib tklib tcl-dev tk-dev \
+          xvfb \
+    - name: Configure project
+      env:
+        OCCT_CONFIG: |
+          set(BUILD_RELEASE_DISABLE_EXCEPTIONS OFF CACHE BOOL "")
+          set(BUILD_DOC_Overview OFF CACHE BOOL "")
+          set(BUILD_MODULE_Draw  ON  CACHE BOOL "")
+          set(BUILD_Inspector    OFF CACHE BOOL "")
+          set(BUILD_SAMPLES_QT   OFF CACHE BOOL "")
+          set(BUILD_USE_PCH      ON  CACHE BOOL "")
+          set(USE_FREETYPE       ON  CACHE BOOL "")
+          set(USE_FREEIMAGE      ON  CACHE BOOL "")
+          set(USE_XLIB           ON  CACHE BOOL "")
+          set(USE_WAYLAND        OFF CACHE BOOL "")
+          set(USE_GLES2          ON  CACHE BOOL "")
+          set(USE_RAPIDJSON      ON  CACHE BOOL "")
+          set(USE_DRACO          ON  CACHE BOOL "")
+          set(CMAKE_BUILD_TYPE "Release")
+          set(INSTALL_DIR      "${CMAKE_CURRENT_LIST_DIR}/occt-install" CACHE PATH "")
+      run: |
+        g++ --version
+        echo "${OCCT_CONFIG}" | tee ./occt-make.cmake
+        cmake -S ./occt.git -B ./occt-make -G Ninja --toolchain "$PWD/occt-make.cmake"
+    - name: Build project
+      run: |
+        cmake --build ./occt-make
+    - name: Install build
+      run: |
+        cmake --install ./occt-make --prefix ./occt-install
+    - name: Run DRAW
+      run: |
+        export LD_LIBRARY_PATH=$PWD/occt-install/lib
+        export PATH=$PWD/occt-install/bin:$PATH
+        xvfb-run -a DRAWEXE -c "dversion"
+    - name: Pack install
+      run: |
+        anArchName=occt-linux-gcc.tar
+        pushd ./occt-install
+        tar -cf ../${anArchName} *
+        popd
+    - name: Upload build
+      uses: actions/upload-artifact@v4
+      with:
+        name: occt-linux-gcc
+        path: occt-linux-gcc.tar
+        if-no-files-found: error
+
+  # Run tests within subgroups to:
+  # - provide granulated reports for different domains;
+  # - speedup running on large number of small runners.
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [algo, algo-bugs, bop, heal, heal-bugs, v3d, opengl, xde, xde-bugs]
+        include:
+          # modeling data and algorithms
+          - cmd: 'blend,chamfer,collections,cr,demo,draft,evolved,feat,fillet2d,gdt,geometry,lowalgos,mkface,nproject,offset,pipe,prism,mesh,hlr,thrusection'
+            group: algo
+          - cmd: 'bugs demo,fclasses,filling,mesh,modalg_1,modalg_2,modalg_3,modalg_4,modalg_5,modalg_6,modalg_7,modalg_8,modaldata_1,modaldata_2,modaldata_3'
+            group: algo-bugs
+          # boolean operations
+          - cmd: 'boolean'
+            group: bop
+          # shape healing
+          - cmd: 'heal'
+            group: heal
+          - cmd: 'bugs heal'
+            group: heal-bugs
+          # visualization
+          - cmd: 'v3d,vselect'
+            group: v3d
+          - cmd: 'opengl,opengles3'
+            group: opengl
+          # data exchange
+          - cmd: 'caf,de,de_mesh,de_wrapper,persist,sewing,xcaf,xml'
+            group: xde
+          - cmd: 'bugs caf,iges,step,stlvrml,xde'
+            group: xde-bugs
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+    - name: Clone Tree
+      uses: actions/checkout@v6
+      with:
+        path: occt.git
+        fetch-depth: 1
+    - name: Clone Dataset
+      uses: actions/checkout@v6
+      with:
+        path: occt.git/data/opencascade-dataset.git
+        repository: gkv311/opencascade-dataset
+        fetch-depth: 1
+    # Extra packages: xwayland-run weston
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libfontconfig1 libfreetype6 libdraco8 libfreeimage3 \
+          libegl1 libglapi-mesa libgl1 libgles2 \
+          tcllib tklib tcl-thread \
+          xvfb \
+    # Install fr_FR locale for test bugs/xde/bug22898.
+    - name: Install locales for xde tests
+      if: (matrix.group == 'xde-bugs')
+      run: |
+        sudo apt-get install -y \
+          locales language-pack-fr
+        #echo "::group::Reconfigure locales"
+        #export LANG="en_US.UTF-8"
+        #export LC_ALL="en_US.UTF-8"
+        #sudo dpkg-reconfigure locales
+        #echo "::endgroup::"
+        echo "::group::Available locales:"
+        locale -a
+        echo "::endgroup::"
+        echo "::group::Active locale:"
+        locale
+        echo "::endgroup::"
+    - name: Install fonts for v3d tests
+      if: (matrix.group == 'v3d') || (matrix.group == 'opengl') || (matrix.group == 'algo-bugs')
+      run: |
+        sudo apt-get install -y \
+          fonts-dejavu \
+          fonts-liberation fonts-liberation-sans-narrow \
+          fonts-lexi-gulim \
+          fonts-noto-cjk
+    - name: Download build
+      uses: actions/download-artifact@v5
+      with:
+        name: occt-linux-gcc
+        path: occt-install
+    - name: Unpack build
+      run: |
+        pushd ./occt-install
+        tar -xvf ./occt-linux-gcc.tar
+        popd
+    - name: Run Tests
+      run: |
+        #source ./occt-install/bin/env.sh
+        export LD_LIBRARY_PATH=$PWD/occt-install/lib
+        export PATH=$PWD/occt-install/bin:$PATH
+        export CASROOT=$PWD/occt.git
+        export CSF_OCCTResourcePath=$CASROOT/src
+        export CSF_OCCTSamplesPath=$CASROOT/samples
+        export CSF_OCCTDataPath=$CASROOT/data
+        export DRAWDEFAULT=$CSF_OCCTResourcePath/DrawResources/DrawDefault
+        export DRAWHOME=$CSF_OCCTResourcePath/DrawResources
+        export CSF_DrawPluginDefaults=$DRAWHOME
+        # it is better to get rid of CSF_OCCTTestsPath
+        export CSF_OCCTTestsPath=$CASROOT/tests
+        # used by some XDE tests to switch healing parameters
+        export CSF_IGESDefaults=$CSF_OCCTResourcePath/XSTEPResource
+        export CSF_STEPDefaults=$CSF_OCCTResourcePath/XSTEPResource
+        xvfb-run -a DRAWEXE -c "testgrid ${{ matrix.cmd }} -outdir $PWD/occt-results"
+    # Check statistics and create warning/error annotations.
+    - name: Check results
+      id: results
+      run: |
+        testslog=./occt-results/tests.log
+        nb_ok=`grep -oP '\K\w+ OK' $testslog | cut -d" " -f1`
+        nb_bad=`grep -oP '\K\w+ BAD' $testslog | cut -d" " -f1`
+        nb_failed=`grep -oP '\K\w+ FAILED' $testslog | cut -d" " -f1`
+        nb_skipped=`grep -oP '\K\w+ SKIPPED' $testslog | cut -d" " -f1`
+        nb_improved=`grep -oP '\K\w+ IMPROVED' $testslog | cut -d" " -f1`
+        echo "nb_ok=$nb_ok" >> $GITHUB_OUTPUT
+        echo "nb_bad=$nb_bad" >> $GITHUB_OUTPUT
+        echo "nb_failed=$nb_failed" >> $GITHUB_OUTPUT
+        echo "nb_skipped=$nb_skipped" >> $GITHUB_OUTPUT
+        echo "nb_improved=$nb_improved" >> $GITHUB_OUTPUT
+        if [[ $nb_failed -gt 0  ]]; then
+          echo "::error:: $nb_failed FAILED tests. Please check regressions."
+        elif [[ $nb_improved -gt 0 ]]; then
+          echo "::error:: $nb_improved IMPROVED tests. Please validate results."
+        elif [[ $nb_ok == '' ]]; then
+          echo "::error:: Invalid test results. Please check test grids."
+        fi
+        if [[ $nb_skipped -gt 0 ]]; then
+          echo "::warning:: $nb_skipped SKIPPED tests. Please check test data."
+        fi
+    # Prepare a separate report for failed test case
+    # to spare time on downloading report with all test results.
+    #
+    # tests.log defines the following sections:
+    # ```
+    # Improvements:
+    #   ...
+    # Failed:
+    #   ...
+    # Skipped:
+    #   ...
+    # Total cases: ...
+    # ```
+    # and skips empty sections; so we use different 'sed' filters to collect results.
+    - name: Collect failures
+      id: failures
+      if: |
+        (steps.results.outputs.nb_failed != '') ||
+        (steps.results.outputs.nb_improved != '')
+      run: |
+        testslog=./occt-results/tests.log
+        nb_bad=`grep -oP '\K\w+ BAD' $testslog | cut -d" " -f1`
+        nb_failed=`grep -oP '\K\w+ FAILED' $testslog | cut -d" " -f1`
+        nb_skipped=`grep -oP '\K\w+ SKIPPED' $testslog | cut -d" " -f1`
+        nb_improved=`grep -oP '\K\w+ IMPROVED' $testslog | cut -d" " -f1`
+        list_failed=''
+        if [[ $nb_failed != '' && $nb_skipped != '' ]]; then
+          list_failed=`sed '/^Failed/,/^Skipped/!d;//d' $testslog`
+        elif [[ $nb_failed != '' ]]; then
+          list_failed=`sed '/^Failed/,/^Total cases/!d;//d' $testslog`
+        fi
+        list_improved=''
+        if [[ $nb_improved != '' && $nb_failed != '' ]]; then
+          list_improved=`sed '/^Improvements/,/^Failed/!d;//d' $testslog`
+        elif [[ $nb_improved != '' && $nb_skipped != '' ]]; then
+          list_improved=`sed '/^Improvements/,/^Skipped/!d;//d' $testslog`
+        elif [[ $nb_improved != '' ]]; then
+          list_failed=`sed '/^Improvements/,/^Total cases/!d;//d' $testslog`
+        fi
+        list_total=$list_failed
+        if [[ ${#list_failed} -gt 0 && ${#list_improved} -gt 0 ]]; then
+          list_total="${list_failed}
+          ${list_improved}"
+        elif [[ ${#list_failed} == 0 && ${#list_improved} -gt 0 ]]; then
+          list_total=${list_improved}
+        fi
+        echo $list_total
+        while read line; do
+        read -r group grid casename <<< $line
+          if [ ! -z "$group" ] && [ ! -z "$grid" ] && [ ! -z "$casename" ]
+          then
+            mkdir -p ./occt-results-failed/$group/$grid
+            cp ./occt-results/$group/$grid/$casename* ./occt-results-failed/$group/$grid
+          fi
+        done <<< $list_total
+        mkdir -p ./occt-results-failed
+        cp ./occt-results/summary.html ./occt-results-failed/
+    - name: Upload report with failed tests
+      if: |
+        (steps.results.outputs.nb_failed != '') ||
+        (steps.results.outputs.nb_improved != '')
+      uses: actions/upload-artifact@v4
+      with:
+        name: occt-ubuntu-gcc-tests-${{ matrix.group }}-bad
+        path: occt-results-failed
+        if-no-files-found: error
+    # Upload complete report, but filter out file artifacts
+    # (temporary model files, which are supposed to be deleted by tests on completion).
+    - name: Upload report with all tests
+      uses: actions/upload-artifact@v4
+      with:
+        name: occt-ubuntu-gcc-tests-${{ matrix.group }}-all
+        path: |
+          occt-results
+          !occt-results/**/*.bin
+          !occt-results/**/*.brep
+          !occt-results/**/*.cbf
+          !occt-results/**/*.cmp
+          !occt-results/**/*.gen
+          !occt-results/**/*.xbf
+          !occt-results/**/*.xml
+          !occt-results/**/*.igs
+          !occt-results/**/*.iges
+          !occt-results/**/*.stp
+          !occt-results/**/*.step
+          !occt-results/**/*.stl
+          !occt-results/**/*.wrl
+          !occt-results/**/*.vrml
+        if-no-files-found: error
+    - name: Set final job status
+      if: |
+        (steps.results.outputs.nb_failed != '') ||
+        (steps.results.outputs.nb_improved != '') ||
+        (steps.results.outputs.nb_ok == '')
+      run: |
+        exit 1

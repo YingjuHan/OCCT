@@ -1,0 +1,45 @@
+name: Build (Android)
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Clone Tree
+      uses: actions/checkout@v6
+      with:
+        path: occt.git
+        fetch-depth: 1
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          g++ cmake ninja-build
+    - name: Configure project
+      env:
+        OCCT_CONFIG: |
+          set(BUILD_RELEASE_DISABLE_EXCEPTIONS OFF CACHE BOOL "")
+          set(BUILD_DOC_Overview OFF CACHE BOOL "")
+          set(BUILD_MODULE_Draw  OFF CACHE BOOL "")
+          set(USE_FREETYPE       OFF CACHE BOOL "")
+          set(USE_FREEIMAGE      OFF CACHE BOOL "")
+          set(CMAKE_SYSTEM_NAME      "Android")
+          set(CMAKE_SYSTEM_VERSION   "21")
+          set(CMAKE_ANDROID_NDK      "$ENV{ANDROID_NDK}")
+          set(CMAKE_ANDROID_ARCH_ABI "arm64-v8a")
+          set(CMAKE_ANDROID_STL_TYPE "c++_shared")
+          set(CMAKE_BUILD_TYPE "Release")
+          set(CMAKE_C_FLAGS    "-Werror")
+          set(CMAKE_CXX_FLAGS  "-Werror")
+          set(INSTALL_DIR      "${CMAKE_CURRENT_LIST_DIR}/occt-install" CACHE PATH "")
+      run: |
+        echo "ANDROID_NDK=$ANDROID_NDK"
+        echo "${OCCT_CONFIG}" | tee ./occt-make.cmake
+        cmake -S ./occt.git -B ./occt-make -G Ninja --toolchain "$PWD/occt-make.cmake"
+    - name: Build project
+      run: |
+        cmake --build ./occt-make
+    - name: Install build
+      run: |
+        cmake --install ./occt-make --prefix ./occt-install
