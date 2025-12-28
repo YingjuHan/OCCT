@@ -141,9 +141,6 @@ void BOPAlgo_BuilderSolid::Perform(const Message_ProgressRange& theRange)
 //=======================================================================
 void BOPAlgo_BuilderSolid::PerformShapesToAvoid(const Message_ProgressRange& theRange)
 {
-  Standard_Boolean bFound;
-  Standard_Integer i, iCnt, aNbE, aNbF;
-  TopAbs_Orientation aOrE;
   TopTools_IndexedDataMapOfShapeListOfShape aMEF;
   TopTools_ListIteratorOfListOfShape aIt;
   //
@@ -151,13 +148,13 @@ void BOPAlgo_BuilderSolid::PerformShapesToAvoid(const Message_ProgressRange& the
   //
   Message_ProgressScope aPS(theRange, NULL, 1);
   //
-  iCnt=0;
-  for(;;) {
+  for(Standard_Integer iCnt = 0;; ++iCnt) {
+    (void)iCnt;
     if (UserBreak(aPS)) {
       return;
     }
-    ++iCnt;
-    bFound=Standard_False;
+
+    bool bFound = false;
     //
     // 1. MEF
     aMEF.Clear();
@@ -171,22 +168,22 @@ void BOPAlgo_BuilderSolid::PerformShapesToAvoid(const Message_ProgressRange& the
                                         aMEF);
       }
     }
-    aNbE=aMEF.Extent();
+    const Standard_Integer aNbE = aMEF.Extent();
     //
     // 2. myFacesToAvoid
-    for (i=1; i<=aNbE; ++i) {
+    for (Standard_Integer i = 1; i <= aNbE; ++i) {
       const TopoDS_Edge& aE=(*(TopoDS_Edge*)(&aMEF.FindKey(i)));
       if (BRep_Tool::Degenerated(aE)) {
         continue;
       }
       //
       TopTools_ListOfShape& aLF=aMEF.ChangeFromKey(aE);
-      aNbF=aLF.Extent();
-      if (!aNbF) {
+      const Standard_Integer aNbF = aLF.Extent();
+      if (aNbF == 0) {
         continue;
       }
       //
-      aOrE=aE.Orientation();
+      const TopAbs_Orientation aOrE = aE.Orientation();
       //
       const TopoDS_Face& aF1=(*(TopoDS_Face*)(&aLF.First()));
       if (aNbF==1) {

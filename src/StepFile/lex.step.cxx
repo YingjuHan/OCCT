@@ -793,6 +793,17 @@ long string in files Henri.stp and 401.stp*/
 // disable GCC warnings in flex code
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunused-function"
+#if (__GNUC__ >= 6)
+  #pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#endif
+#endif
+
+// disable Clang warnings in flex code
+#if defined(__clang__)
+  #pragma clang diagnostic ignored "-Wshorten-64-to-32"
+  #if __has_warning("-Wmisleading-indentation")
+    #pragma clang diagnostic ignored "-Wmisleading-indentation"
+  #endif
 #endif
 
 

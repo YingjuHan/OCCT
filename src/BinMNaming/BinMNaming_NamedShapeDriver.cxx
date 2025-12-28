@@ -298,6 +298,7 @@ void BinMNaming_NamedShapeDriver::Paste (const Handle(TDF_Attribute)& theSource,
     }
     
     i++;
+    (void)i;
   }
 
 }

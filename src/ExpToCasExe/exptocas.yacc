@@ -96,7 +96,11 @@ namespace exptocas {
 #define yylex scanner->lex
 // disable MSVC warnings in bison code
 #ifdef _MSC_VER
-#pragma warning(disable:4244 4800)
+  #pragma warning(disable:4244 4800)
+#endif
+// disable Clang warnings in bison code
+#if defined(__clang__)
+  #pragma clang diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
 /************************************************/

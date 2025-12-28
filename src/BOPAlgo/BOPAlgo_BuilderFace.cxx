@@ -166,8 +166,6 @@ void BOPAlgo_BuilderFace::Perform(const Message_ProgressRange& theRange)
 //=======================================================================
 void BOPAlgo_BuilderFace::PerformShapesToAvoid(const Message_ProgressRange& theRange)
 {
-  Standard_Boolean bFound;
-  Standard_Integer i, iCnt, aNbV, aNbE;
   TopTools_IndexedDataMapOfShapeListOfShape aMVE;
   TopTools_ListIteratorOfListOfShape aIt;
   //
@@ -175,15 +173,14 @@ void BOPAlgo_BuilderFace::PerformShapesToAvoid(const Message_ProgressRange& theR
   //
   Message_ProgressScope aPS(theRange, NULL, 1);
   //
-  iCnt=0;
-  for(;;) {
+  for (Standard_Integer iCnt = 0;; ++iCnt) {
+    (void)iCnt;
     if (UserBreak(aPS))
     {
       return;
     }
 
-    ++iCnt;
-    bFound=Standard_False;
+    bool bFound = false;
     //
     // 1. MEF
     aMVE.Clear();
@@ -194,15 +191,15 @@ void BOPAlgo_BuilderFace::PerformShapesToAvoid(const Message_ProgressRange& theR
         TopExp::MapShapesAndAncestors(aE, TopAbs_VERTEX, TopAbs_EDGE, aMVE);
       }
     }
-    aNbV=aMVE.Extent();
+    const Standard_Integer aNbV = aMVE.Extent();
     //
     // 2. myEdgesToAvoid
-    for (i=1; i<=aNbV; ++i) {
+    for (Standard_Integer i = 1; i <= aNbV; ++i) {
       const TopoDS_Vertex& aV=(*(TopoDS_Vertex *)(&aMVE.FindKey(i)));
       //
       TopTools_ListOfShape& aLE=aMVE.ChangeFromKey(aV);
-      aNbE=aLE.Extent();
-      if (!aNbE) {
+      const Standard_Integer aNbE = aLE.Extent();
+      if (aNbE == 0) {
         continue;
       }
       //
