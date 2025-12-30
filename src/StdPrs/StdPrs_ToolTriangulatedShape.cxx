@@ -27,23 +27,22 @@
 #include <TopoDS.hxx>
 #include <TopoDS_Face.hxx>
 
+#include <algorithm>
+
 //=======================================================================
 //function : IsTriangulated
 //purpose  :
 //=======================================================================
 Standard_Boolean StdPrs_ToolTriangulatedShape::IsTriangulated (const TopoDS_Shape& theShape)
 {
-  TopLoc_Location aLocDummy;
-  for (TopExp_Explorer aFaceIter (theShape, TopAbs_FACE); aFaceIter.More(); aFaceIter.Next())
+  TopExp_Explorer aFaceIter(theShape, TopAbs_FACE);
+  return std::all_of(aFaceIter.begin(), aFaceIter.end(), [](const TopoDS_Shape& theFace)
   {
-    const TopoDS_Face&                aFace = TopoDS::Face (aFaceIter.Current());
-    const Handle(Poly_Triangulation)& aTri  = BRep_Tool::Triangulation (aFace, aLocDummy);
-    if (aTri.IsNull())
-    {
-      return Standard_False;
-    }
-  }
-  return Standard_True;
+    TopLoc_Location aLocDummy;
+    const TopoDS_Face& aFace = TopoDS::Face(theFace);
+    const Handle(Poly_Triangulation)& aTri = BRep_Tool::Triangulation(aFace, aLocDummy);
+    return !aTri.IsNull();
+  });
 }
 
 //=======================================================================
@@ -82,9 +81,8 @@ Standard_Boolean StdPrs_ToolTriangulatedShape::IsClosed (const TopoDS_Shape& the
       if (!BRep_Tool::IsClosed (theShape))
         return Standard_False;
 
-      for (TopoDS_Iterator anIter (theShape); anIter.More(); anIter.Next())
+      for (const TopoDS_Shape& aShape : theShape)
       {
-        const TopoDS_Shape& aShape = anIter.Value();
         if (aShape.IsNull())
         {
           continue;

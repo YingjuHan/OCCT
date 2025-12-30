@@ -94,8 +94,31 @@ public:
   //! none, a null label.
     const TDF_Label Value() const;
 
+public: //! @name interaface for range-based loop
 
+  //! Returns the current label.
+  TDF_Label operator*() const { return Value(); }
 
+  //! Move iterator to next label and return new position.
+  TDF_ChildIterator& operator++()
+  {
+    Next();
+    return *this;
+  }
+
+  //! Move iterator to next label and return previous position.
+  TDF_ChildIterator operator++(int)
+  {
+    TDF_ChildIterator aCopy(*this);
+    Next();
+    return aCopy;
+  }
+
+  //! Equality operator.
+  bool operator==(const TDF_ChildIterator& theOther) const { return myNode == theOther.myNode; }
+
+  //! Non-equality operator.
+  bool operator!=(const TDF_ChildIterator& theOther) const { return myNode != theOther.myNode; }
 
 protected:
 

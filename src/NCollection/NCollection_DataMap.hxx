@@ -51,25 +51,36 @@ public:
   //! STL-compliant typedef for key type
   typedef TheKeyType key_type;
   //! STL-compliant typedef for value type
-  typedef TheItemType value_type;
+  typedef std::pair<const TheKeyType, TheItemType> value_type;
 
 public:
   // **************** Adaptation of the TListNode to the DATAmap
-  class DataMapNode : public NCollection_TListNode<TheItemType>
+  class DataMapNode : public NCollection_TListNode<value_type>
   {
   public:
     //! Constructor with 'Next'
     DataMapNode (const TheKeyType&     theKey, 
                  const TheItemType&    theItem, 
-                 NCollection_ListNode* theNext) :
-      NCollection_TListNode<TheItemType> (theItem, theNext),
-      myKey(theKey)
+                 NCollection_ListNode* theNext)
+    : NCollection_TListNode<value_type> (theKey, theItem, theNext)
     {}
 
     //! Key
     const TheKeyType& Key (void) const
-    { return myKey; }
-    
+    { return this->myValue.first; }
+
+    //! Return value.
+    const TheItemType& Value() const { return this->myValue.second; }
+
+    //! Return value.
+    TheItemType& ChangeValue() { return this->myValue.second; }
+
+    //! Return key+value pair.
+    const value_type& KeyValue() const { return this->myValue; }
+
+    //! Return key+value pair.
+    value_type& ChangeKeyValue() { return this->myValue; }
+
     //! Static deleter to be passed to BaseMap
     static void delNode (NCollection_ListNode * theNode, 
                          Handle(NCollection_BaseAllocator)& theAl)
@@ -77,9 +88,6 @@ public:
       ((DataMapNode *) theNode)->~DataMapNode();
       theAl->Free(theNode);
     }
-
-  private:
-    TheKeyType    myKey;
   };
 
  public:
@@ -117,13 +125,25 @@ public:
       Standard_NoSuchObject_Raise_if(!More(), "NCollection_DataMap::Iterator::Key");  
       return ((DataMapNode *) myNode)->Key();
     }
+    //! Return reference to the current Key+Value pair.
+    value_type& operator*() const
+    {
+      Standard_NoSuchObject_Raise_if(!More(), "NCollection_DataMap::Iterator::operator*");
+      return ((DataMapNode *)myNode)->ChangeKeyValue();
+    }
+    //! Return pointer to the current Key+Value pair.
+    value_type* operator->() const
+    {
+      Standard_NoSuchObject_Raise_if(!More(), "NCollection_DataMap::Iterator::operator->");
+      return &(((DataMapNode *)myNode)->ChangeKeyValue());
+    }
   };
   
   //! Shorthand for a regular iterator type.
-  typedef NCollection_StlIterator<std::forward_iterator_tag, Iterator, TheItemType, false> iterator;
+  typedef NCollection_StlIterator<std::forward_iterator_tag, Iterator, value_type, false> iterator;
 
   //! Shorthand for a constant iterator type.
-  typedef NCollection_StlIterator<std::forward_iterator_tag, Iterator, TheItemType, true> const_iterator;
+  typedef NCollection_StlIterator<std::forward_iterator_tag, Iterator, value_type, true> const_iterator;
 
   //! Returns an iterator pointing to the first element in the map.
   iterator begin() const { return Iterator (*this); }

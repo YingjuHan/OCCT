@@ -176,6 +176,16 @@ Standard_Boolean TestIteration()
     aResult = Standard_False;
   }
 
+  // test range-based loop iterator
+  aVecIter = aVector->begin();
+  for (const auto& anIter : *aCollec)
+  {
+    if (anIter != *aVecIter)
+      aResult = false;
+
+    ++aVecIter;
+  }
+
   delete aVector;
   delete aCollec;
 
@@ -336,6 +346,15 @@ struct Invoker
   }
 };
 
+template <typename T>
+struct InvokerPair
+{
+  void operator()(T& thePair) const
+  {
+    thePair.second *= 2;
+  }
+};
+
 //=======================================================================
 //function : TestParallel
 //purpose  :
@@ -385,7 +404,7 @@ Standard_Boolean TestDataMapParallel()
 
   MapFiller<CollectionType, T>::Perform (&aCollec1, &aCollec2);
 
-  OSD_Parallel::ForEach(aCollec1->begin(), aCollec1->end(), Invoker<T>());
+  OSD_Parallel::ForEach(aCollec1->begin(), aCollec1->end(), InvokerPair<typename CollectionType::value_type>());
 
   // create OCCT-style iterator
   typename CollectionType::Iterator aOccIter (*aCollec2);
@@ -397,7 +416,7 @@ Standard_Boolean TestDataMapParallel()
 
   for (; aStlIter != aCollec1->cend(); ++aStlIter, aOccIter.Next())
   {
-    if (static_cast<T> (2) * aOccIter.Value() != *aStlIter)
+    if (static_cast<T> (2) * aOccIter.Value() != aStlIter->second)
       aResult = Standard_False;
   }
 
@@ -413,11 +432,11 @@ Standard_Boolean TestDataMapParallel()
 }
 
 //=======================================================================
-//function : TestMapIteration
+//function : TestSetIteration
 //purpose  :
 //=======================================================================
 template<class CollectionType, class T>
-Standard_Boolean TestMapIteration()
+Standard_Boolean TestSetIteration()
 {
   CollectionType* aCollec (NULL);
 
@@ -441,6 +460,72 @@ Standard_Boolean TestMapIteration()
   {
     aResult = Standard_False;
   }
+
+  // test range-based loop iterator
+  aStlIter = aCollec->begin();
+  for (const auto& anIter : *aCollec)
+  {
+    if (anIter != *aStlIter)
+      aResult = false;
+
+    ++aStlIter;
+  }
+
+  delete aCollec;
+
+  return aResult;
+}
+
+//=======================================================================
+//function : TestDataMapIteration
+//purpose  :
+//=======================================================================
+template<class CollectionType, class T>
+Standard_Boolean TestDataMapIteration()
+{
+  CollectionType* aCollec(NULL);
+
+  MapFiller<CollectionType, T>::Perform(&aCollec);
+
+  // create OCCT-style iterator
+  typename CollectionType::Iterator aOccIter(*aCollec);
+
+  // create STL-compatible iterator
+  typename CollectionType::const_iterator aStlIter = aCollec->cbegin();
+
+  Standard_Boolean aResult(Standard_True);
+
+  for (; aStlIter != aCollec->cend(); ++aStlIter, aOccIter.Next())
+  {
+    if (aOccIter.Key() != aStlIter->first || aOccIter.Value() != aStlIter->second)
+      aResult = Standard_False;
+  }
+
+  if (aOccIter.More())
+  {
+    aResult = Standard_False;
+  }
+
+  // test range-based loop iterator
+  aStlIter = aCollec->cbegin();
+  for (const auto& anIter : *aCollec)
+  {
+    if (anIter.first != aStlIter->first || anIter.second != aStlIter->second)
+      aResult = false;
+
+    ++aStlIter;
+  }
+
+#if defined(__cplusplus) && (__cplusplus >= 201703L)
+  aStlIter = aCollec->cbegin();
+  for (const auto& [aKeyIter, aValueIter] : *aCollec)
+  {
+    if (aKeyIter != aStlIter->first || aValueIter != aStlIter->second)
+      aResult = false;
+
+    ++aStlIter;
+  }
+#endif
 
   delete aCollec;
 
@@ -607,11 +692,11 @@ static Standard_Integer QANMapStlIterator (Draw_Interpretor&, Standard_Integer, 
 //  TestForwardIterator <NCollection_Map<Standard_Integer> >();
 
   // run-time tests
-  Standard_Boolean aResult = TestMapIteration<NCollection_Map<Standard_Integer>, Standard_Integer>();
+  Standard_Boolean aResult = TestSetIteration<NCollection_Map<Standard_Integer>, Standard_Integer>();
   std::cout << "NCollection_Map<int> Iteration:                 " <<
     (aResult ? "SUCCESS" : "FAIL") << std::endl;
 
-  aResult = TestMapIteration<NCollection_Map<Standard_Real>, Standard_Real>();
+  aResult = TestSetIteration<NCollection_Map<Standard_Real>, Standard_Real>();
   std::cout << "NCollection_Map<double> Iteration:              " <<
     (aResult ? "SUCCESS" : "FAIL") << std::endl;
 
@@ -629,11 +714,11 @@ static Standard_Integer QANIndexedMapStlIterator (Draw_Interpretor&, Standard_In
 //  TestBidirIterator <NCollection_IndexedMap<Standard_Integer> >();
 
   // run-time tests
-  Standard_Boolean aResult = TestMapIteration<NCollection_IndexedMap<Standard_Integer>, Standard_Integer>();
+  Standard_Boolean aResult = TestSetIteration<NCollection_IndexedMap<Standard_Integer>, Standard_Integer>();
   std::cout << "NCollection_IndexedMap<int> Iteration:          " <<
     (aResult ? "SUCCESS" : "FAIL") << std::endl;
 
-  aResult = TestMapIteration<NCollection_IndexedMap<Standard_Real>, Standard_Real>();
+  aResult = TestSetIteration<NCollection_IndexedMap<Standard_Real>, Standard_Real>();
   std::cout << "NCollection_IndexedMap<double> Iteration:       " <<
     (aResult ? "SUCCESS" : "FAIL") << std::endl;
 
@@ -651,11 +736,11 @@ static Standard_Integer QANDataMapStlIterator (Draw_Interpretor&, Standard_Integ
 //  TestBidirIterator <NCollection_DataMap<int, int> >();
 
   // run-time tests
-  Standard_Boolean aResult = TestMapIteration<NCollection_DataMap<Standard_Integer, Standard_Integer>, Standard_Integer>();
+  Standard_Boolean aResult = TestDataMapIteration<NCollection_DataMap<Standard_Integer, Standard_Integer>, Standard_Integer>();
   std::cout << "NCollection_DataMap<int> Iteration:             " <<
     (aResult ? "SUCCESS" : "FAIL") << std::endl;
 
-  aResult = TestMapIteration<NCollection_DataMap<Standard_Real, Standard_Real>, Standard_Real>();
+  aResult = TestDataMapIteration<NCollection_DataMap<Standard_Real, Standard_Real>, Standard_Real>();
   std::cout << "NCollection_DataMap<double> Iteration:          " <<
     (aResult ? "SUCCESS" : "FAIL") << std::endl;
 
@@ -681,11 +766,11 @@ static Standard_Integer QANIndexedDataMapStlIterator (Draw_Interpretor&, Standar
 //  TestBidirIterator <NCollection_IndexedDataMap<int, int> >();
 
   // run-time tests
-  Standard_Boolean aResult = TestMapIteration<NCollection_IndexedDataMap<Standard_Integer, Standard_Integer>, Standard_Integer>();
+  Standard_Boolean aResult = TestDataMapIteration<NCollection_IndexedDataMap<Standard_Integer, Standard_Integer>, Standard_Integer>();
   std::cout << "NCollection_IndexedDataMap<int> Iteration:      " <<
     (aResult ? "SUCCESS" : "FAIL") << std::endl;
 
-  aResult = TestMapIteration<NCollection_IndexedDataMap<Standard_Real, Standard_Real>, Standard_Real>();
+  aResult = TestDataMapIteration<NCollection_IndexedDataMap<Standard_Real, Standard_Real>, Standard_Real>();
   std::cout << "NCollection_IndexedDataMap<double> Iteration:   " <<
     (aResult ? "SUCCESS" : "FAIL") << std::endl;
 

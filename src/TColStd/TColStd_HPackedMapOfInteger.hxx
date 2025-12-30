@@ -41,8 +41,11 @@ public:
   
     TColStd_PackedMapOfInteger& ChangeMap();
 
+  //! Returns iterator pointing for range-based loop.
+  TColStd_PackedMapOfInteger::Iterator begin() { return myMap.begin(); }
 
-
+  //! Returns iterator pointing to nothing for range-based loop.
+  TColStd_PackedMapOfInteger::Iterator end() { return myMap.end(); }
 
   DEFINE_STANDARD_RTTIEXT(TColStd_HPackedMapOfInteger,Standard_Transient)
 

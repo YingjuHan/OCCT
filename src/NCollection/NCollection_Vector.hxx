@@ -118,6 +118,18 @@ public:
       return ((TheItemType* )curBlockV()->DataPtr)[myCurIndex];
     }
 
+    //! Return reference to the current value.
+    TheItemType& operator*() const
+    {
+      return ((TheItemType*)curBlockV()->DataPtr)[myCurIndex];
+    }
+
+    //! Return pointer to the current value.
+    TheItemType* operator->() const
+    {
+      return &(((TheItemType*)curBlockV()->DataPtr)[myCurIndex]);
+    }
+
     //! Performs comparison of two iterators.
     Standard_Boolean IsEqual (const Iterator& theOther) const
     {

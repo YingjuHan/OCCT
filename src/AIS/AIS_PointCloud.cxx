@@ -123,9 +123,9 @@ void AIS_PointCloudOwner::HilightWithColor (const Handle(PrsMgr_PresentationMana
   }
 
   Handle(Graphic3d_ArrayOfPoints) aPoints = new Graphic3d_ArrayOfPoints (aMap->Map().Extent());
-  for (TColStd_PackedMapOfInteger::Iterator aPntIter (aMap->Map()); aPntIter.More(); aPntIter.Next())
+  for (const Standard_Integer aPntIter : *aMap)
   {
-    const gp_Pnt aPnt = anAllPoints->Vertice (aPntIter.Key() + 1);
+    const gp_Pnt aPnt = anAllPoints->Vertice (aPntIter + 1);
     aPoints->AddVertex (aPnt);
   }
 

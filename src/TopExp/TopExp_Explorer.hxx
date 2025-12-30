@@ -142,6 +142,66 @@ public:
   //! Destructor.
   Standard_EXPORT ~TopExp_Explorer();
 
+public:
+
+  //! Returns the current shape.
+  const TopoDS_Shape& operator*() const { return Current(); }
+
+  //! Returns pointer to the current shape.
+  const TopoDS_Shape* operator->() const { return &Current(); }
+
+  //! Move iterator to next subshape and return new position.
+  TopExp_Explorer& operator++()
+  {
+    Next();
+    return *this;
+  }
+
+  //! Move iterator to next subshape and return previous position.
+  TopExp_Explorer operator++(int)
+  {
+    TopExp_Explorer aCopy(*this);
+    Next();
+    return aCopy;
+  }
+
+public:
+  //! Wrapper for range-based loops implementing only minimal set of operations.
+  class StlIterator
+  {
+  public:
+    const TopoDS_Shape& operator*() const { return myIter->Value(); }
+    const TopoDS_Shape* operator->() const { return &myIter->Value(); }
+    StlIterator& operator++()
+    {
+      myIter->Next();
+      if (!myIter->More())
+        myIter = nullptr; // equal to end()
+
+      return *this;
+    }
+    bool operator==(const StlIterator& theOther) const { return myIter == theOther.myIter; }
+    bool operator!=(const StlIterator& theOther) const { return myIter != theOther.myIter; }
+  public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = TopoDS_Shape;
+    using difference_type = ptrdiff_t;
+    using pointer = const TopoDS_Shape*;
+    using reference = const TopoDS_Shape&;
+  private:
+    friend class TopExp_Explorer;
+    StlIterator(TopExp_Explorer* theIter) : myIter((theIter != nullptr && theIter->More()) ? theIter : nullptr) {}
+  private:
+    TopExp_Explorer* myIter = nullptr;
+  };
+
+  //! Returns iterator pointing to this for range-based loop.
+  //! TopExp_Explorer will be modified during the loop.
+  StlIterator begin() { return StlIterator(this); }
+
+  //! Returns iterator pointing to nothing for range-based loop.
+  StlIterator end() { return StlIterator(nullptr); }
+
 private:
 
   TopExp_Stack myStack;

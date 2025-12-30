@@ -342,11 +342,9 @@ Standard_Boolean Image_Diff::SaveDiffImage (Image_PixMap& theDiffImage) const
       case Image_Format_Gray:
       case Image_Format_Alpha:
       {
-        for (TColStd_MapIteratorOfPackedMapOfInteger aPixelIter (aGroup->Map()); aPixelIter.More(); aPixelIter.Next())
-        {
-          Standard_Integer aDiffPixel (aPixelIter.Key());
+        for (const Standard_Integer aDiffPixel : *aGroup)
           theDiffImage.ChangeValue<unsigned char> (UnpackY(aDiffPixel), UnpackX(aDiffPixel)) = 255;
-        }
+
         break;
       }
       case Image_Format_RGB:
@@ -356,20 +354,16 @@ Standard_Boolean Image_Diff::SaveDiffImage (Image_PixMap& theDiffImage) const
       case Image_Format_RGBA:
       case Image_Format_BGRA:
       {
-        for (TColStd_MapIteratorOfPackedMapOfInteger aPixelIter (aGroup->Map()); aPixelIter.More(); aPixelIter.Next())
-        {
-          Standard_Integer aDiffPixel (aPixelIter.Key());
+        for (const Standard_Integer aDiffPixel : *aGroup)
           memset (theDiffImage.ChangeValue<Standard_Byte*> (UnpackY(aDiffPixel), UnpackX(aDiffPixel)), 255, 3);
-        }
+
         break;
       }
       default:
       {
-        for (TColStd_MapIteratorOfPackedMapOfInteger aPixelIter (aGroup->Map()); aPixelIter.More(); aPixelIter.Next())
-        {
-          Standard_Integer aDiffPixel (aPixelIter.Key());
+        for (const Standard_Integer aDiffPixel : *aGroup)
           theDiffImage.SetPixelColor (UnpackX(aDiffPixel), UnpackY(aDiffPixel), aWhiteRgba);
-        }
+
         break;
       }
     }
@@ -477,9 +471,9 @@ Standard_Integer Image_Diff::ignoreBorderEffect()
     }
 
     Standard_Integer aDiffPixel = 0;
-    for (TColStd_MapIteratorOfPackedMapOfInteger aPixelIter (aGroup->Map()); aPixelIter.More(); aPixelIter.Next())
+    for (const Standard_Integer aPixelIter : *aGroup)
     {
-      aDiffPixel = aPixelIter.Key();
+      aDiffPixel = aPixelIter;
       aNeighboursNb = 0;
 
       // pixels of a line have only 1 or 2 neighbour pixels inside the same group

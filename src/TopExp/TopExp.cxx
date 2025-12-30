@@ -38,11 +38,8 @@ void TopExp::MapShapes(const TopoDS_Shape& S,
 		       const TopAbs_ShapeEnum T,
 		       TopTools_IndexedMapOfShape& M)
 {
-  TopExp_Explorer Ex(S,T);
-  while (Ex.More()) {
-    M.Add(Ex.Current());
-    Ex.Next();
-  }
+  for (const TopoDS_Shape& aShapeIter : TopExp_Explorer(S, T))
+    M.Add(aShapeIter);
 }
 
 //=======================================================================
@@ -55,11 +52,8 @@ void TopExp::MapShapes(const TopoDS_Shape& S,
   const Standard_Boolean cumOri, const Standard_Boolean cumLoc)
 {
   M.Add(S);
-  TopoDS_Iterator It(S, cumOri, cumLoc);
-  while (It.More()) {
-    MapShapes(It.Value(),M);
-    It.Next();
-  }
+  for (const TopoDS_Shape& aShapeIter : TopoDS_Iterator(S, cumOri, cumLoc))
+    MapShapes(aShapeIter, M);
 }
 
 //=======================================================================
@@ -71,9 +65,8 @@ void TopExp::MapShapes(const TopoDS_Shape& S,
   const Standard_Boolean cumOri, const Standard_Boolean cumLoc)
 {
   M.Add(S);
-  TopoDS_Iterator It(S, cumOri, cumLoc);
-  for (; It.More(); It.Next())
-    MapShapes(It.Value(), M);
+  for (const TopoDS_Shape& aShapeIter : TopoDS_Iterator(S, cumOri, cumLoc))
+    MapShapes(aShapeIter, M);
 }
 
 //=======================================================================
@@ -251,11 +244,11 @@ void  TopExp::Vertices(const TopoDS_Wire& W,
   Vfirst = Vlast = TopoDS_Vertex(); // nullify
 
   TopTools_MapOfShape vmap;
-  TopoDS_Iterator it(W);
   TopoDS_Vertex   V1,V2;
 
-  while (it.More()) {
-    const TopoDS_Edge& E = TopoDS::Edge(it.Value());
+  for (const TopoDS_Shape& anEdgeIter : W)
+  {
+    const TopoDS_Edge& E = TopoDS::Edge(anEdgeIter);
     if (E.Orientation() == TopAbs_REVERSED)
       TopExp::Vertices(E,V2,V1);
     else
@@ -265,8 +258,6 @@ void  TopExp::Vertices(const TopoDS_Wire& W,
     V2.Orientation(TopAbs_REVERSED);
     if (!vmap.Add(V1)) vmap.Remove(V1);
     if (!vmap.Add(V2)) vmap.Remove(V2);
-
-    it.Next();
   }
   if (vmap.IsEmpty()) { // closed
     TopoDS_Shape aLocalShape = V2.Oriented(TopAbs_FORWARD);

@@ -26,6 +26,7 @@
 #include <Standard_OStream.hxx>
 #include <TDF_AttributeIndexedMap.hxx>
 class TDF_Attribute;
+class TDF_ChildIterator;
 class TDF_Data;
 class Standard_GUID;
 class TDF_IDFilter;
@@ -254,6 +255,14 @@ Standard_OStream& operator<< (Standard_OStream& anOS) const
   //! Dumps the label entry.
   Standard_EXPORT void EntryDump (Standard_OStream& anOS) const;
 
+public:
+
+  //! Create child iterator for range-based loop.
+  //! @code for (const TDF_Label& aChildIter : theParent) {} @endcode
+  Standard_EXPORT TDF_ChildIterator begin() const;
+
+  //! Create empty child iterator for range-based loop.
+  Standard_EXPORT TDF_ChildIterator end() const;
 
 friend class TDF_ChildIterator;
 friend class TDF_Attribute;

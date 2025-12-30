@@ -80,6 +80,91 @@ public:
     return myShape;
   }
 
+public:
+
+  //! Copy constructor.
+  TopoDS_Iterator(const TopoDS_Iterator& theOther) = default;
+
+  //! Move constructor.
+  TopoDS_Iterator(TopoDS_Iterator&& theOther) = default;
+
+  //! Assginment operator.
+  TopoDS_Iterator& operator=(const TopoDS_Iterator& theOther) = default;
+
+  //! Move operator.
+  TopoDS_Iterator& operator=(TopoDS_Iterator&& theOther) = default;
+
+  //! Returns the current subshape.
+  const TopoDS_Shape& operator*() const { return Value(); }
+
+  //! Returns pointer to the current subshape.
+  const TopoDS_Shape* operator->() const { return &Value(); }
+
+  //! Move iterator to next subshape and return new position.
+  TopoDS_Iterator& operator++()
+  {
+    Next();
+    return *this;
+  }
+
+  //! Move iterator to next subshape and return previous position.
+  TopoDS_Iterator operator++(int)
+  {
+    TopoDS_Iterator aCopy(*this);
+    Next();
+    return aCopy;
+  }
+
+  //! Equality operator.
+  bool operator==(const TopoDS_Iterator& theOther) const { return myShapes == theOther.myShapes; }
+
+  //! Non-equality operator.
+  bool operator!=(const TopoDS_Iterator& theOther) const { return !(myShapes == theOther.myShapes); }
+
+public:
+  //! Wrapper for range-based loops implementing only minimal set of operations.
+  class StlIterator
+  {
+  public:
+    const TopoDS_Shape& operator*() const { return myIter->Value(); }
+    const TopoDS_Shape* operator->() const { return &myIter->Value(); }
+    StlIterator& operator++()
+    {
+      myIter->Next();
+      if (!myIter->More())
+        myIter = nullptr; // equal to end()
+
+      return *this;
+    }
+    bool operator==(const StlIterator& theOther) const { return myIter == theOther.myIter; }
+    bool operator!=(const StlIterator& theOther) const { return myIter != theOther.myIter; }
+  public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = TopoDS_Shape;
+    using difference_type = ptrdiff_t;
+    using pointer = const TopoDS_Shape*;
+    using reference = const TopoDS_Shape&;
+  private:
+    friend class TopoDS_Iterator;
+    StlIterator(TopoDS_Iterator* theIter) : myIter((theIter != nullptr && theIter->More()) ? theIter : nullptr) {}
+  private:
+    TopoDS_Iterator* myIter = nullptr;
+  };
+
+  //! Returns iterator pointing to this for range-based loop.
+  //! TopoDS_Iterator will be modified during the loop.
+  StlIterator begin() { return StlIterator(this); }
+
+  //! Returns iterator pointing to nothing for range-based loop.
+  StlIterator end() { return StlIterator(nullptr); }
+
+public: //! @name types for std::iterator
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = TopoDS_Shape;
+  using difference_type = ptrdiff_t;
+  using pointer = const TopoDS_Shape*;
+  using reference = const TopoDS_Shape&;
+
 private:
 
   TopoDS_Shape myShape;

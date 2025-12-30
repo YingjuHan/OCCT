@@ -26,6 +26,8 @@
   #undef Convex
 #endif
 
+class TopoDS_Iterator;
+
 //! Describes a shape which
 //! - references an underlying shape with the potential
 //! to be given a location and an orientation
@@ -304,6 +306,17 @@ public:
 
   //! Dumps the content of me into the stream
   Standard_EXPORT void DumpJson (Standard_OStream& theOStream, Standard_Integer theDepth = -1) const;
+
+public:
+
+  //! Create child iterator for range-based loop.
+  //! TopoDS_Iterator is constructed with default parameters
+  //! (to combine location/orientation with parent+child)
+  //! @code for (const TopoDS_Shape& aSubshapeIter : theParent) {} @endcode
+  Standard_EXPORT TopoDS_Iterator begin() const;
+
+  //! Create empty child iterator for range-based loop.
+  Standard_EXPORT TopoDS_Iterator end() const;
 
 private:
 

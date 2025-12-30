@@ -104,10 +104,30 @@ public:
       Standard_NoSuchObject_Raise_if (!More(), "NCollection_Map::Iterator::Key");  
       return ((MapNode *) myNode)->Value();
     }
+
+    //! Return reference to the current value.
+    const TheKeyType& operator*() const
+    {
+      Standard_NoSuchObject_Raise_if(!More(), "NCollection_Map::Iterator::operator*");
+      return ((MapNode *)myNode)->Value();
+    }
+
+    //! Return pointer to the current value.
+    const TheKeyType* operator->() const
+    {
+      Standard_NoSuchObject_Raise_if(!More(), "NCollection_Map::Iterator::operator->");
+      return &(((MapNode *)myNode)->Value());
+    }
   };
   
   //! Shorthand for a constant iterator type.
   typedef NCollection_StlIterator<std::forward_iterator_tag, Iterator, TheKeyType, true> const_iterator;
+
+  //! Returns a const iterator pointing to the first element in the map.
+  const_iterator begin() const { return Iterator(*this); }
+
+  //! Returns a const iterator referring to the past-the-end element in the map.
+  const_iterator end() const { return Iterator(); }
 
   //! Returns a const iterator pointing to the first element in the map.
   const_iterator cbegin() const { return Iterator (*this); }

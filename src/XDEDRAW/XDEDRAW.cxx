@@ -717,9 +717,9 @@ private:
       {
         aName += "/";
         const TopLoc_Location aLoc = theLoc * XCAFDoc_ShapeTool::GetLocation (theLabel);
-        for (TDF_ChildIterator aChildIter (aRefLabel); aChildIter.More(); aChildIter.Next())
+        for (const TDF_Label& aChildIter : aRefLabel)
         {
-          if (displayLabel (theDI, aChildIter.Value(), aName, aLoc, theOutDispList) == 1)
+          if (displayLabel (theDI, aChildIter, aName, aLoc, theOutDispList) == 1)
           {
             return 1;
           }

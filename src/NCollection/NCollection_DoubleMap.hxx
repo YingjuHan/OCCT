@@ -18,6 +18,7 @@
 
 #include <NCollection_BaseMap.hxx>
 #include <NCollection_TListNode.hxx>
+#include <NCollection_StlIterator.hxx>
 #include <Standard_MultiplyDefined.hxx>
 #include <Standard_NoSuchObject.hxx>
 
@@ -38,6 +39,11 @@ template < class TheKey1Type,
 class NCollection_DoubleMap : public NCollection_BaseMap
 {
 public:
+  //! STL-compliant typedef for key type
+  typedef TheKey1Type key_type;
+  //! STL-compliant typedef for value type
+  typedef std::pair<const TheKey1Type, TheKey2Type> value_type;
+
   //! STL-compliant typedef for key1 type
   typedef TheKey1Type key1_type;
   //! STL-compliant typedef for key2 type
@@ -45,7 +51,7 @@ public:
 
 public:
   // **************** Adaptation of the TListNode to the DOUBLEmap
-  class DoubleMapNode : public NCollection_TListNode<TheKey2Type>
+  class DoubleMapNode : public NCollection_TListNode<value_type>
   {
   public:
     //! Constructor with 'Next'
@@ -53,17 +59,16 @@ public:
                    const TheKey2Type&    theKey2, 
                    NCollection_ListNode* theNext1, 
                    NCollection_ListNode* theNext2) :
-      NCollection_TListNode<TheKey2Type> (theKey2, theNext1),
-      myKey1(theKey1),
+      NCollection_TListNode<value_type> (theKey1, theKey2, theNext1),
       myNext2((DoubleMapNode*)theNext2)
     { 
     }
     //! Key1
     const TheKey1Type& Key1 (void)
-    { return myKey1; }
+    { return this->myValue.first; }
     //! Key2
     const TheKey2Type& Key2 (void)
-    { return this->myValue; }
+    { return this->myValue.second; }
     //! Next2
     DoubleMapNode*& Next2 (void)
     { return myNext2; }
@@ -77,7 +82,6 @@ public:
     }
 
   private:
-    TheKey1Type    myKey1;
     DoubleMapNode *myNext2;
   };
 
@@ -113,9 +117,36 @@ public:
     const TheKey2Type& Value(void) const
     {  
       Standard_NoSuchObject_Raise_if (!More(), "NCollection_DoubleMap::Iterator::Value");
-      return ((DoubleMapNode *) myNode)->Value();
+      return ((DoubleMapNode *) myNode)->Key2();
+    }
+    //! Return reference to the current key1+key2 pair.
+    value_type& operator*() const
+    {
+      Standard_NoSuchObject_Raise_if(!More(), "NCollection_DoubleMap::Iterator::operator*");
+      return ((DoubleMapNode *)myNode)->ChangeValue();
+    }
+    //! Return pointer to the current key1+key2 pair.
+    value_type* operator->() const
+    {
+      Standard_NoSuchObject_Raise_if(!More(), "NCollection_DoubleMap::Iterator::operator->");
+      return &(((DoubleMapNode *)myNode)->ChangeValue());
     }
   };
+
+  //! Shorthand for a constant iterator type.
+  typedef NCollection_StlIterator<std::forward_iterator_tag, Iterator, value_type, true> const_iterator;
+
+  //! Returns a const iterator pointing to the first element in the map.
+  const_iterator begin() const { return Iterator(*this); }
+
+  //! Returns a const iterator referring to the past-the-end element in the map.
+  const_iterator end() const { return Iterator(); }
+
+  //! Returns a const iterator pointing to the first element in the map.
+  const_iterator cbegin() const { return Iterator(*this); }
+
+  //! Returns a const iterator referring to the past-the-end element in the map.
+  const_iterator cend() const { return Iterator(); }
 
  public:
   // ---------- PUBLIC METHODS ------------

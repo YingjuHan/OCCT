@@ -108,6 +108,12 @@ public:
     TheItemType& ChangeValue (void) const 
     { return *myPtrCur; }
 
+    //! Return reference to the current value.
+    TheItemType& operator*() const { return *myPtrCur; }
+
+    //! Return pointer to the current value.
+    TheItemType* operator->() const { return myPtrCur; }
+
     //! Performs comparison of two iterators
     Standard_Boolean IsEqual (const Iterator& theOther) const
     { return myPtrCur == theOther.myPtrCur; }

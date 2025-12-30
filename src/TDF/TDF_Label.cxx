@@ -646,3 +646,21 @@ void TDF_Label::ResumeToNode (const TDF_LabelNodePtr& toNode,
 }
 
 //////////////////end from insertor ///////////////////////////////////////////////////
+
+//=======================================================================
+//function : begin
+//purpose  :
+//=======================================================================
+TDF_ChildIterator TDF_Label::begin() const
+{
+  return TDF_ChildIterator(*this);
+}
+
+//=======================================================================
+//function : end
+//purpose  :
+//=======================================================================
+TDF_ChildIterator TDF_Label::end() const
+{
+  return TDF_ChildIterator();
+}

@@ -86,7 +86,7 @@ protected:
       myIndex(0) {}
     //! Constructor
     Iterator (const NCollection_IndexedMap& theMap) :
-      myMap((NCollection_IndexedMap *) &theMap),
+      myMap(&theMap),
       myIndex(1) {}
     //! Query if the end of collection is reached by iterator
     Standard_Boolean More(void) const
@@ -100,6 +100,18 @@ protected:
       Standard_NoSuchObject_Raise_if(!More(), "NCollection_IndexedMap::Iterator::Value");
       return myMap->FindKey(myIndex);
     }
+    //! Return reference to the current position.
+    const TheKeyType& operator*() const
+    {
+      Standard_NoSuchObject_Raise_if(!More(), "NCollection_IndexedMap::Iterator::operator*");
+      return myMap->FindKey(myIndex);
+    }
+    //! Return pointer to the current position.
+    const TheKeyType* operator->() const
+    {
+      Standard_NoSuchObject_Raise_if(!More(), "NCollection_IndexedMap::Iterator::operator->");
+      return &myMap->FindKey(myIndex);
+    }
 
     //! Performs comparison of two iterators.
     Standard_Boolean IsEqual (const Iterator& theOther) const
@@ -108,12 +120,18 @@ protected:
     }
     
   private:
-    NCollection_IndexedMap * myMap;   // Pointer to the map being iterated
-    Standard_Integer         myIndex; // Current index
+    const NCollection_IndexedMap* myMap;   // Pointer to the map being iterated
+    Standard_Integer              myIndex; // Current index
   };
   
   //! Shorthand for a constant iterator type.
   typedef NCollection_StlIterator<std::forward_iterator_tag, Iterator, TheKeyType, true> const_iterator;
+
+  //! Returns a const iterator pointing to the first element in the map.
+  const_iterator begin() const { return Iterator(*this); }
+
+  //! Returns a const iterator referring to the past-the-end element in the map.
+  const_iterator end() const { return Iterator(); }
 
   //! Returns a const iterator pointing to the first element in the map.
   const_iterator cbegin() const { return Iterator (*this); }

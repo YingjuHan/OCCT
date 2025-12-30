@@ -77,13 +77,13 @@ protected: //! @name methods related to forward STL iterator
   template<bool Condition>
   typename std::enable_if<!Condition, ItemType&>::type Reference() const
   {
-    return myIterator.ChangeValue();
+    return *myIterator;
   }
 
   template<bool Condition>
   typename std::enable_if<Condition, const ItemType&>::type Reference() const
   {
-    return myIterator.Value();
+    return *myIterator;
   }
 
 public: //! @name methods related to forward STL iterator

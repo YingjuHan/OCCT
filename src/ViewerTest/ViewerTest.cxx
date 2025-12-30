@@ -694,15 +694,15 @@ void ViewerTest::Clear()
   }
 
   NCollection_Sequence<Handle(AIS_InteractiveObject)> aListRemoved;
-  for (ViewerTest_DoubleMapIteratorOfDoubleMapOfInteractiveAndName anObjIter (GetMapOfAIS()); anObjIter.More(); anObjIter.Next())
+  for (const auto& anObjIter : GetMapOfAIS())
   {
-    const Handle(AIS_InteractiveObject)& anObj = anObjIter.Key1();
+    const Handle(AIS_InteractiveObject)& anObj = anObjIter.first;
     if (anObj->GetContext() != TheAISContext())
     {
       continue;
     }
 
-    Message::SendInfo() << "Remove " << anObjIter.Key2();
+    Message::SendInfo() << "Remove " << anObjIter.second;
     TheAISContext()->Remove (anObj, Standard_False);
     aListRemoved.Append (anObj);
   }

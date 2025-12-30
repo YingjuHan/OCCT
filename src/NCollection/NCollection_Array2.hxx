@@ -79,6 +79,10 @@ public:
     //! Variable value access
     TheItemType& ChangeValue (void) const
     { return myArray->myStart[myCurrent]; }
+    //! Return reference to the current value.
+    TheItemType& operator*() const { return myArray->myStart[myCurrent]; }
+    //! Return pointer to the current value.
+    TheItemType* operator->() const { return &myArray->myStart[myCurrent]; }
   private:
     Standard_Integer    myCurrent;  //!< Index of the current item
     Standard_Integer    mySize;     //!< Total amount of items

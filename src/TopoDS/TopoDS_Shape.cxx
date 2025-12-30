@@ -19,6 +19,7 @@
 #include <Standard_DomainError.hxx>
 #include <Standard_NullObject.hxx>
 #include <Standard_Dump.hxx>
+#include <TopoDS_Iterator.hxx>
 #include <TopLoc_Location.hxx>
 #include <TopoDS_TShape.hxx>
 
@@ -46,4 +47,23 @@ void TopoDS_Shape::DumpJson (Standard_OStream& theOStream, Standard_Integer theD
   OCCT_DUMP_FIELD_VALUES_DUMPED (theOStream, theDepth, &myLocation)
 
   OCCT_DUMP_FIELD_VALUE_NUMERICAL (theOStream, myOrient)
+}
+
+
+//=======================================================================
+//function : begin
+//purpose  :
+//=======================================================================
+TopoDS_Iterator TopoDS_Shape::begin() const
+{
+  return TopoDS_Iterator(*this);
+}
+
+//=======================================================================
+//function : end
+//purpose  :
+//=======================================================================
+TopoDS_Iterator TopoDS_Shape::end() const
+{
+  return TopoDS_Iterator();
 }

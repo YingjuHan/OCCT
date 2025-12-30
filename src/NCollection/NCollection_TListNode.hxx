@@ -30,6 +30,14 @@ template <class TheItemType> class NCollection_TListNode
   NCollection_TListNode (const TheItemType& theItem,
                          NCollection_ListNode* theNext=NULL) :
     NCollection_ListNode  (theNext), myValue(theItem) { }
+
+  //! Constructor for std::pair<T1,T2>.
+  template<class T1, class T2>
+  NCollection_TListNode (const T1& theItem1,
+                         const T2& theItem2,
+                         NCollection_ListNode* theNext)
+  : NCollection_ListNode  (theNext), myValue(theItem1, theItem2) { }
+
   //! Constant value access
   const TheItemType& Value () const { return myValue; }
   //! Variable value access

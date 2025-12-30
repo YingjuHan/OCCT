@@ -80,6 +80,10 @@ public:
     //! Variable value access
     TheItemType& ChangeValue (void) const
     { return ((Node *)myCurrent)->ChangeValue(); }
+    //! Return reference to the current value.
+    TheItemType& operator*() const { return ((Node *)myCurrent)->ChangeValue(); }
+    //! Return pointer to the current value.
+    TheItemType* operator->() const { return &(((Node *)myCurrent)->ChangeValue()); }
     //! Performs comparison of two iterators.
     Standard_Boolean IsEqual (const Iterator& theOther) const
     {

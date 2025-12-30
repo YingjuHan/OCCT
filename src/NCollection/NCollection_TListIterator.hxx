@@ -55,6 +55,14 @@ template <class TheItemType> class NCollection_TListIterator
   //! Non-const Value access
   TheItemType& ChangeValue (void) const
   { return ((NCollection_TListNode<TheItemType> *)myCurrent)->ChangeValue(); }
+
+  //! Return reference to the current value.
+  TheItemType& operator*() const
+  { return ((NCollection_TListNode<TheItemType> *)myCurrent)->ChangeValue(); }
+
+  //! Return pointer to the current value.
+  TheItemType* operator->() const
+  { return &(((NCollection_TListNode<TheItemType> *)myCurrent)->ChangeValue()); }
 };
 
 #endif

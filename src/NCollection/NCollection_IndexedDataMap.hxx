@@ -53,11 +53,11 @@ public:
   //! STL-compliant typedef for key type
   typedef TheKeyType key_type;
   //! STL-compliant typedef for value type
-  typedef TheItemType value_type;
+  typedef std::pair<const TheKeyType, TheItemType> value_type;
 
 private:
   //!    Adaptation of the TListNode to the INDEXEDDatamap
-  class IndexedDataMapNode : public NCollection_TListNode<TheItemType>
+  class IndexedDataMapNode : public NCollection_TListNode<value_type>
   {
   public:
     //! Constructor with 'Next'
@@ -65,15 +65,26 @@ private:
                         const Standard_Integer theIndex,
                         const TheItemType&     theItem,
                         NCollection_ListNode*  theNext1)
-    : NCollection_TListNode<TheItemType>(theItem,theNext1),
-      myKey1  (theKey1),
+    : NCollection_TListNode<value_type>(theKey1, theItem, theNext1),
       myIndex (theIndex)
     { 
     }
     //! Key1
-    TheKeyType& Key1() { return myKey1; }
+    const TheKeyType& Key1() const { return this->myValue.first; }
+    //! Key1
+    TheKeyType& ChangeKey1() { return const_cast<TheKeyType&>(this->myValue.first); }
     //! Index
-    Standard_Integer& Index() { return myIndex; }
+    const Standard_Integer& Index() const { return myIndex; }
+    //! Index
+    Standard_Integer& ChangeIndex() { return myIndex; }
+    //! Return current value.
+    const TheItemType& Value() const { return this->myValue.second; }
+    //! Return current value.
+    TheItemType& ChangeValue() { return this->myValue.second; }
+    //! Return current key+value pair.
+    const value_type& KeyValue() const { return this->myValue; }
+    //! Return current key+value pair.
+    value_type& ChangeKeyValue() { return this->myValue; }
 
     //! Static deleter to be passed to BaseList
     static void delNode (NCollection_ListNode * theNode, 
@@ -83,7 +94,6 @@ private:
       theAl->Free(theNode);
     }
   private:
-    TheKeyType       myKey1;
     Standard_Integer myIndex;
   };
 
@@ -131,6 +141,22 @@ private:
       return myMap->FindKey(myIndex);
     }
 
+    //! Return reference to current key+value pair.
+    value_type& operator*() const
+    {
+      Standard_NoSuchObject_Raise_if(!More(), "NCollection_IndexedDataMap::Iterator::operator*");
+      IndexedDataMapNode* aNode = (IndexedDataMapNode*)myMap->myData2[myIndex - 1];
+      return aNode->ChangeKeyValue();
+    }
+
+    //! Return pointer to current key+value pair.
+    value_type* operator->() const
+    {
+      Standard_NoSuchObject_Raise_if(!More(), "NCollection_IndexedDataMap::Iterator::operator->");
+      IndexedDataMapNode* aNode = (IndexedDataMapNode*)myMap->myData2[myIndex - 1];
+      return &aNode->ChangeKeyValue();
+    }
+
     //! Performs comparison of two iterators.
     Standard_Boolean IsEqual (const Iterator& theOther) const
     {
@@ -144,10 +170,10 @@ private:
   };
   
   //! Shorthand for a regular iterator type.
-  typedef NCollection_StlIterator<std::forward_iterator_tag, Iterator, TheItemType, false> iterator;
+  typedef NCollection_StlIterator<std::forward_iterator_tag, Iterator, value_type, false> iterator;
 
   //! Shorthand for a constant iterator type.
-  typedef NCollection_StlIterator<std::forward_iterator_tag, Iterator, TheItemType, true> const_iterator;
+  typedef NCollection_StlIterator<std::forward_iterator_tag, Iterator, value_type, true> const_iterator;
 
   //! Returns an iterator pointing to the first element in the map.
   iterator begin() const { return Iterator (*this); }
@@ -314,7 +340,7 @@ private:
           throw Standard_DomainError ("NCollection_IndexedDataMap::Substitute : "
                                       "Attempt to substitute existing key");
         }
-        p->Key1() = theKey1;
+        p->ChangeKey1() = theKey1;
         p->ChangeValue() = theItem;
         return;
       }
@@ -337,7 +363,7 @@ private:
     }
 
     // update the node
-    p->Key1()  = theKey1;
+    p->ChangeKey1()  = theKey1;
     p->ChangeValue() = theItem;
     p->Next()  = myData1[iK1];
     myData1[iK1] = p;
@@ -357,7 +383,7 @@ private:
 
     IndexedDataMapNode* aP1 = (IndexedDataMapNode* )myData2[theIndex1 - 1];
     IndexedDataMapNode* aP2 = (IndexedDataMapNode* )myData2[theIndex2 - 1];
-    std::swap (aP1->Index(), aP2->Index());
+    std::swap (aP1->ChangeIndex(), aP2->ChangeIndex());
     myData2[theIndex2 - 1] = aP1;
     myData2[theIndex1 - 1] = aP2;
   }

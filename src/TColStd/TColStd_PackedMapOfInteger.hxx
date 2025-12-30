@@ -210,10 +210,41 @@ public:
         myKey = TColStd_intMapNode_findNext (myNode, myIntMask);
         if (myIntMask != ~0u)
         {
-          break;
+          return;
         }
       }
+      myKey = 0; // for compatison in range-based loop iterator
     }
+
+    //! Move to the next position.
+    Iterator& operator++()
+    {
+      Next();
+      return *this;
+    }
+
+    //! Move to the next position and return previous one.
+    Iterator operator++(int)
+    {
+      Iterator aCopy(*this);
+      Next();
+      return aCopy;
+    }
+
+    //! Return reference to current position.
+    Standard_Integer operator*() const { return myKey; }
+
+    //! Equality operator.
+    bool operator==(const Iterator& theOther) const { return myNode == theOther.myNode && myKey == theOther.myKey; }
+
+    //! Inequality operator.
+    bool operator!=(const Iterator& theOther) const { return myNode != theOther.myNode || myKey != theOther.myKey; }
+  public: // interface for std::iterator
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = Standard_Integer;
+    using difference_type = ptrdiff_t;
+    using pointer = Standard_Integer;
+    using reference = Standard_Integer;
   private:
     //! Go to the next bucket in the map.
     void next()
@@ -434,7 +465,15 @@ public:
   Standard_EXPORT Standard_Boolean HasIntersection (const TColStd_PackedMapOfInteger&) const;
 
   //!@}
-  
+
+ public:
+
+  //! Returns iterator pointing for range-based loop.
+  Iterator begin() { return Iterator(*this); }
+
+  //! Returns iterator pointing to nothing for range-based loop.
+  Iterator end() { return Iterator(); }
+
  protected:
 
    //! Returns TRUE if resizing the map should be considered.
