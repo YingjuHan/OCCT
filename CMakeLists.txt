@@ -820,17 +820,13 @@ else()
   OCCT_CHECK_AND_UNSET ("3RDPARTY_DOT_EXECUTABLE")
 endif()
 
-# bison
+# bison and flex
 if (BUILD_YACCLEX)
   OCCT_INCLUDE_CMAKE_FILE ("adm/cmake/bison")
+  OCCT_INCLUDE_CMAKE_FILE ("adm/cmake/flex")
+  add_custom_target (yacclex)
 else()
   OCCT_CHECK_AND_UNSET ("3RDPARTY_BISON_EXECUTABLE")
-endif()
-
-# flex
-if (BUILD_YACCLEX)
-  OCCT_INCLUDE_CMAKE_FILE ("adm/cmake/flex")
-else()
   OCCT_CHECK_AND_UNSET ("3RDPARTY_FLEX_EXECUTABLE")
 endif()
 

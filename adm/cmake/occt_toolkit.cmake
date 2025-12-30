@@ -141,7 +141,16 @@ foreach (OCCT_PACKAGE ${USED_PACKAGES})
           FLEX_TARGET  (Scanner_${CURRENT_FLEX_FILE_NAME} ${CURRENT_FLEX_FILE} "${FLEX_BISON_TARGET_DIR}/${FLEX_OUTPUT_FILE}"
                         COMPILE_FLAGS "-P${CURRENT_FLEX_FILE_NAME} -L")
           ADD_FLEX_BISON_DEPENDENCY (Scanner_${CURRENT_FLEX_FILE_NAME} Parser_${CURRENT_BISON_FILE_NAME})
-           
+          add_custom_target (yacclex-${PROJECT_NAME}
+                             SOURCES ${FLEX_BISON_TARGET_DIR}/${BISON_OUTPUT_FILE} ${FLEX_BISON_TARGET_DIR}/${FLEX_OUTPUT_FILE})
+          if (UNIX)
+            # workaround for flex 2.6.4
+            add_custom_command (TARGET yacclex-${PROJECT_NAME} POST_BUILD
+                                COMMAND sed -i "/^#line/d" ${FLEX_BISON_TARGET_DIR}/${FLEX_OUTPUT_FILE}
+                                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                                VERBATIM)
+          endif()
+          add_dependencies (yacclex yacclex-${PROJECT_NAME})
           list (APPEND SOURCE_FILES ${BISON_OUTPUT_FILE} ${FLEX_OUTPUT_FILE})
         endif()
       endforeach()
