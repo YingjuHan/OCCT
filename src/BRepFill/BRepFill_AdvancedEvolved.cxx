@@ -893,11 +893,12 @@ void BRepFill_AdvancedEvolved::RemoveExcessSolids(const TopTools_ListOfShape& th
       return;
     }
 
+    const TopoDS_Solid aSolid1 = TopoDS::Solid(anExpSo.Current());
     anExpSo.Next();
     if (!anExpSo.More())
     {
       // Only one solid has been generated
-      myResult = TopoDS::Solid(anExpSo.Current());
+      myResult = aSolid1;
       return;
     }
 

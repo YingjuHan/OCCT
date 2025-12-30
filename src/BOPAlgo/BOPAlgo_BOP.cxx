@@ -1165,19 +1165,19 @@ void BOPAlgo_BOP::BuildSolid(const Message_ProgressRange& theRange)
   TopoDS_Shape aResult;
   BOPTools_AlgoTools::MakeContainer(TopAbs_COMPOUND, aResult);
   //
-
-  aIt.Initialize(aRC);
-  if (!aIt.More()) {
+  const Standard_Integer aNbChildren = aRC.NbChildren();
+  if (aNbChildren == 0)
+  {
     // no solids in the result
     myShape = aRC;
     return;
   }
-  //
-  const TopoDS_Shape& aSol1 = aIt.Value();
-  aIt.Next();
-  //
-  // optimization for one solid in the result
-  if (!aIt.More()) {
+  else if (aNbChildren == 1)
+  {
+    // optimization for one solid in the result
+    aIt.Initialize(aRC);
+    const TopoDS_Shape& aSol1 = aIt.Value();
+
     TopoDS_Shape aCS;
     BOPTools_AlgoTools::MakeContainer(TopAbs_COMPSOLID, aCS);
     aBB.Add(aCS, aSol1);

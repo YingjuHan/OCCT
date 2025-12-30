@@ -232,10 +232,10 @@ static Standard_Boolean FindMostSharedShell (
   TopoDS_Iterator aShellIter (theSolid);
   for (; aShellIter.More(); aShellIter.Next())
   {
-    const TopoDS_Shape& aSolidShell = aShellIter.Value();
-    if (aSolidShell.ShapeType() != TopAbs_SHELL) continue;
+    const TopoDS_Shape& aSolidShellTmp = aShellIter.Value();
+    if (aSolidShellTmp.ShapeType() != TopAbs_SHELL) continue;
 
-    theOtherSolidShells.Append (aSolidShell);
+    const TopoDS_Shape& aSolidShell = theOtherSolidShells.Append(aSolidShellTmp);
 
     TopoDS_Iterator aFaceIter (aSolidShell);
     for (; aFaceIter.More(); aFaceIter.Next())

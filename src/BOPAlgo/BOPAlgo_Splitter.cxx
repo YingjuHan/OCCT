@@ -116,16 +116,10 @@ void BOPAlgo_Splitter::BuildResult(const TopAbs_ShapeEnum theType)
     // If there is only one argument shape and it has been modified into
     // a single shape, or has not been modified at all, the result shape
     // has to be overwritten to avoid the unnecessary enclosure into compound.
-    if (myArguments.Extent() == 1)
+    if (myArguments.Extent() == 1
+     && myShape.NbChildren() == 1)
     {
-      TopoDS_Iterator it(myShape);
-      if (it.More())
-      {
-        const TopoDS_Shape& aSFirst = it.Value();
-        it.Next();
-        if (!it.More())
-          myShape = aSFirst;
-      }
+      myShape = TopoDS_Iterator(myShape).Value();
     }
   }
 }
