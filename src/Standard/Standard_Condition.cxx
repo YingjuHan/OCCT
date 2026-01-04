@@ -138,7 +138,7 @@ bool Standard_Condition::Wait (int theTimeMilliseconds)
     struct timespec aTimeout;
     conditionGetRealTime (aNow);
     aTimeout.tv_sec  = (theTimeMilliseconds / 1000);
-    aTimeout.tv_nsec = (theTimeMilliseconds - aTimeout.tv_sec * 1000) * 1000000;
+    aTimeout.tv_nsec = long((theTimeMilliseconds - aTimeout.tv_sec * 1000) * 1000000);
     if (aTimeout.tv_nsec > 1000000000)
     {
       aTimeout.tv_sec  += 1;

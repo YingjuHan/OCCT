@@ -24,10 +24,17 @@
 //! There is no way to prevent this warning at OCCT level (until safer APIs is introduced), thus
 //! suppressing it is the only feasible way to avoid it. As this warning still can point out broken
 //! places, it should be suppressed only locally, where usage of function cast has been verified.
-#if defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__)
-#  if (__GNUC__ > 8) || ((__GNUC__ == 8) && (__GNUC_MINOR__ >= 1))
-#    pragma GCC diagnostic ignored "-Wcast-function-type"
-#  endif
+#if defined(__clang__)
+  #if __has_warning("-Wcast-function-type")
+    #pragma clang diagnostic ignored "-Wcast-function-type"
+  #endif
+  #if __has_warning("-Wcast-function-type-mismatch")
+    #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
+  #endif
+#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__)
+  #if (__GNUC__ > 8) || ((__GNUC__ == 8) && (__GNUC_MINOR__ >= 1))
+    #pragma GCC diagnostic ignored "-Wcast-function-type"
+  #endif
 #endif
 
 #endif // _Standard_WarningDisableFunctionCast_HeaderFile
