@@ -1861,7 +1861,23 @@ void OpenGl_Context::WindowBufferBits (Graphic3d_Vec4i& theColorBits,
   else
   {
   #if defined(HAVE_EGL)
-    //
+    void* anEglCfg = nullptr;
+    if ((EGLSurface )myWindow != EGL_NO_SURFACE)
+    {
+      EGLint anEglCfgId = 0, aNbConfigs = 0;
+      eglQuerySurface((EGLDisplay )myDisplay, (EGLSurface )myWindow, EGL_CONFIG_ID, &anEglCfgId);
+      const EGLint aConfigAttribs[] = { EGL_CONFIG_ID, anEglCfgId, EGL_NONE };
+      eglChooseConfig((EGLDisplay )myDisplay, aConfigAttribs, &anEglCfg, 1, &aNbConfigs);
+    }
+    if (anEglCfg != nullptr)
+    {
+      eglGetConfigAttrib((EGLDisplay )myDisplay, anEglCfg, EGL_RED_SIZE, &theColorBits.r());
+      eglGetConfigAttrib((EGLDisplay )myDisplay, anEglCfg, EGL_GREEN_SIZE, &theColorBits.g());
+      eglGetConfigAttrib((EGLDisplay )myDisplay, anEglCfg, EGL_BLUE_SIZE, &theColorBits.b());
+      eglGetConfigAttrib((EGLDisplay )myDisplay, anEglCfg, EGL_ALPHA_SIZE, &theColorBits.a());
+      eglGetConfigAttrib((EGLDisplay )myDisplay, anEglCfg, EGL_DEPTH_SIZE, &theDepthStencilBits[0]);
+      eglGetConfigAttrib((EGLDisplay )myDisplay, anEglCfg, EGL_STENCIL_SIZE, &theDepthStencilBits[1]);
+    }
   #elif defined(_WIN32)
     const int aPixFrmtIndex = GetPixelFormat ((HDC )myDisplay);
     PIXELFORMATDESCRIPTOR aFormat;

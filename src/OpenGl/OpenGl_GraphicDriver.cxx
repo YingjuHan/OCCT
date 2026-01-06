@@ -363,13 +363,42 @@ Standard_Boolean OpenGl_GraphicDriver::InitContext()
     myEglContext = (Aspect_RenderingContext )eglCreateContext ((EGLDisplay )myEglDisplay, myEglConfig, EGL_NO_CONTEXT, anEglCtxAttribs2);
   }
 #else
-  EGLint* anEglCtxAttribs = NULL;
   if (eglBindAPI (EGL_OPENGL_API) != EGL_TRUE)
   {
     ::Message::SendFail ("Error: EGL does not provide OpenGL client");
     return Standard_False;
   }
-  myEglContext = (Aspect_RenderingContext )eglCreateContext ((EGLDisplay )myEglDisplay, myEglConfig, EGL_NO_CONTEXT, anEglCtxAttribs);
+
+  if (!myCaps->contextCompatible || myCaps->contextDebug)
+  {
+    EGLint aCtxAttribs[] =
+    {
+      EGL_CONTEXT_MAJOR_VERSION, 3,
+      EGL_CONTEXT_MINOR_VERSION, 2,
+      EGL_CONTEXT_OPENGL_PROFILE_MASK, myCaps->contextCompatible ? EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT : EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
+      EGL_CONTEXT_OPENGL_DEBUG, myCaps->contextDebug ? EGL_TRUE : EGL_FALSE,
+      EGL_NONE, EGL_NONE
+    };
+
+    // try to create the core profile of highest OpenGL version
+    for (int aLowVer4 = 5; aLowVer4 >= 0 && (EGLContext )myEglContext == EGL_NO_CONTEXT; --aLowVer4)
+    {
+      aCtxAttribs[1] = 4;
+      aCtxAttribs[3] = aLowVer4;
+      myEglContext = (Aspect_RenderingContext )eglCreateContext((EGLDisplay )myEglDisplay, myEglConfig, EGL_NO_CONTEXT, aCtxAttribs);
+    }
+    for (int aLowVer3 = 3; aLowVer3 >= 2 && (EGLContext )myEglContext == EGL_NO_CONTEXT; --aLowVer3)
+    {
+      aCtxAttribs[1] = 3;
+      aCtxAttribs[3] = aLowVer3;
+      myEglContext = (Aspect_RenderingContext )eglCreateContext((EGLDisplay )myEglDisplay, myEglConfig, EGL_NO_CONTEXT, aCtxAttribs);
+    }
+  }
+
+  if ((EGLContext )myEglContext == EGL_NO_CONTEXT)
+  {
+    myEglContext = (Aspect_RenderingContext )eglCreateContext ((EGLDisplay )myEglDisplay, myEglConfig, EGL_NO_CONTEXT, nullptr);
+  }
 #endif
 
   if ((EGLContext )myEglContext == EGL_NO_CONTEXT)
