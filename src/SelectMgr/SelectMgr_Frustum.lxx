@@ -231,7 +231,7 @@ Standard_Boolean SelectMgr_Frustum<N>::hasSegmentOverlap (const gp_Pnt& theStart
 {
   const gp_XYZ& aDir = theEndPnt.XYZ() - theStartPnt.XYZ();
   if (aDir.Modulus() < Precision::Confusion())
-    return Standard_True;
+    return hasPointOverlap(theStartPnt);
 
   const Standard_Integer anIncFactor = (Camera()->IsOrthographic() && N == 4) ? 2 : 1;
   for (Standard_Integer aPlaneIdx = 0; aPlaneIdx < N + 1; aPlaneIdx += anIncFactor)
