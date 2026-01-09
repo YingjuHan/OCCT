@@ -952,7 +952,12 @@ void Draw_Viewer::Select (Standard_Integer& theId,
     return;
   }
 
-  theId = theX = theY = theButton = 0;
+  theX = theY = theButton = 0;
+  // theId is the output parameter when theToWait==true,
+  // and the input parameter when theToWait==false
+  if (theToWait)
+    theId = -1;
+
   Standard_Boolean hasView = Standard_False;
   for (int aViewIter = 0; aViewIter < MAXVIEW; ++aViewIter)
   {
