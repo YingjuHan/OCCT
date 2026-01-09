@@ -48,7 +48,7 @@ public:
   //! Should be set before initialization.
   void SetPatchDistance (const float thePatchDistMax) { myPatchDistance = thePatchDistMax; }
 
-  //! Initialize the sensitive object from triangualtion.
+  //! Initialize the sensitive object from triangulation.
   //! The sub-triangulation can be specified by arguments theIndexLower and theIndexUpper
   //! (these are for iterating theIndices, not to restrict the actual index values!).
   //! @param theVerts        attributes array containing Graphic3d_TOA_POS with type Graphic3d_TOD_VEC3 or Graphic3d_TOD_VEC2
@@ -66,7 +66,7 @@ public:
                                           const bool                           theToEvalMinMax = true,
                                           const Standard_Integer               theNbGroups = 1);
 
-  //! Initialize the sensitive object from triangualtion.
+  //! Initialize the sensitive object from triangulation.
   //! @param theVerts        attributes array containing Graphic3d_TOA_POS with type Graphic3d_TOD_VEC3 or Graphic3d_TOD_VEC2
   //! @param theIndices      index array defining triangulation
   //! @param theInitLoc      location
@@ -130,6 +130,41 @@ public:
   {
     const Standard_Integer anUpper = !theVerts.IsNull() ? (theVerts->NbElements - 1) : 0;
     return InitPoints (theVerts, Handle(Graphic3d_IndexBuffer)(), theInitLoc, 0, anUpper, theToEvalMinMax, theNbGroups);
+  }
+
+  //! Initialize the sensitive object from segments.
+  //! The sub-range can be specified by arguments theIndexLower and theIndexUpper
+  //! (these are for iterating theIndices, not to restrict the actual index values!).
+  //! @param theVerts        attributes array containing Graphic3d_TOA_POS with type Graphic3d_TOD_VEC3 or Graphic3d_TOD_VEC2
+  //! @param theIndices      index array defining line segments
+  //! @param theInitLoc      location
+  //! @param theIndexLower   the theIndices range - first value (inclusive), starting from 0 and multiple by 2
+  //! @param theIndexUpper   the theIndices range - last  value (inclusive), upto theIndices->NbElements-1 and multiple by 2
+  //! @param theToEvalMinMax compute bounding box within initialization
+  //! @param theNbGroups     number of groups to split the vertex array into several parts
+  Standard_EXPORT bool InitSegments (const Handle(Graphic3d_Buffer)&      theVerts,
+                                     const Handle(Graphic3d_IndexBuffer)& theIndices,
+                                     const TopLoc_Location&               theInitLoc,
+                                     const Standard_Integer               theIndexLower,
+                                     const Standard_Integer               theIndexUpper,
+                                     const bool                           theToEvalMinMax = true,
+                                     const Standard_Integer               theNbGroups = 1);
+
+  //! Initialize the sensitive object from segments.
+  //! @param theVerts        attributes array containing Graphic3d_TOA_POS with type Graphic3d_TOD_VEC3 or Graphic3d_TOD_VEC2
+  //! @param theIndices      index array defining line segments
+  //! @param theInitLoc      location
+  //! @param theToEvalMinMax compute bounding box within initialization
+  //! @param theNbGroups     number of groups to split the vertex array into several parts
+  bool InitSegments (const Handle(Graphic3d_Buffer)&      theVerts,
+                     const Handle(Graphic3d_IndexBuffer)& theIndices,
+                     const TopLoc_Location&               theInitLoc,
+                     const bool                           theToEvalMinMax = true,
+                     const Standard_Integer               theNbGroups = 1)
+  {
+    const Standard_Integer anUpper = !theIndices.IsNull() ? (theIndices->NbElements - 1)
+                                                          : (!theVerts.IsNull() ? (theVerts->NbElements - 1) : 0);
+    return InitSegments (theVerts, theIndices, theInitLoc, 0, anUpper, theToEvalMinMax, theNbGroups);
   }
 
   //! Assign new not transformed bounding box.

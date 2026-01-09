@@ -3622,29 +3622,15 @@ void MyPArrayObject::ComputeSelection (const Handle(SelectMgr_Selection)& theSel
   if (Handle(Graphic3d_ArrayOfTriangles) aTris = Handle(Graphic3d_ArrayOfTriangles)::DownCast (myPArray))
   {
     Handle(Select3D_SensitivePrimitiveArray) aSensitive = new Select3D_SensitivePrimitiveArray (anOwner);
-    aSensitive->InitTriangulation (myPArray->Attributes(), myPArray->Indices(), TopLoc_Location(), true);
+    aSensitive->InitTriangulation (aTris->Attributes(), aTris->Indices(), TopLoc_Location(), true);
     theSelection->Add (aSensitive);
   }
   else if (Handle(Graphic3d_ArrayOfSegments) aSegs = Handle(Graphic3d_ArrayOfSegments)::DownCast (myPArray))
   {
-    if (aSegs->EdgeNumber() > 0)
-    {
-      for (Standard_Integer aPntIter = 1; aPntIter <= aSegs->EdgeNumber(); aPntIter += 2)
-      {
-        Handle(Select3D_SensitiveSegment) aSeg = new Select3D_SensitiveSegment (anOwner, aSegs->Vertice (aSegs->Edge (aPntIter)), aSegs->Vertice (aSegs->Edge (aPntIter + 1)));
-        aSeg->SetSensitivityFactor (4);
-        theSelection->Add (aSeg);
-      }
-    }
-    else
-    {
-      for (Standard_Integer aPntIter = 1; aPntIter <= aSegs->VertexNumber(); aPntIter += 2)
-      {
-        Handle(Select3D_SensitiveSegment) aSeg = new Select3D_SensitiveSegment (anOwner, aSegs->Vertice (aPntIter), aSegs->Vertice (aPntIter + 1));
-        aSeg->SetSensitivityFactor (4);
-        theSelection->Add (aSeg);
-      }
-    }
+    Handle(Select3D_SensitivePrimitiveArray) aSensitive = new Select3D_SensitivePrimitiveArray (anOwner);
+    aSensitive->SetSensitivityFactor (4);
+    aSensitive->InitSegments (aSegs->Attributes(), aSegs->Indices(), TopLoc_Location(), true);
+    theSelection->Add (aSensitive);
   }
   else
   {
