@@ -1544,7 +1544,7 @@ void ViewerTest::RemoveView (const Handle(V3d_View)& theView,
     return;
   }
 
-  const TCollection_AsciiString& aViewName = ViewerTest_myViews.Find2 (theView);
+  const TCollection_AsciiString aViewName = ViewerTest_myViews.Find2 (theView);
   RemoveView (aViewName, theToRemoveContext);
 }
 
