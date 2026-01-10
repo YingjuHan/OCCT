@@ -15,6 +15,7 @@
 #ifndef _ViewerTest_HeaderFile
 #define _ViewerTest_HeaderFile
 
+#include <Aspect_Drawable.hxx>
 #include <Aspect_TypeOfLine.hxx>
 #include <Aspect_TypeOfMarker.hxx>
 #include <Aspect_TypeOfTriedronPosition.hxx>
@@ -180,6 +181,9 @@ public:
   Standard_EXPORT static void ResetEventManager();
 
   Standard_EXPORT static Handle(ViewerTest_EventManager) CurrentEventManager();
+
+  //! Find active event manager for specified native window.
+  Standard_EXPORT static Handle(ViewerTest_EventManager) GetEventManagerForWindow(Aspect_Drawable theWin);
 
   Standard_EXPORT static void RemoveSelected();
 

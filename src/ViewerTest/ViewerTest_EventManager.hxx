@@ -61,6 +61,9 @@ public:
   //! Setup or adjust window callbacks.
   Standard_EXPORT static void SetupWindowCallbacks (const Handle(Aspect_Window)& theWin);
 
+  //! Return view.
+  const Handle(V3d_View)& View() const { return myView; }
+
   //! Return interactive context.
   const Handle(AIS_InteractiveContext)& Context() const { return myCtx; }
 

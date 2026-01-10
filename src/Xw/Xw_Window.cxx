@@ -653,7 +653,7 @@ bool Xw_Window::ProcessMessage (Aspect_WindowInputListener& theListener,
     case KeyPress:
     case KeyRelease:
     {
-      XKeyEvent*   aKeyEvent = (XKeyEvent* )&theMsg;
+      XKeyEvent*   aKeyEvent = &theMsg.xkey;
       const KeySym aKeySym = XLookupKeysym (aKeyEvent, 0);
       const Aspect_VKey aVKey = Xw_Window::VirtualKeyFromNative (aKeySym);
       if (aVKey != Aspect_VKey_UNKNOWN)

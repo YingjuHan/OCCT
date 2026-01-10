@@ -177,6 +177,7 @@ static void SetDisplayConnection (const Handle(Aspect_DisplayConnection)& theDis
 }
 
 NCollection_DoubleMap <TCollection_AsciiString, Handle(V3d_View)> ViewerTest_myViews;
+static NCollection_DoubleMap <TCollection_AsciiString, Handle(ViewerTest_EventManager)> ViewerTest_myEventManagers;
 static NCollection_DoubleMap <TCollection_AsciiString, Handle(AIS_InteractiveContext)>  ViewerTest_myContexts;
 static NCollection_DoubleMap <TCollection_AsciiString, Handle(Graphic3d_GraphicDriver)> ViewerTest_myDrivers;
 
@@ -427,17 +428,57 @@ Standard_Boolean IsWindowOverlapped (const Standard_Integer thePxLeft,
 void ViewerTest::RemoveViewName (const TCollection_AsciiString& theName)
 {
   ViewerTest_myViews.UnBind1 (theName);
+  ViewerTest_myEventManagers.UnBind1 (theName);
 }
 
 void ViewerTest::InitViewName (const TCollection_AsciiString& theName,
                                const Handle(V3d_View)& theView)
 {
   ViewerTest_myViews.Bind (theName, theView);
+  Handle(ViewerTest_EventManager) aViewMgr = new ViewerTest_EventManager (theView, Handle(AIS_InteractiveContext)());
+  ViewerTest_myEventManagers.Bind (theName, aViewMgr);
 }
 
 TCollection_AsciiString ViewerTest::GetCurrentViewName ()
 {
   return ViewerTest_myViews.Find2( ViewerTest::CurrentView());
+}
+
+void ViewerTest::ResetEventManager()
+{
+  if (!ViewerTest::CurrentView().IsNull())
+    ViewerTest::SetEventManager(ViewerTest_myEventManagers.Find1(ViewerTest::GetCurrentViewName()));
+  else
+    ViewerTest::UnsetEventManager();
+}
+
+Handle(ViewerTest_EventManager) ViewerTest::GetEventManagerForWindow(Aspect_Drawable theWin)
+{
+  Handle(ViewerTest_EventManager) anEventMgr = ViewerTest::CurrentEventManager();
+
+  const V3d_View* aParentView = nullptr;
+  if (!anEventMgr.IsNull())
+  {
+    aParentView = anEventMgr->View()->IsSubview()
+                ? anEventMgr->View()->ParentView()
+                : anEventMgr->View().get();
+  }
+  if (aParentView != nullptr && aParentView->Window()->NativeHandle() == Aspect_Drawable(theWin))
+  {
+    return anEventMgr;
+  }
+
+  for (NCollection_DoubleMap<TCollection_AsciiString, Handle(V3d_View)>::Iterator
+       anIter(ViewerTest_myViews); anIter.More(); anIter.Next())
+  {
+    if (!anIter.Value()->IsSubview()
+      && anIter.Value()->Window()->NativeHandle() == Aspect_Drawable(theWin))
+    {
+      ViewerTest_myEventManagers.Find1(anIter.Key1(), anEventMgr);
+      return anEventMgr;
+    }
+  }
+  return anEventMgr;
 }
 
 //==============================================================================
@@ -678,7 +719,7 @@ TCollection_AsciiString ViewerTest::ViewerInit (const ViewerTest_VinitParams& th
   }
   else
   {
-    ViewerTest::ResetEventManager();
+    ViewerTest::UnsetEventManager();
   }
 
   // Create window
@@ -765,6 +806,8 @@ TCollection_AsciiString ViewerTest::ViewerInit (const ViewerTest_VinitParams& th
 
   ViewerTest::CurrentView(aView);
   ViewerTest_myViews.Bind (aViewNames.GetViewName(), aView);
+  Handle(ViewerTest_EventManager) anEventMgr = new ViewerTest_EventManager (aView, ViewerTest::GetAISContext());
+  ViewerTest_myEventManagers.Bind (aViewNames.GetViewName(), anEventMgr);
 
   // Setup for X11 or NT
   SetDisplayConnection (ViewerTest::CurrentView()->Viewer()->Driver()->GetDisplayConnection());
@@ -1485,6 +1528,7 @@ void ViewerTest::ActivateView (const Handle(V3d_View)& theView,
 
   ViewerTest::CurrentView (aView);
   ViewerTest::SetAISContext (anAISContext);
+  ViewerTest::SetEventManager (ViewerTest_myEventManagers.Find1(*aViewName));
   if (aView->IsSubview())
   {
     aView->ParentView()->Window()->SetTitle (TCollection_AsciiString("3D View - ") + *aViewName + "(*)");
@@ -1569,12 +1613,14 @@ void ViewerTest::RemoveView (const TCollection_AsciiString& theViewName, const S
       {
         Handle(AIS_InteractiveContext) anEmptyContext;
         ViewerTest::SetAISContext(anEmptyContext);
+        ViewerTest::UnsetEventManager();
       }
     }
   }
 
   // Delete view
   ViewerTest_myViews.UnBind1(theViewName);
+  ViewerTest_myEventManagers.UnBind1(theViewName);
   if (!aView->Window().IsNull())
   {
     aView->Window()->Unmap();
@@ -1720,7 +1766,7 @@ static int VActivate (Draw_Interpretor& theDi, Standard_Integer theArgsNb, const
       ViewerTest::CurrentView()->Window()->SetTitle (TCollection_AsciiString ("3D View - ") + ViewerTest_myViews.Find2 (ViewerTest::CurrentView()));
       VT_GetWindow().Nullify();
       ViewerTest::CurrentView (Handle(V3d_View)());
-      ViewerTest::ResetEventManager();
+      ViewerTest::UnsetEventManager();
       theDi << theArgVec[0] << ": all views are inactive\n";
       toActivate = Standard_False;
     }
@@ -2236,10 +2282,12 @@ static LRESULT WINAPI AdvViewerWindowProc (HWND theWinHandle,
     }
     default:
     {
-      const Handle(V3d_View)& aView = ViewerTest::CurrentView();
-      WNT_Window* aWin = dynamic_cast<WNT_Window*>(VT_GetWindow().get());
-      if (!aView.IsNull()
-       && aWin != nullptr)
+      Handle(ViewerTest_EventManager) anEventMgr = ViewerTest::GetEventManagerForWindow(Aspect_Drawable(theWinHandle));
+      if (anEventMgr.IsNull())
+        break;
+
+      const V3d_View* aParentView = anEventMgr->View()->IsSubview() ? anEventMgr->View()->ParentView() : anEventMgr->View().get();
+      if (WNT_Window* aWin = dynamic_cast<WNT_Window*>(aParentView->Window().get()))
       {
         MSG aMsg = {};
         aMsg.hwnd = theWinHandle;
@@ -2247,7 +2295,7 @@ static LRESULT WINAPI AdvViewerWindowProc (HWND theWinHandle,
         aMsg.wParam = wParam;
         aMsg.lParam = lParam;
 
-        if (aWin->ProcessMessage(*ViewerTest::CurrentEventManager(), aMsg))
+        if (aWin->ProcessMessage(*anEventMgr, aMsg))
         {
           return 0;
         }
@@ -2337,13 +2385,14 @@ int ViewerMainLoop (Standard_Integer theNbArgs, const char** theArgVec)
     }
     default:
     {
-      const Handle(V3d_View)& aView = ViewerTest::CurrentView();
-      Xw_Window* aWin = dynamic_cast<Xw_Window*>(VT_GetWindow().get());
-      if (!aView.IsNull()
-       && aWin != nullptr)
-      {
-        aWin->ProcessMessage(*ViewerTest::CurrentEventManager(), aReport);
-      }
+      Handle(ViewerTest_EventManager) anEventMgr = ViewerTest::GetEventManagerForWindow(Aspect_Drawable(aReport.xany.window));
+      if (anEventMgr.IsNull())
+        break;
+
+      const V3d_View* aParentView = anEventMgr->View()->IsSubview() ? anEventMgr->View()->ParentView() : anEventMgr->View().get();
+      if (Xw_Window* aWin = dynamic_cast<Xw_Window*>(aParentView->Window().get()))
+        aWin->ProcessMessage(*anEventMgr, aReport);
+
       break;
     }
   }

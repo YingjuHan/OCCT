@@ -596,7 +596,11 @@ Standard_EXPORT Standard_Boolean VDisplayAISObject (const TCollection_AsciiStrin
   return ViewerTest::Display (theName, theObject, Standard_True, theReplaceIfExists);
 }
 
-static NCollection_List<Handle(ViewerTest_EventManager)> theEventMgrs;
+static Handle(ViewerTest_EventManager)& TheEventManager()
+{
+  static Handle(ViewerTest_EventManager) aManager;
+  return aManager;
+}
 
 static Handle(V3d_View)&  a3DView()
 {
@@ -627,7 +631,6 @@ const Handle(AIS_InteractiveContext)& ViewerTest::GetAISContext()
 void ViewerTest::SetAISContext (const Handle(AIS_InteractiveContext)& aCtx)
 {
   TheAISContext() = aCtx;
-  ViewerTest::ResetEventManager();
 }
 
 Handle(V3d_Viewer) ViewerTest::GetViewerFromContext()
@@ -642,26 +645,17 @@ Handle(V3d_Viewer) ViewerTest::GetCollectorFromContext()
 
 
 void ViewerTest::SetEventManager(const Handle(ViewerTest_EventManager)& EM){
-  theEventMgrs.Prepend(EM);
+  TheEventManager() = EM;
 }
 
 void ViewerTest::UnsetEventManager()
 {
-  theEventMgrs.RemoveFirst();
-}
-
-
-void ViewerTest::ResetEventManager()
-{
-  theEventMgrs.Clear();
-  theEventMgrs.Prepend (new ViewerTest_EventManager (ViewerTest::CurrentView(), ViewerTest::GetAISContext()));
+  TheEventManager().Nullify();
 }
 
 Handle(ViewerTest_EventManager) ViewerTest::CurrentEventManager()
 {
-  return !theEventMgrs.IsEmpty()
-        ? theEventMgrs.First()
-        : Handle(ViewerTest_EventManager)();
+  return TheEventManager();
 }
 
 //=======================================================================
