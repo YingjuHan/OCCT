@@ -739,10 +739,8 @@ Standard_Boolean AIS_ColoredShape::dispatchColors (const Handle(AIS_ColoredDrawe
   }
 
   // iterate on sub-shapes
-  BRep_Builder aBBuilder;
-  TopoDS_Shape aShapeCopy = theShapeToParse.EmptyCopied();
-  aShapeCopy.Closed (theShapeToParse.Closed());
-  Standard_Integer nbDef = 0;
+  std::vector<TopoDS_Shape> aSubShapes;
+  aSubShapes.reserve(theShapeToParse.NbChildren());
   for (TopoDS_Iterator aSubShapeIter (theShapeToParse); aSubShapeIter.More(); aSubShapeIter.Next())
   {
     const TopoDS_Shape& aSubShape = aSubShapeIter.Value();
@@ -754,19 +752,28 @@ Standard_Boolean AIS_ColoredShape::dispatchColors (const Handle(AIS_ColoredDrawe
     {
       isSubOverride = Standard_True;
     }
-    else
+    else if (aShapeType != TopAbs_FACE)
     {
-      aBBuilder.Add (aShapeCopy, aSubShape);
-      ++nbDef;
+      aSubShapes.push_back(aSubShape);
     }
   }
+
+  TopoDS_Shape aShapeCopy;
+  BRep_Builder aBBuilder;
   if (aShapeType == TopAbs_FACE || !isSubOverride)
   {
     aShapeCopy = theShapeToParse;
   }
-  else if (nbDef == 0)
+  else if (aSubShapes.empty())
   {
     return isOverriden || isSubOverride; // empty compound
+  }
+  else
+  {
+    aShapeCopy = theShapeToParse.EmptyCopied();
+    aShapeCopy.Closed(theShapeToParse.Closed());
+    for (const TopoDS_Shape& aSubShape : aSubShapes)
+      aBBuilder.Add(aShapeCopy, aSubShape);
   }
 
   // if any of styles is overridden regarding to default one, add rest to map
