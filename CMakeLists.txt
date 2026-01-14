@@ -1299,6 +1299,9 @@ if (APPLE)
 endif()
 
 # Configure and install cmake config file
+# remove -ffile-prefix-map=
+string(REGEX REPLACE " -ffile-prefix-map=.*=\\. " " " OpenCASCADE_C_FLAGS   ${CMAKE_C_FLAGS})
+string(REGEX REPLACE " -ffile-prefix-map=.*=\\. " " " OpenCASCADE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 configure_file("${CMAKE_SOURCE_DIR}/adm/templates/OpenCASCADEConfig.cmake.in" "OpenCASCADEConfig.cmake" ESCAPE_QUOTES @ONLY)
 install(FILES "${CMAKE_BINARY_DIR}/OpenCASCADEConfig.cmake" DESTINATION  "${INSTALL_DIR_CMAKE}")
 
