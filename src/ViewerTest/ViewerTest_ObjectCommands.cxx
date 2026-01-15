@@ -5695,15 +5695,18 @@ static int TextToBRep (Draw_Interpretor& /*theDI*/,
   Standard_CString aName   = theArgVec[anArgIt++];
   Standard_CString aText   = theArgVec[anArgIt++];
 
-  Font_BRepFont           aFont;
   TCollection_AsciiString aFontName ("Courier");
-  Standard_Real           aTextHeight        = 16.0;
-  Font_FontAspect         aFontAspect        = Font_FA_Regular;
-  Standard_Boolean        anIsCompositeCurve = Standard_False;
-  gp_Ax3                  aPenAx3    (gp::XOY());
-  gp_Dir                  aNormal    (0.0, 0.0, 1.0);
-  gp_Dir                  aDirection (1.0, 0.0, 0.0);
-  gp_Pnt                  aPenLoc;
+  Font_FontAspect  aFontAspect = Font_FA_Regular;
+  Standard_Real    aTextHeight = 16.0;
+  Standard_Real    aShearAngle = RealLast();
+  Standard_Real    aWidthScale = RealLast();
+  Standard_Real    aSpaceScale = RealLast();
+  Standard_Real    aLineScale  = RealLast();
+  Standard_Boolean anIsCompositeCurve = Standard_False;
+
+  gp_Dir aNormal    = gp::DZ();
+  gp_Dir aDirection = gp::DX();
+  gp_Pnt aPenLoc;
 
   Graphic3d_HorizontalTextAlignment aHJustification = Graphic3d_HTA_LEFT;
   Graphic3d_VerticalTextAlignment   aVJustification = Graphic3d_VTA_BOTTOM;
@@ -5713,28 +5716,16 @@ static int TextToBRep (Draw_Interpretor& /*theDI*/,
     TCollection_AsciiString aParam (theArgVec[anArgIt]);
     aParam.LowerCase();
 
-    if (aParam == "-pos"
-     || aParam == "-position")
+    if ((aParam == "-pos" || aParam == "-position")
+      && anArgIt + 3 < theArgNb)
     {
-      if (anArgIt + 3 >= theArgNb)
-      {
-        Message::SendFail() << "Error: wrong number of values for parameter '" << aParam << "'";
-        return 1;
-      }
-
       aPenLoc.SetX (Draw::Atof(theArgVec[++anArgIt]));
       aPenLoc.SetY (Draw::Atof(theArgVec[++anArgIt]));
       aPenLoc.SetZ (Draw::Atof(theArgVec[++anArgIt]));
     }
-    else if (aParam == "-halign")
+    else if (aParam == "-halign" && anArgIt + 1 < theArgNb)
     {
-      if (++anArgIt >= theArgNb)
-      {
-        Message::SendFail() << "Error: wrong number of values for parameter '" << aParam << "'";
-        return 1;
-      }
-
-      TCollection_AsciiString aType (theArgVec[anArgIt]);
+      TCollection_AsciiString aType (theArgVec[++anArgIt]);
       aType.LowerCase();
       if (aType == "left")
       {
@@ -5754,15 +5745,9 @@ static int TextToBRep (Draw_Interpretor& /*theDI*/,
         return 1;
       }
     }
-    else if (aParam == "-valign")
+    else if (aParam == "-valign" && anArgIt + 1 < theArgNb)
     {
-      if (++anArgIt >= theArgNb)
-      {
-        Message::SendFail() << "Error: wrong number of values for parameter '" << aParam << "'";
-        return 1;
-      }
-
-      TCollection_AsciiString aType (theArgVec[anArgIt]);
+      TCollection_AsciiString aType (theArgVec[++anArgIt]);
       aType.LowerCase();
       if (aType == "top")
       {
@@ -5786,25 +5771,44 @@ static int TextToBRep (Draw_Interpretor& /*theDI*/,
         return 1;
       }
     }
-    else if (aParam == "-height")
+    else if (aParam == "-height"
+          && anArgIt + 1 < theArgNb
+          && Draw::ParseReal(theArgVec[anArgIt + 1], aTextHeight)
+          && aTextHeight > 0.0)
     {
-      if (++anArgIt >= theArgNb)
-      {
-        Message::SendFail() << "Error: wrong number of values for parameter '" << aParam << "'";
-        return 1;
-      }
-
-      aTextHeight = Draw::Atof(theArgVec[anArgIt]);
+      ++anArgIt;
     }
-    else if (aParam == "-aspect")
+    else if ((aParam == "-widthscale" || aParam == "-widthscaling")
+           && anArgIt + 1 < theArgNb
+           && Draw::ParseReal(theArgVec[anArgIt + 1], aWidthScale)
+           && aWidthScale > 0.0)
     {
-      if (++anArgIt >= theArgNb)
-      {
-        Message::SendFail() << "Error: wrong number of values for parameter '" << aParam << "'";
-        return 1;
-      }
-
-      TCollection_AsciiString anOption (theArgVec[anArgIt]);
+      ++anArgIt;
+    }
+    else if ((aParam == "-spacescale" || aParam == "-spacescaling")
+           && anArgIt + 1 < theArgNb
+           && Draw::ParseReal(theArgVec[anArgIt + 1], aSpaceScale)
+           && aSpaceScale > 0.0)
+    {
+      ++anArgIt;
+    }
+    else if ((aParam == "-linescale" || aParam == "-linescaling")
+           && anArgIt + 1 < theArgNb
+           && Draw::ParseReal(theArgVec[anArgIt + 1], aLineScale)
+           && aLineScale > 0.0)
+    {
+      ++anArgIt;
+    }
+    else if (aParam == "-shearangle"
+          && anArgIt + 1 < theArgNb
+          && Draw::ParseReal(theArgVec[anArgIt + 1], aShearAngle))
+    {
+      ++anArgIt;
+      aShearAngle = aShearAngle * (M_PI / 180.0);
+    }
+    else if (aParam == "-aspect" && anArgIt + 1 < theArgNb)
+    {
+      TCollection_AsciiString anOption (theArgVec[++anArgIt]);
       anOption.LowerCase();
       if (!parseFontStyle (anOption, aFontAspect))
       {
@@ -5812,15 +5816,9 @@ static int TextToBRep (Draw_Interpretor& /*theDI*/,
         return 1;
       }
     }
-    else if (aParam == "-font")
+    else if (aParam == "-font" && anArgIt + 1 < theArgNb)
     {
-      if (++anArgIt >= theArgNb)
-      {
-        Message::SendFail() << "Error: wrong number of values for parameter '" << aParam << "'";
-        return 1;
-      }
-
-      aFontName = theArgVec[anArgIt];
+      aFontName = theArgVec[++anArgIt];
     }
     else if (aParam == "-strict")
     {
@@ -5830,22 +5828,10 @@ static int TextToBRep (Draw_Interpretor& /*theDI*/,
     }
     else if (aParam == "-composite")
     {
-      if (++anArgIt >= theArgNb)
-      {
-        Message::SendFail() << "Error: wrong number of values for parameter '" << aParam << "'";
-        return 1;
-      }
-
-      Draw::ParseOnOff (theArgVec[anArgIt], anIsCompositeCurve);
+      anIsCompositeCurve = Draw::ParseOnOffIterator (theArgNb, theArgVec, anArgIt);
     }
-    else if (aParam == "-plane")
+    else if (aParam == "-plane" && anArgIt + 6 < theArgNb)
     {
-      if (anArgIt + 6 >= theArgNb)
-      {
-        Message::SendFail() << "Error: wrong number of values for parameter '" << aParam << "'";
-        return 1;
-      }
-
       Standard_Real aX = Draw::Atof (theArgVec[++anArgIt]);
       Standard_Real aY = Draw::Atof (theArgVec[++anArgIt]);
       Standard_Real aZ = Draw::Atof (theArgVec[++anArgIt]);
@@ -5858,9 +5844,23 @@ static int TextToBRep (Draw_Interpretor& /*theDI*/,
     }
     else
     {
-      Message::SendFail() << "Warning! Unknown argument '" << aParam << "'";
+      Message::SendFail() << "Syntax error at '" << theArgVec[anArgIt] << "'";
+      return 1;
     }
   }
+
+  Font_BRepFont aFont;
+  if (aShearAngle != RealLast())
+    aFont.SetShearAngle((float)aShearAngle);
+
+  if (aWidthScale != RealLast())
+    aFont.SetWidthScaling((float)aWidthScale);
+
+  if (aSpaceScale != RealLast())
+    aFont.SetSpaceScaling((float)aSpaceScale);
+
+  if (aLineScale != RealLast())
+    aFont.SetLineScaling((float)aLineScale);
 
   aFont.SetCompositeCurveMode (anIsCompositeCurve);
   if (!aFont.FindAndInit (aFontName.ToCString(), aFontAspect, aTextHeight, aStrictLevel))
@@ -5869,7 +5869,7 @@ static int TextToBRep (Draw_Interpretor& /*theDI*/,
     return 1;
   }
 
-  aPenAx3 = gp_Ax3 (aPenLoc, aNormal, aDirection);
+  gp_Ax3 aPenAx3(aPenLoc, aNormal, aDirection);
 
   Font_BRepTextBuilder aBuilder;
   DBRep::Set (aName, aBuilder.Perform (aFont, aText, aPenAx3, aHJustification, aVJustification));
@@ -7203,15 +7203,16 @@ vmarkerstest: name X Y Z [PointsOnSide=10] [MarkerType=0] [Scale=1.0] [FileName=
 )" /* [vmarkerstest] */);
 
   addCmd ("text2brep", TextToBRep, /* [text2brep] */ R"(
-text2brep name text"
-          [-pos X=0 Y=0 Z=0]"
-          [-halign {left|center|right}=left]"
-          [-valign {top|center|bottom|topfirstline}=bottom}]"
-          [-height height=16]"
-          [-aspect {regular|bold|italic|boldItalic}=regular]"
-          [-font font=Courier] [-strict {strict|aliases|any}=any]"
-          [-composite {on|off}=off]"
-          [-plane NormX NormY NormZ DirX DirY DirZ]",
+text2brep name text
+          [-height height]=16 [-widthScale scale]=1.0 [-shearAngle angleDegrees]=0.0
+          [-aspect {regular|bold|italic|boldItalic}]=regular
+          [-spaceScale scale]=1.0 [-lineScale scale]=1.0
+          [-font font]=Courier [-strict {strict|aliases|any}]=any
+          [-pos X=0 Y=0 Z=0] [-plane NormX NormY NormZ DirX DirY DirZ]
+          [-halign {left|center|right}]=left
+          [-valign {top|center|bottom|topfirstline}]=bottom
+          [-composite {on|off}]=off
+Create shape from the given text.
 )" /* [text2brep] */);
 
   addCmd ("vfont", VFont, /* [vfont] */ R"(

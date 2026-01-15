@@ -243,17 +243,61 @@ public:
     return myFontParams.PointSize;
   }
 
-  //! Return glyph scaling along X-axis.
-  float WidthScaling() const
+  //! Return shear transformation angle, in radians; 0.0 by default.
+  //! Notice that this angle is applied in addition to italic aspect.
+  float ShearAngle() const { return myShearAngle; }
+
+  //! Set shear transformation angle.
+  void SetShearAngle(const float theAngle)
   {
-    return myWidthScaling;
+    if (Abs(theAngle) >= M_2_PI)
+      throw Standard_OutOfRange("Font_FTFont::SetShearAngle() invalid value");
+
+    if (myShearAngle != theAngle)
+    {
+      myShearAngle = theAngle;
+      initTransformation();
+    }
   }
 
+  //! Return glyph scaling along X-axis; 1.0 by default.
+  float WidthScaling() const { return myWidthScaling; }
+
   //! Setup glyph scaling along X-axis.
-  //! By default glyphs are not scaled (scaling factor = 1.0)
   void SetWidthScaling (const float theScaleFactor)
   {
-    myWidthScaling = theScaleFactor;
+    if (theScaleFactor <= 0.0f)
+      throw Standard_OutOfRange("Font_FTFont::SetWidthScaling() invalid value");
+
+    if (myWidthScaling != theScaleFactor)
+    {
+      myWidthScaling = theScaleFactor;
+      initTransformation();
+    }
+  }
+
+  //! Return space scaling along X-axis; 1.0 by default.
+  float SpaceScaling() const { return mySpaceScaling; }
+
+  //! Setup space scaling along X-axis.
+  void SetSpaceScaling(const float theScale)
+  {
+    if (theScale <= 0.0f)
+      throw Standard_OutOfRange("Font_FTFont::SetSpaceScaling() invalid value");
+
+    mySpaceScaling = theScale;
+  }
+
+  //! Return newline space scaling; 1.0 by default.
+  float LineScaling() const { return myLineScaling; }
+
+  //! Setup newline space scaling.
+  void SetLineScaling(const float theScale)
+  {
+    if (theScale <= 0.0f)
+      throw Standard_OutOfRange("Font_FTFont::SetLineScaling() invalid value");
+
+    myLineScaling = theScale;
   }
 
   //! Return TRUE if font contains specified symbol (excluding fallback list).
@@ -359,6 +403,9 @@ protected:
 
 protected:
 
+  //! Setup transformation matrix.
+  Standard_EXPORT void initTransformation();
+
   //! Load glyph without rendering it.
   Standard_EXPORT bool loadGlyph (const Standard_Utf32Char theUChar);
 
@@ -393,7 +440,10 @@ protected:
   TCollection_AsciiString    myFontPath;     //!< font path
   Font_FTFontParams          myFontParams;   //!< font initialization parameters
   Font_FontAspect            myFontAspect;   //!< font initialization aspect
+  float                      myShearAngle;   //!< shear transformation angle
   float                      myWidthScaling; //!< scale glyphs along X-axis
+  float                      mySpaceScaling; //!< scale space between glyphs along X-axis
+  float                      myLineScaling;  //!< scale line space between glyphs along Y-axis
   int32_t                    myLoadFlags;    //!< default load flags
 
   Image_PixMap               myGlyphImg;     //!< cached glyph plane

@@ -117,12 +117,31 @@ public:
   //! Notice that altering this flag clears currently accumulated cache!
   Standard_EXPORT void SetCompositeCurveMode (const Standard_Boolean theToConcatenate);
 
-  //! Setup glyph scaling along X-axis.
+  //! Return shear transformation angle, in radians; 0.0 be default.
+  //! Notice that this angle is applied in addition to italic aspect.
+  float ShearAngle() const { return myFTFont->ShearAngle(); }
+
+  //! Set shear transformation angle.
+  void SetShearAngle(const float theAngle) { myFTFont->SetShearAngle(theAngle); }
+
+  //! Return glyph scaling along X-axis.
   //! By default glyphs are not scaled (scaling factor = 1.0)
-  void SetWidthScaling (const float theScaleFactor)
-  {
-    myFTFont->SetWidthScaling (theScaleFactor);
-  }
+  float WidthScaling() const { return myFTFont->WidthScaling(); }
+
+  //! Setup glyph scaling along X-axis.
+  void SetWidthScaling (const float theScaleFactor) { myFTFont->SetWidthScaling (theScaleFactor); }
+
+  //! Return space scaling along X-axis; 1.0 be default.
+  float SpaceScaling() const { return myFTFont->SpaceScaling(); }
+
+  //! Setup space scaling along X-axis.
+  void SetSpaceScaling(const float theScaleFactor) { myFTFont->SetSpaceScaling(theScaleFactor); }
+
+  //! Return newline space scaling; 1.0 be default.
+  float LineScaling() const { return myFTFont->LineScaling(); }
+
+  //! Setup newline space scaling.
+  void SetLineScaling(const float theScaleFactor) { myFTFont->SetLineScaling(theScaleFactor); }
 
 public:
 

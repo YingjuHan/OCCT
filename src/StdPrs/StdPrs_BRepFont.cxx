@@ -66,10 +66,9 @@ namespace
 #ifdef HAVE_FREETYPE
   //! Auxiliary method to convert FT_Vector to gp_XY
   static gp_XY readFTVec (const FT_Vector& theVec,
-                          const Standard_Real theScaleUnits,
-                          const Standard_Real theWidthScaling = 1.0)
+                          const Standard_Real theScaleUnits)
   {
-    return gp_XY (theScaleUnits * Standard_Real(theVec.x) * theWidthScaling / 64.0, theScaleUnits * Standard_Real(theVec.y) / 64.0);
+    return gp_XY (theScaleUnits * Standard_Real(theVec.x) / 64.0, theScaleUnits * Standard_Real(theVec.y) / 64.0);
   }
 
   //! Auxiliary method for classification wire theW2 with respect to wire theW1
@@ -470,8 +469,8 @@ Standard_Boolean StdPrs_BRepFont::renderGlyph (const Standard_Utf32Char theChar,
     BRepBuilderAPI_MakeWire aWireMaker;
 
     gp_XY aPntPrev;
-    gp_XY aPntCurr = readFTVec (aPntList[aPntsNb - 1], myScaleUnits, myFTFont->WidthScaling());
-    gp_XY aPntNext = readFTVec (aPntList[0], myScaleUnits, myFTFont->WidthScaling());
+    gp_XY aPntCurr = readFTVec (aPntList[aPntsNb - 1], myScaleUnits);
+    gp_XY aPntNext = readFTVec (aPntList[0], myScaleUnits);
 
     bool isLineSeg = !myFTFont->IsSingleStrokeFont()
                   && FT_CURVE_TAG(aTags[aPntsNb - 1]) == FT_Curve_Tag_On;
@@ -483,7 +482,7 @@ Standard_Boolean StdPrs_BRepFont::renderGlyph (const Standard_Utf32Char theChar,
     {
       aPntPrev = aPntCurr;
       aPntCurr = aPntNext;
-      aPntNext = readFTVec (aPntList[(aPntId + 1) % aPntsNb], myScaleUnits, myFTFont->WidthScaling());
+      aPntNext = readFTVec (aPntList[(aPntId + 1) % aPntsNb], myScaleUnits);
 
       // process tags
       if (FT_CURVE_TAG(aTags[aPntId]) == FT_Curve_Tag_On)
@@ -567,7 +566,7 @@ Standard_Boolean StdPrs_BRepFont::renderGlyph (const Standard_Utf32Char theChar,
         my4Poles.SetValue (1, aPntPrev);
         my4Poles.SetValue (2, aPntCurr);
         my4Poles.SetValue (3, aPntNext);
-        my4Poles.SetValue (4, gp_Pnt2d(readFTVec (aPntList[(aPntId + 2) % aPntsNb], myScaleUnits, myFTFont->WidthScaling())));
+        my4Poles.SetValue (4, gp_Pnt2d(readFTVec (aPntList[(aPntId + 2) % aPntsNb], myScaleUnits)));
         Handle(Geom2d_BezierCurve) aBezier = new Geom2d_BezierCurve (my4Poles);
         if (myIsCompositeCurve)
         {

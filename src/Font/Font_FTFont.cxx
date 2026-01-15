@@ -26,6 +26,7 @@
 #ifdef HAVE_FREETYPE
   #include <ft2build.h>
   #include FT_FREETYPE_H
+  #include FT_GLYPH_H
 #endif
 
 IMPLEMENT_STANDARD_RTTIEXT(Font_FTFont,Standard_Transient)
@@ -39,7 +40,10 @@ Font_FTFont::Font_FTFont (const Handle(Font_FTLibrary)& theFTLib)
   myFTFace      (NULL),
   myActiveFTFace(NULL),
   myFontAspect  (Font_FontAspect_Regular),
-  myWidthScaling(1.0),
+  myShearAngle  (0.0f),
+  myWidthScaling(1.0f),
+  mySpaceScaling(1.0f),
+  myLineScaling (1.0f),
 #ifdef HAVE_FREETYPE
   myLoadFlags   (FT_LOAD_NO_HINTING | FT_LOAD_TARGET_NORMAL),
 #else
@@ -160,26 +164,78 @@ bool Font_FTFont::Init (const Handle(NCollection_Buffer)& theData,
     return false;
   }
 
-  if (theParams.ToSynthesizeItalic)
-  {
-    const double THE_SHEAR_ANGLE = 10.0 * M_PI / 180.0;
-
-    FT_Matrix aMat;
-    aMat.xx = FT_Fixed (Cos (-THE_SHEAR_ANGLE) * (1 << 16));
-    aMat.xy = 0;
-    aMat.yx = 0;
-    aMat.yy = aMat.xx;
-
-    FT_Fixed aFactor = FT_Fixed (Tan (THE_SHEAR_ANGLE) * (1 << 16));
-    aMat.xy += FT_MulFix (aFactor, aMat.xx);
-
-    FT_Set_Transform (myFTFace, &aMat, 0);
-  }
+  initTransformation();
   myActiveFTFace = myFTFace;
   return true;
 #else
   (void )theFaceId;
   return false;
+#endif
+}
+
+// =======================================================================
+// function : initTransformation
+// purpose  :
+// =======================================================================
+void Font_FTFont::initTransformation()
+{
+  if (myFTFace == 0)
+    return;
+
+#ifdef HAVE_FREETYPE
+  FT_Matrix aResMat = {};
+  bool hasMat = false;
+  if (myFontParams.ToSynthesizeItalic || myShearAngle != 0.0f)
+  {
+    static constexpr double THE_SHEAR_ANGLE = 10.0 * M_PI / 180.0;
+
+    double anAngle = myShearAngle;
+    if (myFontParams.ToSynthesizeItalic)
+      anAngle += THE_SHEAR_ANGLE;
+
+    FT_Matrix aMat = {};
+    aMat.xx = FT_Fixed(Cos(-anAngle) * (1 << 16));
+    aMat.yy = aMat.xx;
+
+    FT_Fixed aFactor = FT_Fixed(Tan(anAngle) * (1 << 16));
+    aMat.xy = FT_MulFix(aFactor, aMat.xx);
+    if (!hasMat)
+    {
+      hasMat = true;
+      aResMat = aMat;
+    }
+    else
+    {
+      FT_Matrix_Multiply(&aMat, &aResMat);
+    }
+  }
+
+  if (myWidthScaling != 1.0f)
+  {
+    FT_Matrix aMat = {};
+    aMat.xx = FT_Fixed(myWidthScaling * (1 << 16));
+    aMat.yy = FT_Fixed(1 << 16);
+    if (!hasMat)
+    {
+      hasMat = true;
+      aResMat = aMat;
+    }
+    else
+    {
+      FT_Matrix_Multiply(&aMat, &aResMat);
+    }
+  }
+
+  FT_Set_Transform(myFTFace, hasMat ? &aResMat : nullptr, nullptr);
+
+  for (const Handle(Font_FTFont)& aFontIter : myFallbackFaces)
+  {
+    if (!aFontIter.IsNull())
+    {
+      aFontIter->SetShearAngle(myShearAngle);
+      aFontIter->SetWidthScaling(myWidthScaling);
+    }
+  }
 #endif
 }
 
@@ -290,6 +346,8 @@ bool Font_FTFont::findAndInitFallback (Font_UnicodeSubset theSubset)
 #ifdef HAVE_FREETYPE
   myFallbackFaces[theSubset] = new Font_FTFont (myFTLib);
   myFallbackFaces[theSubset]->myToUseUnicodeSubsetFallback = false; // no recursion
+  myFallbackFaces[theSubset]->SetShearAngle(myShearAngle);
+  myFallbackFaces[theSubset]->SetWidthScaling(myWidthScaling);
 
   Handle(Font_FontMgr) aFontMgr = Font_FontMgr::GetInstance();
   if (Handle(Font_SystemFont) aRequestedFont = aFontMgr->FindFallbackFont (theSubset, myFontAspect))
@@ -547,7 +605,7 @@ float Font_FTFont::Descender() const
 float Font_FTFont::LineSpacing() const
 {
 #ifdef HAVE_FREETYPE
-  return float(myFTFace->height) * (float(myFTFace->size->metrics.y_ppem) / float(myFTFace->units_per_EM));
+  return myLineScaling * float(myFTFace->height) * (float(myFTFace->size->metrics.y_ppem) / float(myFTFace->units_per_EM));
 #else
   return 0.0f;
 #endif
@@ -621,7 +679,7 @@ float Font_FTFont::AdvanceX (Standard_Utf32Char theUCharNext) const
 #ifdef HAVE_FREETYPE
   FT_Vector aKern;
   getKerning (aKern, myUChar, theUCharNext);
-  return myWidthScaling * fromFTPoints<float> (myActiveFTFace->glyph->advance.x + aKern.x
+  return mySpaceScaling * fromFTPoints<float> (myActiveFTFace->glyph->advance.x + aKern.x
                                              + myActiveFTFace->glyph->lsb_delta - myActiveFTFace->glyph->rsb_delta);
 #else
   (void )theUCharNext;

@@ -4,7 +4,7 @@ puts "============"
 puts ""
 
 pload MODELING VISUALIZATION
-text2brep t "\u00ae" Courier 10
+text2brep t "\u00ae" -font Courier -height 10
 whatis t
 
 vinit View1

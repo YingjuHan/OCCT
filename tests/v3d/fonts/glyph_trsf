@@ -1,0 +1,78 @@
+puts "============"
+puts "Render text as BRep - glyph and space transformations"
+puts "============"
+puts ""
+
+pload MODELING VISUALIZATION
+
+set THE_TEXT "你好. The quick brown fox\njumps over the lazy dog!"
+set THE_FONT_NAME sans-serif
+set THE_FONT_SIZE 18
+set THE_SCALES {70 120}
+set THE_ANGLES {-25 25}
+
+vinit View1 -width 800
+vsetdispmode 1
+vtop
+
+dtracelevel trace
+vfont -verbose 1
+
+set aLine 0
+set aCol  0
+
+# default
+set aText "DEFAULT $THE_TEXT"
+vpoint def_p $aCol $aLine 0.0
+text2brep def $aText -font $THE_FONT_NAME -height $THE_FONT_SIZE -aspect bold -pos $aCol $aLine 0.0 -valign topfirstline
+vdisplay  def
+set aLine [expr $aLine - 4.0 * $THE_FONT_SIZE]
+
+# width scaling
+foreach aScale $THE_SCALES {
+  set aText "WIDTH\[$aScale\] $THE_TEXT"
+  vpoint widthp$aScale $aCol $aLine 0.0
+  text2brep width$aScale $aText -font $THE_FONT_NAME -height $THE_FONT_SIZE -aspect bold -pos $aCol $aLine 0.0 -valign topfirstline -widthScale [expr $aScale/100.0]
+  vdisplay  width$aScale
+  set aLine [expr $aLine - 4.0 * $THE_FONT_SIZE]
+}
+
+# space scaling
+foreach aScale $THE_SCALES {
+  set aText "SPACING\[$aScale\] $THE_TEXT"
+  vpoint spacep$aScale $aCol $aLine 0.0
+  text2brep space$aScale $aText -font $THE_FONT_NAME -height $THE_FONT_SIZE -aspect bold -pos $aCol $aLine 0.0 -valign topfirstline -spaceScale [expr $aScale/100.0]
+  vdisplay  space$aScale
+  set aLine [expr $aLine - 4.0 * $THE_FONT_SIZE]
+}
+
+# shear angle
+set aCol  450
+set aLine 0
+foreach anAngle $THE_ANGLES {
+  set aText "SHEAR\[$anAngle\] $THE_TEXT"
+  vpoint shearp$anAngle $aCol $aLine 0.0
+  text2brep shear$anAngle $aText -font $THE_FONT_NAME -height $THE_FONT_SIZE -aspect bold -pos $aCol $aLine 0.0 -valign topfirstline -shearAngle $anAngle
+  vdisplay  shear$anAngle
+  set aLine [expr $aLine - 4.0 * $THE_FONT_SIZE]
+}
+
+# shear angle + width scaling
+set aText "SHEAR25_WIDTH120 $THE_TEXT"
+vpoint shearwidth_p $aCol $aLine 0.0
+text2brep shearwidth $aText -font $THE_FONT_NAME -height $THE_FONT_SIZE -aspect bold -pos $aCol $aLine 0.0 -valign topfirstline -shearAngle 25 -widthScale 1.2
+vdisplay  shearwidth
+set aLine [expr $aLine - 4.0 * $THE_FONT_SIZE]
+
+# line scaling
+set aText "LINE150 $THE_TEXT"
+vpoint linescale_p $aCol $aLine 0.0
+text2brep linescale $aText -font $THE_FONT_NAME -height $THE_FONT_SIZE -aspect bold -pos $aCol $aLine 0.0 -valign topfirstline -lineScale 1.5
+vdisplay  linescale
+set aLine [expr $aLine - 4.0 * $THE_FONT_SIZE]
+
+vaspects -shadingModel UNLIT -color WHITE -faceBoundaryDraw 0
+
+vfit
+vglinfo
+vdump $imagedir/${casename}.png
