@@ -64,6 +64,32 @@ if (NOT 3RDPARTY_TCL_INCLUDE_DIR)
   endif()
 endif()
 
+set (3RDPARTY_TCL_MAJOR_VERSION 1)
+set (3RDPARTY_TCL_MINOR_VERSION 0)
+set (3RDPARTY_TCL_LIBNAME "${CSF_TclLibs}")
+set (3RDPARTY_TK_LIBNAME  "${CSF_TkLibs}")
+if (3RDPARTY_TCL_INCLUDE_DIR AND EXISTS "${3RDPARTY_TCL_INCLUDE_DIR}/tcl.h")
+  foreach (SOUGHT_VERSION TCL_MAJOR_VERSION TCL_MINOR_VERSION)
+    file (STRINGS "${3RDPARTY_TCL_INCLUDE_DIR}/tcl.h" 3RDPARTY_${SOUGHT_VERSION} REGEX "^#[ ]*define[ ]*${SOUGHT_VERSION}[ ]*.*")
+    string (REGEX REPLACE ".*${SOUGHT_VERSION}[ ]*.*([0-9]+).*" "\\1" 3RDPARTY_${SOUGHT_VERSION} "${3RDPARTY_${SOUGHT_VERSION}}" )
+  endforeach()
+
+  set (3RDPARTY_TCL_VERSION_SEPARATOR ".")
+  if (WIN32)
+    set (3RDPARTY_TCL_VERSION_SEPARATOR "")
+  endif()
+  if (NOT APPLE)
+    set (3RDPARTY_TCL_LIBNAME "tcl${3RDPARTY_TCL_MAJOR_VERSION}${3RDPARTY_TCL_VERSION_SEPARATOR}${3RDPARTY_TCL_MINOR_VERSION}")
+    if (USE_TK)
+      if (3RDPARTY_TCL_MAJOR_VERSION LESS 9)
+        set (3RDPARTY_TK_LIBNAME "tk${3RDPARTY_TCL_MAJOR_VERSION}${3RDPARTY_TCL_VERSION_SEPARATOR}${3RDPARTY_TCL_MINOR_VERSION}")
+      else()
+        set (3RDPARTY_TK_LIBNAME "tcl${3RDPARTY_TCL_MAJOR_VERSION}tk${3RDPARTY_TCL_MAJOR_VERSION}${3RDPARTY_TCL_VERSION_SEPARATOR}${3RDPARTY_TCL_MINOR_VERSION}")
+      endif()
+    endif()
+  endif()
+endif()
+
 # tcl dir and library
 if (NOT 3RDPARTY_TCL_LIBRARY)
   if (TCL_LIBRARY AND EXISTS "${TCL_LIBRARY}")
@@ -91,7 +117,7 @@ if (WIN32)
     endif()
 
     set (3RDPARTY_TCL_DLL "3RDPARTY_TCL_DLL-NOTFOUND" CACHE FILEPATH "TCL shared library" FORCE)
-    find_library (3RDPARTY_TCL_DLL NAMES ${CSF_TclLibs}
+    find_library (3RDPARTY_TCL_DLL NAMES ${3RDPARTY_TCL_LIBNAME}
                                          PATHS "${DLL_FOLDER_FOR_SEARCH}"
                                          NO_DEFAULT_PATH)
   endif()
@@ -102,12 +128,12 @@ COMPLIANCE_PRODUCT_CONSISTENCY(TCL)
 # tcl dir and library
 if (NOT 3RDPARTY_TCL_LIBRARY)
   set (3RDPARTY_TCL_LIBRARY "3RDPARTY_TCL_LIBRARY-NOTFOUND" CACHE FILEPATH "TCL library" FORCE)
-  find_library (3RDPARTY_TCL_LIBRARY NAMES ${CSF_TclLibs}
+  find_library (3RDPARTY_TCL_LIBRARY NAMES ${3RDPARTY_TCL_LIBNAME}
                                            PATHS "${3RDPARTY_TCL_LIBRARY_DIR}"
                                            NO_DEFAULT_PATH)
 
   # search in another place if previous search doesn't find anything
-  find_library (3RDPARTY_TCL_LIBRARY NAMES ${CSF_TclLibs}
+  find_library (3RDPARTY_TCL_LIBRARY NAMES ${3RDPARTY_TCL_LIBNAME}
                                            PATHS "${3RDPARTY_TCL_DIR}/lib"
                                            NO_DEFAULT_PATH)
 
@@ -121,24 +147,10 @@ if (NOT 3RDPARTY_TCL_LIBRARY)
   endif()
 endif()
 
-set (3RDPARTY_TCL_LIBRARY_VERSION "")
-if (3RDPARTY_TCL_LIBRARY AND EXISTS "${3RDPARTY_TCL_LIBRARY}")
-  get_filename_component (TCL_LIBRARY_NAME "${3RDPARTY_TCL_LIBRARY}" NAME)
-  string(REGEX REPLACE "^.*tcl([0-9]\\.*[0-9]).*$" "\\1" TCL_LIBRARY_VERSION "${TCL_LIBRARY_NAME}")
-
-  if (NOT "${TCL_LIBRARY_VERSION}" STREQUAL "${TCL_LIBRARY_NAME}")
-    set (3RDPARTY_TCL_LIBRARY_VERSION "${TCL_LIBRARY_VERSION}")
-  else() # if the version isn't found - seek other library with 8.6 or 8.5 version in the same dir
-    message (STATUS "Info: TCL version isn't found")
-  endif()
-endif()
-
-set (3RDPARTY_TCL_LIBRARY_VERSION_WITH_DOT "")
-if (3RDPARTY_TCL_LIBRARY_VERSION)
-  string (REGEX REPLACE "^.*([0-9])[^0-9]*[0-9].*$" "\\1" 3RDPARTY_TCL_MAJOR_VERSION "${3RDPARTY_TCL_LIBRARY_VERSION}")
-  string (REGEX REPLACE "^.*[0-9][^0-9]*([0-9]).*$" "\\1" 3RDPARTY_TCL_MINOR_VERSION "${3RDPARTY_TCL_LIBRARY_VERSION}")
-  set (3RDPARTY_TCL_LIBRARY_VERSION_WITH_DOT "${3RDPARTY_TCL_MAJOR_VERSION}.${3RDPARTY_TCL_MINOR_VERSION}")
-endif()
+message (STATUS "Info: Detected Tcl version is \
+TCL_MAJOR_VERSION=${3RDPARTY_TCL_MAJOR_VERSION}; TCL_MINOR_VERSION=${3RDPARTY_TCL_MINOR_VERSION} \
+(3RDPARTY_TCL_LIBNAME=${3RDPARTY_TCL_LIBNAME}; 3RDPARTY_TK_LIBNAME=${3RDPARTY_TK_LIBNAME}) \
+3RDPARTY_TCL_LIBRARY=${3RDPARTY_TCL_LIBRARY}")
 
 if (WIN32)
   if (NOT 3RDPARTY_TCL_DLL)
@@ -155,7 +167,7 @@ if (WIN32)
     endif()
 
     set (3RDPARTY_TCL_DLL "3RDPARTY_TCL_DLL-NOTFOUND" CACHE FILEPATH "TCL shared library" FORCE)
-    find_library (3RDPARTY_TCL_DLL NAMES tcl${3RDPARTY_TCL_LIBRARY_VERSION}
+    find_library (3RDPARTY_TCL_DLL NAMES ${3RDPARTY_TCL_LIBNAME}
                                          PATHS "${DLL_FOLDER_FOR_SEARCH}"
                                          NO_DEFAULT_PATH)
 
@@ -237,8 +249,10 @@ if (INSTALL_TCL)
 
   if (TCL_TCLSH_VERSION)
     # tcl is required to install in lib folder (without)
-    install (DIRECTORY "${3RDPARTY_TCL_LIBRARY_DIR}/tcl8"                    DESTINATION "${INSTALL_DIR_LIB}")
-    install (DIRECTORY "${3RDPARTY_TCL_LIBRARY_DIR}/tcl${TCL_TCLSH_VERSION}" DESTINATION "${INSTALL_DIR_LIB}")
+    install (DIRECTORY "${3RDPARTY_TCL_LIBRARY_DIR}/tcl${3RDPARTY_TCL_MAJOR_VERSION}" DESTINATION "${INSTALL_DIR_LIB}")
+    install (DIRECTORY "${3RDPARTY_TCL_LIBRARY_DIR}/tcl${TCL_TCLSH_VERSION}" DESTINATION "${INSTALL_DIR_LIB}" OPTIONAL)
+    file (GLOB TCL_THREAD_LIB_FOLDER "${3RDPARTY_TCL_LIBRARY_DIR}/thread*" LIST_DIRECTORIES true)
+    install (DIRECTORY "${TCL_THREAD_LIB_FOLDER}" DESTINATION "${INSTALL_DIR_LIB}" OPTIONAL)
   else()
     message (STATUS "\nWarning: tclX.X subdir won't be copied during the installation process.")
     message (STATUS "Try seeking tcl within another folder by changing 3RDPARTY_TCL_DIR variable.")

@@ -11,7 +11,7 @@ close $aFileIn
 set aFileOut [open "$aTmpFilePath" w]
 fconfigure $aFileOut -translation crlf
 foreach aLineIter $aLines {
-  puts $aFileIn $aLineIter
+  puts $aFileOut $aLineIter
 }
 close $aFileOut
 

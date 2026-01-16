@@ -52,11 +52,11 @@ set aTmpFileISO8859N "${imagedir}/${casename}-tmp-"
 # multi-encoding
 set anEngName [encoding convertfrom utf-8 "\x54\x65\x73\x74"]
 # ISO 8859-1
-set iso8859_1 [encoding convertfrom utf-8 "\x50\x72\x6f\x62\xed\x68\xe1"]
+set iso8859_1 [encoding convertfrom utf-8 "\x50\x72\x6f\x62\xc3\xad\x68\xc3\xa1"]
 # ISO 8859-2
-set iso8859_2 [encoding convertfrom utf-8 "\x50\x72\x6f\x62\xed\x68\xe1"]
+set iso8859_2 [encoding convertfrom utf-8 "\x50\x72\x6f\x62\xc3\xad\x68\xc3\xa1"]
 # ISO 8859-3
-set iso8859_3 [encoding convertfrom utf-8 "\xd6\x6c\xe7\x65\x6b"]
+set iso8859_3 [encoding convertfrom utf-8 "\xc3\x96\x6c\xc3\xa7\x65\x6b"]
 # ISO 8859-4 
 set iso8859_4 [encoding convertfrom utf-8 "\x6d\xc4\x93\xc4\xa3\x69\x6e\x69\x65\x74"]
 # ISO 8859-5

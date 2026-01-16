@@ -438,9 +438,11 @@ proc wokdep:SearchTclTk {theErrInc theErrLib32 theErrLib64 theErrBin32 theErrBin
   if { "$::tcl_platform(platform)" == "windows" } {
     set aTclLibName "tcl${tclver_maj}${tclver_min}"
     set aTkLibName  "tk${tclver_maj}${tclver_min}"
+    if { $tclver_maj >= 9 } { set aTkLibName "tcl${tclver_maj}tk${tclver_maj}${tclver_min}" }
   } else {
     set aTclLibName "tcl${tclver_maj}.${tclver_min}"
     set aTkLibName  "tk${tclver_maj}.${tclver_min}"
+    if { $tclver_maj >= 9 } { set aTkLibName "tcl${tclver_maj}tk${tclver_maj}.${tclver_min}" }
   }
 
   foreach anArchIter {64 32} {

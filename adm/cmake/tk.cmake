@@ -47,6 +47,11 @@ if (NOT 3RDPARTY_TK_DIR AND 3RDPARTY_DIR)
   FIND_PRODUCT_DIR("${3RDPARTY_DIR}" tk TK_DIR_NAME)
   if (TK_DIR_NAME)
     set (3RDPARTY_TK_DIR "${3RDPARTY_DIR}/${TK_DIR_NAME}" CACHE PATH "The directory containing tk" FORCE)
+  else()
+    FIND_PRODUCT_DIR("${3RDPARTY_DIR}" tcltk TK_DIR_NAME)
+    if (TK_DIR_NAME)
+      set (3RDPARTY_TK_DIR "${3RDPARTY_DIR}/${TK_DIR_NAME}" CACHE PATH "The directory containing tk" FORCE)
+    endif()
   endif()
 endif()
 
@@ -97,7 +102,7 @@ if (BUILD_SHARED_LIBS)
         endif()
 
         set (3RDPARTY_TK_DLL "3RDPARTY_TK_DLL-NOTFOUND" CACHE FILEPATH "TK shared library" FORCE)
-        find_library (3RDPARTY_TK_DLL NAMES ${CSF_TclTkLibs}
+        find_library (3RDPARTY_TK_DLL NAMES ${3RDPARTY_TK_LIBNAME}
                                             PATHS "${DLL_FOLDER_FOR_SEARCH}"
                                             NO_DEFAULT_PATH)
     endif()
@@ -110,12 +115,12 @@ if (BUILD_SHARED_LIBS)
   # tk dir and library
   if (NOT 3RDPARTY_TK_LIBRARY)
     set (3RDPARTY_TK_LIBRARY "3RDPARTY_TK_LIBRARY-NOTFOUND" CACHE FILEPATH "TK library" FORCE)
-    find_library (3RDPARTY_TK_LIBRARY NAMES ${CSF_TclTkLibs}
+    find_library (3RDPARTY_TK_LIBRARY NAMES ${3RDPARTY_TK_LIBNAME}
                                             PATHS "${3RDPARTY_TK_LIBRARY_DIR}"
                                             NO_DEFAULT_PATH)
 
     # search in another place if previous search doesn't find anything
-    find_library (3RDPARTY_TK_LIBRARY NAMES ${CSF_TclTkLibs}
+    find_library (3RDPARTY_TK_LIBRARY NAMES ${3RDPARTY_TK_LIBNAME}
                                             PATHS "${3RDPARTY_TK_DIR}/lib"
                                             NO_DEFAULT_PATH)
 
@@ -128,25 +133,6 @@ if (BUILD_SHARED_LIBS)
       get_filename_component (3RDPARTY_TK_LIBRARY_DIR "${3RDPARTY_TK_LIBRARY}" PATH)
       set (3RDPARTY_TK_LIBRARY_DIR "${3RDPARTY_TK_LIBRARY_DIR}" CACHE FILEPATH "The directory containing TK library" FORCE)
     endif()
-  endif()
-
-  set (3RDPARTY_TK_LIBRARY_VERSION "")
-  if (3RDPARTY_TK_LIBRARY AND EXISTS "${3RDPARTY_TK_LIBRARY}")
-    get_filename_component (TK_LIBRARY_NAME "${3RDPARTY_TK_LIBRARY}" NAME)
-    string(REGEX REPLACE "^.*tk([0-9]\\.*[0-9]).*$" "\\1" TK_LIBRARY_VERSION "${TK_LIBRARY_NAME}")
-
-    if (NOT "${TK_LIBRARY_VERSION}" STREQUAL "${TK_LIBRARY_NAME}")
-      set (3RDPARTY_TK_LIBRARY_VERSION "${TK_LIBRARY_VERSION}")
-    else() # if the version isn't found - seek other library with 8.6 or 8.5 version in the same dir
-      message (STATUS "Info: TK version isn't found")
-    endif()
-  endif()
-
-  set (3RDPARTY_TK_LIBRARY_VERSION_WITH_DOT "")
-  if (3RDPARTY_TK_LIBRARY_VERSION)
-    string (REGEX REPLACE "^.*([0-9])[^0-9]*[0-9].*$" "\\1" 3RDPARTY_TK_MAJOR_VERSION "${3RDPARTY_TK_LIBRARY_VERSION}")
-    string (REGEX REPLACE "^.*[0-9][^0-9]*([0-9]).*$" "\\1" 3RDPARTY_TK_MINOR_VERSION "${3RDPARTY_TK_LIBRARY_VERSION}")
-    set (3RDPARTY_TK_LIBRARY_VERSION_WITH_DOT "${3RDPARTY_TK_MAJOR_VERSION}.${3RDPARTY_TK_MINOR_VERSION}")
   endif()
 
   if (WIN32)
@@ -164,7 +150,7 @@ if (BUILD_SHARED_LIBS)
       endif()
 
       set (3RDPARTY_TK_DLL "3RDPARTY_TK_DLL-NOTFOUND" CACHE FILEPATH "TK shared library" FORCE)
-      find_library (3RDPARTY_TK_DLL NAMES tk${3RDPARTY_TK_LIBRARY_VERSION}
+      find_library (3RDPARTY_TK_DLL NAMES ${3RDPARTY_TK_LIBNAME}
                                           PATHS "${DLL_FOLDER_FOR_SEARCH}"
                                           NO_DEFAULT_PATH)
 

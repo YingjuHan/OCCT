@@ -1400,12 +1400,25 @@ proc osutils:csfList { theOS theCsfLibsMap theCsfFrmsMap theRelease} {
   unset theCsfLibsMap
   unset theCsfFrmsMap
 
+  # detect tcl version by parsing header file
+  set tclver_maj 8
+  set tclver_min 6
+  set aTclHPath [wokdep:SearchHeader "tcl.h"]
+  if { "$aTclHPath" != "" } {
+    set fh [open $aTclHPath]
+    set tcl_h [read $fh]
+    close $fh
+    regexp {define\s+TCL_MAJOR_VERSION\s+([0-9]+)} $tcl_h dummy tclver_maj
+    regexp {define\s+TCL_MINOR_VERSION\s+([0-9]+)} $tcl_h dummy tclver_min
+  }
+
   if { "$::HAVE_FREETYPE" == "true" } {
     set aLibsMap(CSF_FREETYPE) "freetype"
   }
-  set aLibsMap(CSF_TclLibs)   "tcl8.6"
+  set aLibsMap(CSF_TclLibs)   "tcl${tclver_maj}.${tclver_min}"
   if { "$::HAVE_TK" == "true" } {
-    set aLibsMap(CSF_TclTkLibs) "tk8.6"
+    set aLibsMap(CSF_TclTkLibs) "tk${tclver_maj}.${tclver_min}"
+    if { ${tclver_maj} >= 9 } { set aLibsMap(CSF_TclTkLibs) "tcl${tclver_maj}tk${tclver_maj}.${tclver_min}" }
   }
   if { "$::HAVE_FREEIMAGE" == "true" } {
     if { "$theOS" == "wnt" } {
@@ -1465,9 +1478,10 @@ proc osutils:csfList { theOS theCsfLibsMap theCsfFrmsMap theRelease} {
     set aLibsMap(CSF_d3d9)         "d3d9"
 
     # the naming is different on Windows
-    set aLibsMap(CSF_TclLibs)      "tcl86"
+    set aLibsMap(CSF_TclLibs)      "tcl${tclver_maj}${tclver_min}"
     if { "$::HAVE_TK" == "true" } {
-      set aLibsMap(CSF_TclTkLibs)  "tk86"
+      set aLibsMap(CSF_TclTkLibs)  "tk${tclver_maj}${tclver_min}"
+      if { ${tclver_maj} >= 9 } { set aLibsMap(CSF_TclTkLibs) "tcl${tclver_maj}tk${tclver_maj}${tclver_min}" }
     }
     if { "$theRelease" == "true" } {
       set aLibsMap(CSF_QT)         "Qt5Gui Qt5Widgets Qt5Xml Qt5Core"

@@ -6,16 +6,14 @@ puts ""
 # Cut with a compound
 ######################################################
 
-# Création cylindre tronqué ouvert avec 4 zones
+# Creating an open truncated cylinder with 4 zones
 
-# Démarche
-# - Création de quatre faces planes connexes (profil représentant les 
-#   3 couches et l'interieur
-# - Génération des portions de cylindres connexes par révolution 
-#   des faces précédentes
-# - Creation du plan et troncature (cut) de l'objet précedent
+# Procedure
+# - Creating four connected flat faces (profile representing the 3 layers and the interior)
+# - Generating connected cylinder segments by revolving the previous faces
+# - Creating the plane and truncating (cutting) the previous object
 
-# => temps moyen : 62source  ms
+# => Average time: 62 ms
 
 vertex v0 0 0 0
 vertex v1 1 0 0

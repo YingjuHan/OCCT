@@ -651,6 +651,7 @@ proc testgrid {args} {
     lappend log "Command: testgrid $args"
     lappend log "Host: [info hostname]"
     lappend log "Started on: [clock format [clock seconds] -format {%Y-%m-%d %H:%M:%S}]"
+    if { [info commands ::tcl::build-info] != "" } {lappend log "Tcl build: [::tcl::build-info]" }
     catch {lappend log "DRAW build:\n[dversion]" }
     catch {lappend log "Multithreading info:\n[dparallel]" }
     catch {lappend log "Memory info:\n[meminfo]" }
@@ -672,7 +673,13 @@ proc testgrid {args} {
 
     # if parallel execution is requested, allocate thread pool
     if { $parallel > 0 } {
-        if { ! [info exists tcl_platform(threaded)] || [catch {package require Thread}] } {
+        set isThreadedTcl 0
+        if { [expr $::tcl_version >= 9.0] } {
+            set isThreadedTcl 1
+        } elseif { [info exists ::tcl_platform(threaded)] && $::tcl_platform(threaded) } {
+            set isThreadedTcl 1
+        }
+        if { !$isThreadedTcl || [catch {package require Thread}] } {
             _log_and_puts log "Warning: Tcl package Thread is not available, running in sequential mode"
             set parallel 0
         } else {

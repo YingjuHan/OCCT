@@ -52,15 +52,15 @@ set aTmpFileCP125N "${imagedir}/${casename}-tmp-CP125N.stp"
 # multi-encoding
 set anEngName [encoding convertfrom utf-8 "\x54\x65\x73\x74"]
 # cp1250
-set aLat1Name [encoding convertfrom utf-8 "\x50\x72\x6f\x62\xed\x68\xe1"]
+set aLat1Name [encoding convertfrom utf-8 "\x50\x72\x6f\x62\xc3\xad\x68\xc3\xa1"]
 # cp1251
 set aCyrName [encoding convertfrom utf-8 "\xD0\xa2\xD0\xB5\xD1\x81\xD1\x82"]
 # cp1252
-set aLat2Name [encoding convertfrom utf-8 "\x50\x72\x6f\x62\xed\x68\xe1"]
+set aLat2Name [encoding convertfrom utf-8 "\x50\x72\x6f\x62\xc3\xad\x68\xc3\xa1"]
 # cp1253 
 set aGreekName [encoding convertfrom utf-8 "\xce\x94\xce\xbf\xce\xba\xce\xb9\xce\xbc\xce\xae"]
 # cp1254
-set aTurkName [encoding convertfrom utf-8 "\xd6\x6c\xe7\x65\x6b"]
+set aTurkName [encoding convertfrom utf-8 "\xc3\x96\x6c\xc3\xa7\x65\x6b"]
 # cp1255
 set aHebrName [encoding convertfrom utf-8 "\xd7\x9e\xd6\xb4\xd7\x91\xd6\xb0\xd7\x97\xd6\xb8\xd7\x9f"]
 # cp1256
@@ -68,7 +68,7 @@ set anArabName [encoding convertfrom utf-8 "\xd8\xa7\xd8\xae\xd8\xaa\xd8\xa8\xd8
 # cp1257
 set aBaltName [encoding convertfrom utf-8 "\x50\xc4\x81\x72\x62\x61\x75\x64\x65"]
 # cp1258
-set aViettName [encoding convertfrom utf-8 "\u0054\u0068\u00ed \u006e\u0067\u0068\u0069\u1ec7\u006d"]
+set aViettName [encoding convertfrom utf-8 "\x54\x68\xc3\xad\x20\x6e\x67\x68\x69\xc3\x87\x6d"]
 
 box b 1 2 3
 Close A T U CP -silent

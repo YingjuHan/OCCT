@@ -8,6 +8,7 @@ CSF_OCCTDataPath=@CMAKE_SOURCE_DIR@/data
 CSF_OCCTSamplesPath=@CMAKE_SOURCE_DIR@/samples
 CSF_OCCTTestsPath=@CMAKE_SOURCE_DIR@/tests
 CSF_OCCTDocPath=@CMAKE_SOURCE_DIR@/doc
+TCLLIBPATH=@3RDPARTY_TCL_LIBRARY_DIR@
 PATH=@3RDPARTY_DLL_DIRS_FOR_PATH@;%PATH%
  </LocalDebuggerEnvironment>
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -21,6 +22,7 @@ CSF_OCCTDataPath=@CMAKE_SOURCE_DIR@/data
 CSF_OCCTSamplesPath=@CMAKE_SOURCE_DIR@/samples
 CSF_OCCTTestsPath=@CMAKE_SOURCE_DIR@/tests
 CSF_OCCTDocPath=@CMAKE_SOURCE_DIR@/doc
+TCLLIBPATH=@3RDPARTY_TCL_LIBRARY_DIR@
 PATH=@3RDPARTY_DLL_DIRS_FOR_PATH@;%PATH%
  </LocalDebuggerEnvironment>
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -34,6 +36,7 @@ CSF_OCCTDataPath=@CMAKE_SOURCE_DIR@/data
 CSF_OCCTSamplesPath=@CMAKE_SOURCE_DIR@/samples
 CSF_OCCTTestsPath=@CMAKE_SOURCE_DIR@/tests
 CSF_OCCTDocPath=@CMAKE_SOURCE_DIR@/doc
+TCLLIBPATH=@3RDPARTY_TCL_LIBRARY_DIR@
 PATH=@3RDPARTY_DLL_DIRS_FOR_PATH@;%PATH%
  </LocalDebuggerEnvironment>
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>

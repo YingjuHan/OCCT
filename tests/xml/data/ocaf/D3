@@ -12,7 +12,7 @@ Label D ${aV3Label}
 
 SetVariable D ${aV1Label} 1 "N"
 SetVariable D ${aV2Label} 0 "kg"
-SetVariable D ${aV3Label} 0 "µ/s²"
+SetVariable D ${aV3Label} 0 "Âµ/sÂ²"
 
 # Set an expression
 set expression "f = m*a"

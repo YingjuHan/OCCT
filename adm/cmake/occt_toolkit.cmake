@@ -376,14 +376,14 @@ foreach (USED_ITEM ${USED_EXTERNLIB_AND_TOOLKITS})
       else() # get CSF_ value
         set (CURRENT_CSF ${${USED_ITEM}})
         if (NOT "x${CURRENT_CSF}" STREQUAL "x")
-          if ("${CURRENT_CSF}" STREQUAL "${CSF_OpenGlLibs}")
+          if ("${USED_ITEM}" STREQUAL "CSF_OpenGlLibs")
             add_definitions (-DHAVE_OPENGL)
           endif()
-          if ("${CURRENT_CSF}" STREQUAL "${CSF_OpenGlesLibs}")
+          if ("${USED_ITEM}" STREQUAL "CSF_OpenGlesLibs")
             add_definitions (-DHAVE_GLES2)
           endif()
 
-          if ("${CURRENT_CSF}" STREQUAL "${CSF_Draco}")
+          if ("${USED_ITEM}" STREQUAL "CSF_Draco")
             set (CURRENT_CSF "")
             set (USED_DRACO 1)
           endif()
@@ -401,12 +401,8 @@ foreach (USED_ITEM ${USED_EXTERNLIB_AND_TOOLKITS})
 
               if (EXISTS "${CURRENT_CACHE_LIBRARY}" AND NOT IS_DIRECTORY "${CURRENT_CACHE_LIBRARY}")
                 string (REGEX MATCH "_${CSF_LIBRARY}$" IS_ENDING "${CACHE_VARIABLE}")
-                string (REGEX MATCH "^([a-z]+)" CSF_WO_VERSION "${CSF_LIBRARY}")
-                string (REGEX MATCH "_${CSF_WO_VERSION}$" IS_ENDING_WO_VERSION "${CACHE_VARIABLE}")
                 if ("3rdparty_${CSF_LIBRARY}_library" STREQUAL "${CACHE_VARIABLE}" OR
-                    "3rdparty_${CSF_WO_VERSION}_library" STREQUAL "${CACHE_VARIABLE}" OR
-                    NOT "x${IS_ENDING}" STREQUAL "x" OR
-                    NOT "x${IS_ENDING_WO_VERSION}" STREQUAL "x")
+                    NOT "x${IS_ENDING}" STREQUAL "x")
                   list (APPEND USED_EXTERNAL_LIBS_BY_CURRENT_PROJECT "${CURRENT_CACHE_LIBRARY}")
                   set (LIBRARY_FROM_CACHE 1)
                 endif()

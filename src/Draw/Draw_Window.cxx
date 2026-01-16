@@ -2000,7 +2000,9 @@ static DWORD WINAPI tkLoop (const LPVOID theThreadParameter)
   #endif
   }
   Tcl_Exit(0);
+#if !(defined(TCL_NORETURN) && (defined(__GNUC__) || defined(_MSC_VER)))
   return 0;
+#endif
 }
 
 /*--------------------------------------------------------*\
