@@ -1511,9 +1511,12 @@ void OpenGl_Context::init (const Standard_Boolean theIsCoreProfile)
     GLint aWinColorEncoding = 0; // GL_LINEAR
     bool toSkipCheck = false;
     if (myGapi == Aspect_GraphicsLibrary_OpenGLES)
-    {
       toSkipCheck = !IsGlGreaterEqual (3, 0);
-    }
+
+  #ifndef __APPLE__
+    if (myWindow == 0)
+      toSkipCheck = true;
+  #endif
     if (!toSkipCheck)
     {
       arbFBO->glGetFramebufferAttachmentParameteriv (GL_FRAMEBUFFER, aDefWinBuffer, GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &aWinColorEncoding);
@@ -1906,6 +1909,30 @@ void OpenGl_Context::WindowBufferBits (Graphic3d_Vec4i& theColorBits,
     }
   #endif
   }
+
+  if (myDefaultFbo.IsNull()
+  || !myDefaultFbo->IsValid()
+  || theColorBits.r() != 0)
+    return;
+
+  // get info from default FBO
+  myDefaultFbo->BindBuffer(this);
+  arbFBO->glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE,   &theColorBits.r());
+  arbFBO->glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE, &theColorBits.g());
+  arbFBO->glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE,  &theColorBits.b());
+  arbFBO->glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE, &theColorBits.a());
+
+  GLint aType = GL_NONE;
+  arbFBO->glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,   GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &aType);
+  if (aType != GL_NONE)
+    arbFBO->glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE,  &theDepthStencilBits[0]);
+
+  aType = GL_NONE;
+  arbFBO->glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &aType);
+  if (aType != GL_NONE)
+    arbFBO->glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE, &theDepthStencilBits[1]);
+
+  arbFBO->glBindFramebuffer(GL_FRAMEBUFFER, OpenGl_FrameBuffer::NO_FRAMEBUFFER);
 }
 
 // =======================================================================

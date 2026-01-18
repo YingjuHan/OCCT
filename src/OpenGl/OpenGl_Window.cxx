@@ -268,6 +268,8 @@ void OpenGl_Window::Init (const Handle(OpenGl_GraphicDriver)& theDriver,
       if (anEglConfig != NULL)
       {
       #if !defined(__EMSCRIPTEN__) // eglCreatePbufferSurface() is not implemented by Emscripten EGL
+        const bool hasSurfLessExt =
+          OpenGl_Context::CheckExtension(::eglQueryString(anEglDisplay, EGL_EXTENSIONS), "EGL_KHR_surfaceless_context");
         const int aSurfAttribs[] =
         {
           EGL_WIDTH,  mySize.x(),
@@ -276,10 +278,11 @@ void OpenGl_Window::Init (const Handle(OpenGl_GraphicDriver)& theDriver,
           //EGL_GL_COLORSPACE_KHR, !theCaps->sRGBDisable ? EGL_GL_COLORSPACE_SRGB_KHR : EGL_GL_COLORSPACE_LINEAR_KHR,
           EGL_NONE
         };
-        anEglSurf = eglCreatePbufferSurface (anEglDisplay, anEglConfig, aSurfAttribs);
-        if (anEglSurf == EGL_NO_SURFACE)
+        if (!hasSurfLessExt)
         {
-          throw Aspect_GraphicDeviceDefinitionError("OpenGl_Window, EGL is unable to create off-screen surface!");
+          anEglSurf = eglCreatePbufferSurface (anEglDisplay, anEglConfig, aSurfAttribs);
+          if (anEglSurf == EGL_NO_SURFACE)
+            throw Aspect_GraphicDeviceDefinitionError("OpenGl_Window, EGL is unable to create off-screen surface!");
         }
       #endif
       }
@@ -790,7 +793,8 @@ void OpenGl_Window::init()
   }
 
 #if defined(HAVE_EGL)
-  if ((EGLSurface )myGlContext->myWindow == EGL_NO_SURFACE)
+  if ((EGLSurface )myGlContext->myWindow == EGL_NO_SURFACE
+   && myOwnGContext)
   {
     // define an offscreen default FBO to avoid rendering into EGL_NO_SURFACE;
     // note that this code is currently never called, since eglCreatePbufferSurface() is used instead as more robust solution
@@ -816,7 +820,8 @@ void OpenGl_Window::init()
     aDefFbo->BindBuffer (myGlContext);
   }
   else if (!myPlatformWindow->IsVirtual()
-         && mySizeWindow == myPlatformWindow)
+         && mySizeWindow == myPlatformWindow
+         && (EGLSurface )myGlContext->myWindow != EGL_NO_SURFACE)
   {
     eglQuerySurface ((EGLDisplay )myGlContext->myDisplay, (EGLSurface )myGlContext->myWindow, EGL_WIDTH,  &mySize.x());
     eglQuerySurface ((EGLDisplay )myGlContext->myDisplay, (EGLSurface )myGlContext->myWindow, EGL_HEIGHT, &mySize.y());
