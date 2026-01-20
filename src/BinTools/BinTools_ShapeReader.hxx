@@ -64,15 +64,30 @@ private:
   //! Reads triangulation from the stream.
   Handle(Poly_Triangulation) ReadTriangulation (BinTools_IStream& theStream);
 
+private:
+  //! Computes a hash code for the given value of the uint64_t type, in range [1, theUpperBound]
+  struct Uint64Hasher
+  {
+    static int HashCode (const uint64_t theValue, const int theUpperBound)
+    {
+      return IntegerHashCode(theValue, 0xffffffffffffffff, theUpperBound);
+    }
+    static bool IsEqual(const uint64_t& theKey1, const uint64_t& theKey2)
+    {
+      return theKey1 == theKey2;
+    }
+  };
+
+private:
   /// position of the shape previously restored
-  NCollection_DataMap<uint64_t, TopoDS_Shape> myShapePos;
-  NCollection_DataMap<uint64_t, TopLoc_Location> myLocationPos;
-  NCollection_DataMap<uint64_t, Handle(Geom_Curve)> myCurvePos;
-  NCollection_DataMap<uint64_t, Handle(Geom2d_Curve)> myCurve2dPos;
-  NCollection_DataMap<uint64_t, Handle(Geom_Surface)> mySurfacePos;
-  NCollection_DataMap<uint64_t, Handle(Poly_Polygon3D)> myPolygon3dPos;
-  NCollection_DataMap<uint64_t, Handle(Poly_PolygonOnTriangulation)> myPolygonPos;
-  NCollection_DataMap<uint64_t, Handle(Poly_Triangulation)> myTriangulationPos;
+  NCollection_DataMap<uint64_t, TopoDS_Shape, Uint64Hasher> myShapePos;
+  NCollection_DataMap<uint64_t, TopLoc_Location, Uint64Hasher> myLocationPos;
+  NCollection_DataMap<uint64_t, Handle(Geom_Curve), Uint64Hasher> myCurvePos;
+  NCollection_DataMap<uint64_t, Handle(Geom2d_Curve), Uint64Hasher> myCurve2dPos;
+  NCollection_DataMap<uint64_t, Handle(Geom_Surface), Uint64Hasher> mySurfacePos;
+  NCollection_DataMap<uint64_t, Handle(Poly_Polygon3D), Uint64Hasher> myPolygon3dPos;
+  NCollection_DataMap<uint64_t, Handle(Poly_PolygonOnTriangulation), Uint64Hasher> myPolygonPos;
+  NCollection_DataMap<uint64_t, Handle(Poly_Triangulation), Uint64Hasher> myTriangulationPos;
 };
 
 #endif // _BinTools_ShapeReader_HeaderFile
