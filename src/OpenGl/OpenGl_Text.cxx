@@ -119,7 +119,7 @@ void OpenGl_Text::SetFontSize (const Handle(OpenGl_Context)& theCtx,
 // =======================================================================
 void OpenGl_Text::Reset (const Handle(OpenGl_Context)& theCtx)
 {
-  if (!myFont.IsNull() && myFont->FTFont()->PointSize() != myText->Height())
+  if (!myFont.IsNull() && !myFont->FTFont().IsNull() && myFont->FTFont()->PointSize() != myText->Height())
   {
     Release (theCtx.operator->());
   }
