@@ -14,6 +14,7 @@
 #include <OpenGl_GraphicDriverFactory.hxx>
 
 #include <OpenGl_GraphicDriver.hxx>
+#include <OSD.hxx>
 
 #ifdef HAVE_GLES2
   #define OpenGl_DRIVER_NAME "TKOpenGles"
@@ -40,6 +41,8 @@ OpenGl_GraphicDriverFactory::OpenGl_GraphicDriverFactory()
 // =======================================================================
 Handle(Graphic3d_GraphicDriver) OpenGl_GraphicDriverFactory::CreateDriver (const Handle(Aspect_DisplayConnection)& theDisp)
 {
+  OSD::SentryIgnoreFloatingSignals aNoCatchFpe;
+
   Handle(OpenGl_GraphicDriver) aDriver = new OpenGl_GraphicDriver (theDisp, false);
   aDriver->ChangeOptions() = *myDefaultCaps;
   aDriver->InitContext();

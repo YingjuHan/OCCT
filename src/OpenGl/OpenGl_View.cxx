@@ -36,6 +36,7 @@
 #include <OpenGl_Texture.hxx>
 #include <OpenGl_Window.hxx>
 #include <OpenGl_Workspace.hxx>
+#include <OSD.hxx>
 #include <OSD_Parallel.hxx>
 #include <Standard_CLocaleSentry.hxx>
 
@@ -1625,6 +1626,8 @@ bool OpenGl_View::prepareFrameBuffers (Graphic3d_Camera::Projection& theProj)
 //=======================================================================
 void OpenGl_View::Redraw()
 {
+  OSD::SentryIgnoreFloatingSignals aNoCatchFpe;
+
   const Standard_Boolean wasDisabledMSAA = myToDisableMSAA;
   const Standard_Boolean hadFboBlit      = myHasFboBlit;
   if (myRenderParams.Method == Graphic3d_RM_RAYTRACING

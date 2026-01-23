@@ -22,6 +22,7 @@
 #include <OpenGl_FrameBuffer.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <OpenGl_Window.hxx>
+#include <OSD.hxx>
 
 #include <Aspect_GraphicDeviceDefinitionError.hxx>
 #include <Aspect_Handle.hxx>
@@ -577,6 +578,8 @@ void OpenGl_Window::Init (const Handle(OpenGl_GraphicDriver)& theDriver,
    && anFBConfig != NULL
    && OpenGl_Context::CheckExtension (aGlxExts, "GLX_ARB_create_context_profile"))
   {
+    OSD::SentryIgnoreFloatingSignals aNoCatchFpe;
+
     // Replace default XError handler to ignore errors.
     // Warning - this is global for all threads!
     typedef int (*xerrorhandler_t)(Display* , XErrorEvent* );

@@ -142,6 +142,27 @@ public:
   //! Sets a length of stack trace to be put into exception redirected from signal.
   Standard_EXPORT static void SetSignalStackTraceLength (Standard_Integer theLength);
 
+public:
+  //! Sentry object to temporarily disable catching of floating points signals
+  //! within the block, where such floating math is expected (such as a software renderer).
+  class SentryIgnoreFloatingSignals
+  {
+  public:
+    //! Disable FPE signals.
+    SentryIgnoreFloatingSignals() : myWasEnabled(ToCatchFloatingSignals())
+    {
+      if (myWasEnabled)
+        SetFloatingSignal(false);
+    }
+    //! Restore FPE signals.
+    ~SentryIgnoreFloatingSignals()
+    {
+      if (myWasEnabled)
+        SetFloatingSignal(true);
+    }
+  private:
+    bool myWasEnabled = false;
+  };
 };
 
 #endif // _OSD_HeaderFile
