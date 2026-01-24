@@ -349,6 +349,44 @@ if (NOT EMSCRIPTEN)
                                                     VERSION   "${OCC_VERSION_MAJOR}.${OCC_VERSION_MINOR}.${OCC_VERSION_MAINTENANCE}")
 endif()
 
+# Copy GDB pretty-printers
+macro (HANDLE_GDB_SCRIPT SCRIPT_TYPE)
+  set (GDB_SOURCE_NAME "${PROJECT_NAME}-gdb.${SCRIPT_TYPE}")
+  set (GDB_SOURCE_PATH "${CMAKE_SOURCE_DIR}/${RELATIVE_SOURCES_DIR}/${PROJECT_NAME}/${GDB_SOURCE_NAME}")
+  if (EXISTS "${GDB_SOURCE_PATH}")
+    set (DEST_DIR "")
+    if (EXECUTABLE_PROJECT)
+      set (DEST_DIR "${INSTALL_DIR_BIN}${OCCT_INSTALL_BIN_LETTER}")
+    else()
+      set (DEST_DIR "${INSTALL_DIR_LIB}${OCCT_INSTALL_BIN_LETTER}")
+    endif()
+    if (SINGLE_GENERATOR)
+      set (aBuildConfigs ${CMAKE_BUILD_TYPE})
+    else()
+      set (aBuildConfigs Debug RelWithDebInfo)
+    endif()
+    set (aTargetGdbFile "$<TARGET_FILE:${PROJECT_NAME}>-gdb.${SCRIPT_TYPE}")
+    foreach (aBuildCfgIter ${aBuildConfigs})
+      add_custom_target ("${GDB_SOURCE_NAME}-${aBuildCfgIter}" ALL
+                         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GDB_SOURCE_PATH}" "${aTargetGdbFile}"
+                         COMMENT "Copying ${GDB_SOURCE_NAME}"
+                         DEPENDS "${GDB_SOURCE_PATH}"
+                         SOURCES "${GDB_SOURCE_PATH}"
+                         VERBATIM)
+message (STATUS " @@@ ${GDB_SOURCE_PATH} -> ${aTargetGdbFile}")
+    endforeach()
+    install (FILES "${aTargetGdbFile}"
+             CONFIGURATIONS Debug RelWithDebInfo
+             DESTINATION "${DEST_DIR}" OPTIONAL)
+  endif()
+endmacro()
+
+if ((CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX) AND (NOT SINGLE_GENERATOR OR
+    "${CMAKE_BUILD_TYPE}" STREQUAL "Debug" OR "${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo"))
+  HANDLE_GDB_SCRIPT ("gdb")
+  HANDLE_GDB_SCRIPT ("py")
+endif()
+
 set (USED_TOOLKITS_BY_CURRENT_PROJECT)
 set (USED_EXTERNAL_LIBS_BY_CURRENT_PROJECT)
 
