@@ -710,9 +710,9 @@ Standard_Boolean StdSelect_BRepSelectionTool::GetSensitiveForFace (const TopoDS_
 
   // for faces with triangulation bugs or without autotriangulation ....
   // very ugly and should not even exist ...
-  BRepAdaptor_Surface BS (theFace);
-  if (BS.GetType() == GeomAbs_Plane)
+  if (Handle(Geom_Plane) aGeomPlane = Handle(Geom_Plane)::DownCast (aSurf))
   {
+    BRepAdaptor_Surface BS (theFace);
     const Standard_Real aFirstU = BS.FirstUParameter() <= -Precision::Infinite() ? -theMaxParam : BS.FirstUParameter();
     const Standard_Real aLastU  = BS.LastUParameter()  >=  Precision::Infinite() ?  theMaxParam : BS.LastUParameter();
     const Standard_Real aFirstV = BS.FirstVParameter() <= -Precision::Infinite() ? -theMaxParam : BS.FirstVParameter();
@@ -738,6 +738,19 @@ Standard_Boolean StdSelect_BRepSelectionTool::GetSensitiveForFace (const TopoDS_
 
   // This is construction of a sensitive polygon from the exterior contour of the face...
   // It is not good at all, but...
+  return GetSensitiveEntityForFaceContour (theFace, theOwner, theSensitiveList, NbPOnEdge, theInteriorFlag);
+}
+
+//=======================================================================
+//function : GetSensitiveEntityForFaceContour
+//purpose  :
+//=======================================================================
+Standard_Boolean StdSelect_BRepSelectionTool::GetSensitiveEntityForFaceContour (const TopoDS_Face& theFace,
+                                                                                const Handle(SelectMgr_EntityOwner)& theOwner,
+                                                                                Select3D_EntitySequence& theSensitiveList,
+                                                                                const Standard_Integer NbPOnEdge,
+                                                                                const Standard_Boolean theInteriorFlag)
+{
   TopoDS_Wire aWire;
   {
     TopExp_Explorer anExpWiresInFace (theFace, TopAbs_WIRE);
@@ -801,6 +814,7 @@ Standard_Boolean StdSelect_BRepSelectionTool::GetSensitiveForFace (const TopoDS_
       {
         if (2.0 * M_PI - Abs (wl - wf) <= Precision::Confusion())
         {
+          BRepAdaptor_Surface BS (theFace);
           if (BS.GetType() == GeomAbs_Cylinder ||
               BS.GetType() == GeomAbs_Torus ||
               BS.GetType() == GeomAbs_Cone  ||
@@ -877,6 +891,8 @@ Standard_Boolean StdSelect_BRepSelectionTool::GetSensitiveForFace (const TopoDS_
       }
     }
   }
+  if (aWirePoints.IsEmpty())
+    return false;
 
   Handle(TColgp_HArray1OfPnt) aFacePoints = new TColgp_HArray1OfPnt (1, aWirePoints.Length());
   {

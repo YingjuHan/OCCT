@@ -158,6 +158,13 @@ public:
                                                                const Standard_Real theMaxiParam = 500,
                                                                const Standard_Boolean theInteriorFlag = Standard_True);
 
+  //! Fallback method creating sensitivity from Face's contour.
+  Standard_EXPORT static Standard_Boolean GetSensitiveEntityForFaceContour (const TopoDS_Face& theFace,
+                                                                            const Handle(SelectMgr_EntityOwner)& theOwner,
+                                                                            Select3D_EntitySequence& theOutList,
+                                                                            const Standard_Integer theNbPOnEdge,
+                                                                            const Standard_Boolean theInteriorFlag);
+
   //! Creates a sensitive cylinder.
   //! @param[in] theSubfacesMap map of cylinder faces
   //! @param[in] theOwner       selectable owner object
