@@ -1,0 +1,1 @@
+"Conan tooling for OCCT."

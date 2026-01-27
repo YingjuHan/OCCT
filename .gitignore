@@ -15,8 +15,11 @@
 !/OCCT_LGPL_EXCEPTION.txt
 !/README.md
 !/adm/
+!/conan/
+!/conanfile.py
 !/cmake/
 !/data/
+!/docs/
 !/dox/
 !/src/
 !/tests/

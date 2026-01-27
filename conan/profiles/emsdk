@@ -1,0 +1,7 @@
+[settings]
+os=Emscripten
+arch=wasm32
+compiler=clang
+compiler.version=16
+compiler.libcxx=libc++
+build_type=Release
