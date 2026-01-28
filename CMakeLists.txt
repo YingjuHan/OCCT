@@ -942,6 +942,8 @@ string(TIMESTAMP CURRENT_TIME "%H:%M:%S")
 message (STATUS "\nInfo: \(${CURRENT_TIME}\) Start collecting all OCCT header files into ${CMAKE_BINARY_DIR}/inc ...")
 
 # collect all the headers to <binary dir>/inc folder
+set (BUILD_SHORTCUT_HEADERS "shortcut" CACHE STRING "Strategy for filling 'inc' headers within build folder.")
+set_property (CACHE BUILD_SHORTCUT_HEADERS PROPERTY STRINGS "shortcut" "fullpath")
 COLLECT_AND_INSTALL_OCCT_HEADER_FILES ("${CMAKE_BINARY_DIR}" "${BUILD_TOOLKITS}" "${CMAKE_SOURCE_DIR}/src" "${INSTALL_DIR_INCLUDE}")
 
 string(TIMESTAMP CURRENT_TIME "%H:%M:%S")
