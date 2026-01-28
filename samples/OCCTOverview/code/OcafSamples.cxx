@@ -150,7 +150,8 @@ void OcafSamples::CreateOcafDocument()
 {
   Handle(TOcaf_Application) anOcaf_Application = new TOcaf_Application;
   anOcaf_Application->NewDocument("BinOcaf", myOcafDoc);
-  TPrsStd_AISViewer::New(myOcafDoc->Main(), myViewer);
+  Handle(TPrsStd_AISViewer) aTViewer = TPrsStd_AISViewer::New(myOcafDoc->Main(), myViewer);
+  aTViewer->SetInteractiveContext(myContext);
 
   Handle(AIS_InteractiveContext) anAisContext;
   TPrsStd_AISViewer::Find(myOcafDoc->Main(), anAisContext);
@@ -195,7 +196,8 @@ void OcafSamples::CreateBoxOcafSample()
 
   // Instantiate a TFunction_Function attribute connected to the current box driver
   // and attach it to the data structure as an attribute of the Box Label
-  Handle(TFunction_Function) myFunction = TFunction_Function::Set(aLabel, TOcafFunction_BoxDriver::GetID());
+  Handle(TFunction_Function) myFunction =
+    TFunction_Function::Set(aLabel, TOcafFunction_BoxDriver::GetID());
 
   // Initialize and execute the box driver (look at the "Execute()" code)
   Handle(TFunction_Logbook) aLogBook = TFunction_Logbook::Set(aLabel);
@@ -203,18 +205,15 @@ void OcafSamples::CreateBoxOcafSample()
   Handle(TFunction_Driver) myBoxDriver;
   // Find the TOcafFunction_BoxDriver in the TFunction_DriverTable using its GUID
   if (!TFunction_DriverTable::Get()->FindDriver(TOcafFunction_BoxDriver::GetID(), myBoxDriver))
-  {
     myResult << "Ocaf Box driver not found" << std::endl;
-  }
 
   myBoxDriver->Init(aLabel);
   if (myBoxDriver->Execute(aLogBook))
-  {
     myResult << "Create Box function execute failed" << std::endl;
-  }
 
   // Get the TPrsStd_AISPresentation of the new box TNaming_NamedShape
-  Handle(TPrsStd_AISPresentation) anAisPresentation = TPrsStd_AISPresentation::Set(aLabel, TNaming_NamedShape::GetID());
+  Handle(TPrsStd_AISPresentation) anAisPresentation =
+    TPrsStd_AISPresentation::Set(aLabel, TNaming_NamedShape::GetID());
   // Display it
   anAisPresentation->Display(1);
   // Attach an integer attribute to aLabel to memorize it's displayed
@@ -261,7 +260,8 @@ void OcafSamples::CreateCylinderOcafSample()
 
   // Instantiate a TFunction_Function attribute connected to the current cylinder driver
   // and attach it to the data structure as an attribute of the Cylinder Label
-  Handle(TFunction_Function) myFunction = TFunction_Function::Set(aLabel, TOcafFunction_CylDriver::GetID());
+  Handle(TFunction_Function) myFunction =
+    TFunction_Function::Set(aLabel, TOcafFunction_CylDriver::GetID());
 
   // Initialize and execute the cylinder driver (look at the "Execute()" code)
   Handle(TFunction_Logbook) aLogBook = TFunction_Logbook::Set(aLabel);
@@ -269,16 +269,15 @@ void OcafSamples::CreateCylinderOcafSample()
   Handle(TFunction_Driver) myCylDriver;
   // Find the TOcafFunction_CylDriver in the TFunction_DriverTable using its GUID
   if (!TFunction_DriverTable::Get()->FindDriver(TOcafFunction_CylDriver::GetID(), myCylDriver))
-  {
     myResult << "Ocaf Cylinder driver not found";
-  }
+
   myCylDriver->Init(aLabel);
   if (myCylDriver->Execute(aLogBook))
-  {
     myResult << "Create Cylinder function execute failed";
-  }
+
   // Get the TPrsStd_AISPresentation of the new box TNaming_NamedShape
-  Handle(TPrsStd_AISPresentation) anAisPresentation = TPrsStd_AISPresentation::Set(aLabel, TNaming_NamedShape::GetID());
+  Handle(TPrsStd_AISPresentation) anAisPresentation =
+    TPrsStd_AISPresentation::Set(aLabel, TNaming_NamedShape::GetID());
   // Display it
   anAisPresentation->Display(1);
   // Attach an integer attribute to aLabel to memorize it's displayed
@@ -298,13 +297,14 @@ void OcafSamples::ModifyBoxOcafSample()
   AIS_ListOfInteractive anAisObjectsList;
   myContext->DisplayedObjects(anAisObjectsList);
   Standard_Integer aBoxCount(0);
-  for(AIS_ListOfInteractive::Iterator anIter(anAisObjectsList);
-      anIter.More(); anIter.Next())
+  for (const Handle(AIS_InteractiveObject)& anAisObject : anAisObjectsList)
   {
-    const Handle(AIS_InteractiveObject)& anAisObject = anIter.Value();
-
     // Get the main label of the selected object
-    Handle(TPrsStd_AISPresentation) anAisPresentation = Handle(TPrsStd_AISPresentation)::DownCast(anAisObject->GetOwner());
+    Handle(TPrsStd_AISPresentation) anAisPresentation =
+      Handle(TPrsStd_AISPresentation)::DownCast(anAisObject->GetOwner());
+    if (anAisPresentation.IsNull())
+      continue;
+
     TDF_Label aLabel = anAisPresentation->Label();
 
     // Get the TFunction_Function attribute of the selected object
@@ -368,9 +368,7 @@ void OcafSamples::ModifyBoxOcafSample()
       // Set the box touched, it will be useful to recompute an object which used this box as attribute
       aLogBook->SetTouched(aLabel);
       if (aBoxDriver->Execute(aLogBook))
-      {
         myResult << "Recompute failed" << std::endl;
-      }
 
       // Get the presentation of the box, display it and set it selected
       anAisPresentation = TPrsStd_AISPresentation::Set(aLabel, TNaming_NamedShape::GetID());
@@ -386,14 +384,10 @@ void OcafSamples::ModifyBoxOcafSample()
       myResult << "width: " << aBoxWidth << " length: " << aBoxLength << " height: " << aBoxHeight << std::endl;
     }
   }
-  if (aBoxCount)
-  {
+  if (aBoxCount != 0)
     myResult << "Number of modified boxes: " << aBoxCount << std::endl;
-  }
   else
-  {
     myResult << "No boxes to modify" << std::endl;
-  }
 }
 
 void OcafSamples::ModifyCylinderOcafSample()
@@ -401,12 +395,14 @@ void OcafSamples::ModifyCylinderOcafSample()
   AIS_ListOfInteractive anAisObjectsList;
   myContext->DisplayedObjects(anAisObjectsList);
   Standard_Integer aCylCount(0);
-  for(AIS_ListOfInteractive::Iterator anIter (anAisObjectsList);
-      anIter.More(); anIter.Next())
+  for (const Handle(AIS_InteractiveObject)& anAisObject : anAisObjectsList)
   {
-    const Handle(AIS_InteractiveObject)& anAisObject = anIter.Value();
     // Get the main label of the selected object
-    Handle(TPrsStd_AISPresentation) anAisPresentation = Handle(TPrsStd_AISPresentation)::DownCast(anAisObject->GetOwner());
+    Handle(TPrsStd_AISPresentation) anAisPresentation =
+      Handle(TPrsStd_AISPresentation)::DownCast(anAisObject->GetOwner());
+    if (anAisPresentation.IsNull())
+      continue;
+
     TDF_Label aLabel = anAisPresentation->Label();
 
     // Get the TFunction_Function attribute of the selected object
@@ -470,9 +466,8 @@ void OcafSamples::ModifyCylinderOcafSample()
       // Set the cylinder touched, it will be useful to recompute an object which used this box as attribute
       aLogBook->SetTouched(aLabel);
       if (aCylDriver->Execute(aLogBook))
-      {
         myResult << "Recompute failed" << std::endl;
-      }
+
       // Get the presentation of the box, display it and set it selected
       anAisPresentation = TPrsStd_AISPresentation::Set(aLabel, TNaming_NamedShape::GetID());
       TDataStd_Integer::Set(aLabel, 1);
@@ -487,14 +482,10 @@ void OcafSamples::ModifyCylinderOcafSample()
       myResult << "base coord X: " << aCylX << " Y: " << aCylY << " Z: " << aCylZ << std::endl;
     }
   }
-  if (aCylCount)
-  {
+  if (aCylCount != 0)
     myResult << "Number of modified boxes: " << aCylCount << std::endl;
-  }
   else
-  {
     myResult << "No boxes to modify" << std::endl;
-  }
 }
 
 void OcafSamples::UndoOcafSample()
@@ -569,13 +560,9 @@ void OcafSamples::DialogSaveBinOcafSample()
   // Saves the document in the current application
   PCDM_StoreStatus aStoreStatus = anOcaf_Application->SaveAs(myOcafDoc, myFileName);
   if (aStoreStatus == PCDM_SS_OK)
-  {
     myResult << "The file was saved successfully" << std::endl;
-  }
   else
-  {
     myResult << "Error! The file wasn't saved. PCDM_StoreStatus: " << aStoreStatus << std::endl;
-  }
 }
 
 void OcafSamples::DialogSaveXmlOcafSample()
@@ -586,13 +573,9 @@ void OcafSamples::DialogSaveXmlOcafSample()
   // Saves the document in the current application
   PCDM_StoreStatus aStoreStatus = anOcaf_Application->SaveAs(myOcafDoc, myFileName);
   if (aStoreStatus == PCDM_SS_OK)
-  {
     myResult << "The file was saved successfully" << std::endl;
-  }
   else
-  {
     myResult << "Error! The file wasn't saved. PCDM_StoreStatus: " << aStoreStatus << std::endl;
-  }
 }
 
 void OcafSamples::DisplayPresentation()
@@ -604,24 +587,20 @@ void OcafSamples::DisplayPresentation()
     TDF_Label aLabel = it.Value();
     Handle(TNaming_NamedShape) aNamedShape;
     if (!aLabel.FindAttribute(TNaming_NamedShape::GetID(), aNamedShape))
-    {
       continue;
-    }
+
     Handle(TDataStd_Integer) aDataInteger;
 
     // To know if the object was displayed
     if (aLabel.FindAttribute(TDataStd_Integer::GetID(), aDataInteger))
     {
       if (!aDataInteger->Get())
-      {
         continue;
-      }
     }
     Handle(TPrsStd_AISPresentation) anAisPresentation;
     if (!aLabel.FindAttribute(TPrsStd_AISPresentation::GetID(), anAisPresentation))
-    {
       anAisPresentation = TPrsStd_AISPresentation::Set(aLabel, TNaming_NamedShape::GetID());
-    }
+
     anAisPresentation->SetColor(Quantity_NOC_ORANGE);
     anAisPresentation->Display(1);
   }
