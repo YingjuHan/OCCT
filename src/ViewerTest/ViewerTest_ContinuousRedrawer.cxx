@@ -43,7 +43,7 @@ ViewerTest_ContinuousRedrawer::ViewerTest_ContinuousRedrawer()
   myToStop (false),
   myToPause (false)
 {
-  //
+  myThread.SetName("occt:draw:redrawer");
 }
 
 // =======================================================================

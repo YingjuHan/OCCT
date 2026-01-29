@@ -60,6 +60,7 @@ Media_PlayerContext::Media_PlayerContext (Media_IFrameQueue* theFrameQueue)
   mySeekTo    (0.0),
   myPlayEvent (Media_PlayerEvent_NONE)
 {
+  myThread.SetName("occt:mediaplayer");
   myThread.Run (this);
 
 #if defined(_WIN32) && !defined(OCCT_UWP)

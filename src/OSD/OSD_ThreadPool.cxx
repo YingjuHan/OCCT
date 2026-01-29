@@ -166,6 +166,7 @@ void OSD_ThreadPool::Init (int theNbThreads)
       aThread.myPool        = this;
       aThread.myThreadIndex = aLastThreadIndex++;
       aThread.SetFunction (&OSD_ThreadPool::EnumeratedThread::runThread);
+      aThread.SetName(TCollection_AsciiString("occt:pool:th") + aThread.myThreadIndex);
     }
   }
   else

@@ -27,7 +27,7 @@ BVH_BuildThread::BVH_BuildThread (BVH_BuildTool&  theBuildTool,
   myBuildQueue (theBuildQueue),
   myWorkThread (threadFunction)
 {
-  //
+  myWorkThread.SetName("occt:bvhbuild");
 }
 
 // =======================================================================

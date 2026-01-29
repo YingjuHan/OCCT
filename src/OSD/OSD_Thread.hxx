@@ -16,15 +16,10 @@
 #ifndef _OSD_Thread_HeaderFile
 #define _OSD_Thread_HeaderFile
 
-#include <Standard.hxx>
-#include <Standard_DefineAlloc.hxx>
-#include <Standard_Handle.hxx>
-
 #include <OSD_ThreadFunction.hxx>
 #include <OSD_PThread.hxx>
 #include <Standard_ThreadId.hxx>
-#include <Standard_Boolean.hxx>
-
+#include <TCollection_AsciiString.hxx>
 
 //! A simple platform-intependent interface to execute
 //! and control threads.
@@ -109,8 +104,17 @@ void operator = (const OSD_Thread& other)
   //! or 0 if no thread is run
   Standard_EXPORT Standard_ThreadId GetId() const;
 
+  //! Return thread name.
+  const TCollection_AsciiString& Name() const { return myName; }
+
+  //! Set thread name.
+  Standard_EXPORT void SetName(const TCollection_AsciiString& theName);
+
   //! Auxiliary: returns ID of the current thread
   Standard_EXPORT static Standard_ThreadId Current();
+
+  //! Set current thread name.
+  Standard_EXPORT static void SetCurrentName(const TCollection_AsciiString& theName);
 
 private:
 
@@ -118,6 +122,7 @@ private:
   OSD_PThread myThread;
   Standard_ThreadId myThreadId;
   Standard_Integer myPriority;
+  TCollection_AsciiString myName;
 
 };
 

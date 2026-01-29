@@ -15,6 +15,8 @@
 
 #include <OSD_Thread.hxx>
 
+#include <TCollection_ExtendedString.hxx>
+
 //=============================================
 // OSD_Thread::OSD_Thread
 //=============================================
@@ -144,13 +146,18 @@ Standard_Boolean OSD_Thread::Run (const Standard_Address data,
   adata->func = myFunc;
 
   // then try to create a new thread
-  DWORD aThreadId = DWORD();
+  DWORD aThreadId = 0;
   myThread = CreateThread ( NULL, WNTStackSize, WNTthread_func,
                             adata, 0, &aThreadId );
   myThreadId = aThreadId;
-  if ( myThread )
+  if (myThread != 0)
+  {
     SetThreadPriority (myThread, myPriority);
-  else {
+    if (!myName.IsEmpty())
+      SetName(myName);
+  }
+  else
+  {
     memset ( adata, 0, sizeof(WNTthread_data) );
     free ( adata );
   }
@@ -164,6 +171,8 @@ Standard_Boolean OSD_Thread::Run (const Standard_Address data,
   else
   {
     myThreadId = (Standard_ThreadId)myThread;
+    if (!myName.IsEmpty())
+      SetName(myName);
   }
 #endif
   return myThread != 0;
@@ -335,5 +344,116 @@ Standard_ThreadId OSD_Thread::Current ()
   return GetCurrentThreadId();
 #else
   return (Standard_ThreadId)pthread_self();
+#endif
+}
+
+#ifdef _WIN32
+// suppress GCC warnings
+#include <Standard_WarningDisableFunctionCast.hxx>
+#if (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
+typedef HRESULT(WINAPI *SetThreadDescription_t)(HANDLE, PCWSTR);
+
+//! Retrieve function pointer (requires Windows 10 1607+).
+static SetThreadDescription_t findSetThreadDesc()
+{
+  HMODULE aKernBaseMod = GetModuleHandleW(L"kernelbase");
+  return (SetThreadDescription_t)(aKernBaseMod != nullptr
+                                  ? GetProcAddress(aKernBaseMod, "SetThreadDescription")
+                                  : nullptr);
+}
+
+//! Set thread name using WinAPI (requires Windows 10 1607+).
+static void setWinApiThreadName(HANDLE theThread, const TCollection_AsciiString& theName)
+{
+  static const SetThreadDescription_t kerSetThreadDescription = findSetThreadDesc();
+  if (kerSetThreadDescription != nullptr)
+  {
+    TCollection_ExtendedString aNameWide(theName);
+    kerSetThreadDescription(theThread, aNameWide.ToWideString());
+  }
+}
+
+#include <pshpack8.h>
+struct MsWinThreadNameInfo
+{
+  DWORD  dwType     = 0x1000;  //!< must be 0x1000
+  LPCSTR szName     = nullptr; //!< pointer to name
+  DWORD  dwThreadID = 0;       //!< thread ID (-1 for caller thread)
+  DWORD  dwFlags    = 0;       //!< must be zero
+};
+#include <poppack.h>
+
+//! Ignore manually raised exception.
+static EXCEPTION_DISPOSITION NTAPI msWinIgnoreHandler(EXCEPTION_RECORD*, void*, CONTEXT*, void*)
+{
+  return ExceptionContinueExecution;
+}
+
+//! Set thread name by raising exception for attached debugger.
+static void setMsvcThreadName(DWORD theThreadId, const TCollection_AsciiString& theName)
+{
+  if (!IsDebuggerPresent())
+    return;
+
+  MsWinThreadNameInfo anInfo;
+  anInfo.szName = theName.ToCString();
+  anInfo.dwThreadID = theThreadId;
+
+  // use custom exception handler instead of MSVC-specific __try/__except
+  NT_TIB* anNtTib = (NT_TIB*)NtCurrentTeb();
+  EXCEPTION_REGISTRATION_RECORD anExcRec = {};
+  anExcRec.Next = anNtTib->ExceptionList;
+  anExcRec.Handler = &msWinIgnoreHandler;
+  anNtTib->ExceptionList = &anExcRec;
+
+  static const DWORD MS_VC_EXCEPTION = 0x406D1388;
+  ::RaiseException(MS_VC_EXCEPTION, 0, sizeof(anInfo) / sizeof(ULONG_PTR), (ULONG_PTR*)&anInfo);
+
+  anNtTib->ExceptionList = anNtTib->ExceptionList->Next;
+}
+
+#if (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)))
+#pragma GCC diagnostic pop
+#endif
+#endif
+
+//=============================================
+// SetName
+//=============================================
+void OSD_Thread::SetName(const TCollection_AsciiString& theName)
+{
+  myName = theName;
+#ifdef _WIN32
+  if (myThread != 0)
+  {
+    setWinApiThreadName((HANDLE)myThread, myName);
+    setMsvcThreadName((DWORD)myThreadId, myName);
+  }
+#elif defined(__APPLE__)
+  // not implemented
+#elif !defined(__EMSCRIPTEN__)
+  if (myThread)
+    pthread_setname_np(myThread, myName.ToCString());
+#endif
+}
+
+//=============================================
+// SetCurrentName
+//=============================================
+void OSD_Thread::SetCurrentName(const TCollection_AsciiString& theName)
+{
+#ifdef _WIN32
+  setWinApiThreadName(GetCurrentThread(), theName);
+  setMsvcThreadName((DWORD)-1, theName);
+#elif defined(__APPLE__)
+  pthread_setname_np(theName.ToCString());
+#elif !defined(__EMSCRIPTEN__)
+  pthread_setname_np(pthread_self(), theName.ToCString());
+#else
+  (void)theName;
 #endif
 }

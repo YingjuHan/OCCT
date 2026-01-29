@@ -39,6 +39,7 @@ SelectMgr_BVHThreadPool::SelectMgr_BVHThreadPool (Standard_Integer theNbThreads)
     aThread.SetFunction (&BVHThread::runThread);
     aThread.myPool = this;
     aThread.myToCatchFpe = toCatchFpe;
+    aThread.SetName(TCollection_AsciiString("occt:bvhpool:th") + i);
   }
 }
 

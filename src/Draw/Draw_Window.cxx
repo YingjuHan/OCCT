@@ -29,6 +29,7 @@
 #include <NCollection_List.hxx>
 #include <OSD.hxx>
 #include <OSD_Timer.hxx>
+#include <OSD_Thread.hxx>
 #include <Standard_ErrorHandler.hxx>
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
@@ -1712,6 +1713,8 @@ static DWORD WINAPI readStdinThreadFunc (const LPVOID theThreadParameter)
   {
     return 1;
   }
+
+  OSD_Thread::SetCurrentName("occt:draw:stdin");
 
   // Console locale could be set to the system codepage .OCP (UTF-8 is not properly supported on Windows).
   // However, to use it, we have to care using std::wcerr/fwprintf/WriteConsoleW for non-ascii strings everywhere (including Tcl itself),
