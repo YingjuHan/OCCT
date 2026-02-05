@@ -89,6 +89,10 @@ public:
         || (theUChar >= 0x0F900 && theUChar <= 0x0FAFF)
         || (theUChar >= 0x20000 && theUChar <= 0x2A6DF)
         || (theUChar >= 0x2F800 && theUChar <= 0x2FA1F)
+        // CJK Symbols and Punctuation +
+        // Halfwidth and Fullwidth Forms
+        || (theUChar >= 0x03000 && theUChar <= 0x0303F)
+        || (theUChar >= 0x0FF00 && theUChar <= 0x0FFEF)
         // Hiragana and Katakana (Japanese) are NOT part of CJK, but CJK fonts usually include these symbols
         || IsCharFromHiragana (theUChar)
         || IsCharFromKatakana (theUChar);
