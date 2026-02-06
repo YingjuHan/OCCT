@@ -101,6 +101,9 @@ proc test {group grid casename {args {}}} {
 
     # check log
     if { !$echo } {
+        set nbtests_done 0
+        set nbtests_total 1
+        set csvfile ""
         _check_log $dir $group $gridname $casename $errors [dlog get] summary html_log
 
         # create log file
@@ -167,6 +170,7 @@ proc testgrid {args} {
     set logdir ""
     set overwrite 0
     set xmlfile ""
+    set csvfile "summary.csv"
     set signal 0
     set verbose 1
     set exc_group 0
@@ -349,6 +353,7 @@ proc testgrid {args} {
     if { [catch {file mkdir $logdir}] || ! [file writable $logdir] } {
         error "Error: Cannot create directory \"$logdir\", or it is not writable"
     }
+    set csvfile [file normalize $logdir/$csvfile]
 
     # masks for search of test groups, grids, and cases
     if { ! [info exists groupmask] } { set groupmask * }
@@ -578,6 +583,9 @@ proc testgrid {args} {
     set refresh_timer [clock seconds]
     uplevel dchrono _timer reset
     uplevel dchrono _timer start
+
+    set nbtests_done 0
+    set nbtests_total [llength $tests_list]
 
     # if parallel execution is requested, allocate thread pool
     if { $parallel > 0 } {
@@ -928,6 +936,13 @@ proc testdiff {dir1 dir2 args} {
         if {$save != false} {
             error "Error: Option -save can not be used with image/cpu/memory options"
         }
+    }
+
+    set nbtests_done 0
+    if { $image == false && $cpu == false && $memory == false } {
+        set csvfile "[file rootname $logfile]diff-[file tail $dir2].csv"
+    } else {
+        set csvfile ""
     }
 
     # run diff procedure (recursive)
@@ -1430,6 +1445,9 @@ proc _run_test {scriptsdir group gridname casefile echo} {
 # Internal procedure to check log of test execution and decide if it passed or failed
 proc _check_log {dir group gridname casename errors log {_summary {}} {_html_log {}}} {
     global env
+    upvar nbtests_done nbtests_done
+    upvar nbtests_total nbtests_total
+    upvar csvfile csvfile
     if { $_summary != "" } { upvar $_summary summary }
     if { $_html_log != "" } { upvar $_html_log html_log }
     set summary {}
@@ -1599,14 +1617,60 @@ proc _check_log {dir group gridname casename errors log {_summary {}} {_html_log
         }
 
         # report normal OK
-        if { $status == "" } {set status "OK" }
+        if { $status == "" } { set status "OK" }
 
     } res] {
         set status "FAILED ($res)"
     }
 
+    set elapsed_time "   N/A"
+    set cpu_time     "   N/A"
+    set sys_time     "   N/A"
+    set mem_peak     "   N/A"
+    set mem_delta    "   N/A"
+    if { [regexp {ELAPSED TIME:\s*([\d.]+)} $log tmp elapsed_time] } {
+        set elapsed_time [format "%6.1f" $elapsed_time]
+    }
+    if { [regexp {TOTAL CPU TIME:\s*([\d.]+)} $log tmp cpu_time] } {
+        set cpu_time [format "%6.1f" $cpu_time]
+    }
+    if { [regexp {SYSTEM CPU TIME:\s*([\d.]+)} $log tmp sys_time] } {
+        set sys_time [format "%6.1f" $sys_time]
+    }
+    if { [regexp {MEMORY PEAK:\s*([\d.]+)} $log tmp mem_peak] } {
+        set mem_peak [format "%6.0f" [expr $mem_peak/1024.0]]
+    }
+    if { [regexp {MEMORY DELTA:\s*([\d.]+)} $log tmp mem_delta] } {
+        set mem_delta [format "%6.0f" [expr $mem_delta/1024.0]]
+    }
+
     # put final message
-    _log_and_puts summary "CASE $group $gridname $casename: $status"
+    incr nbtests_done
+    set max_digits [string length "$nbtests_total"]
+    set prog_percents "[format %3d [expr int(100.0 * $nbtests_done / $nbtests_total)]]%"
+    set prog_counter "[format %${max_digits}d $nbtests_done]/${nbtests_total}"
+
+    dputs -nonewline "\[$prog_counter $prog_percents |$elapsed_time sec |$mem_peak MiB\] CASE $group $gridname $casename: "
+    set status_color [_dputs_color $status]
+    if { $status_color != "" } {
+        dputs -intense $status_color $status
+    } else {
+        dputs -intense $status
+    }
+
+    if { "$csvfile" != "" } {
+        if { $nbtests_done == 1 } {
+            set file_csv [open "$csvfile" w]
+            puts $file_csv "Group; Grid; Case; Status; Elapsed, sec; Total CPU Time, sec; System CPU Time, sec; Memory Delta, MiB; Memory Peak, MiB; Group/Grid; Group/Grid/Case"
+        } else {
+            set file_csv [open "$csvfile" a]
+        }
+        puts $file_csv "$group; $gridname; $casename; $status; $elapsed_time; $cpu_time; $sys_time; $mem_delta; $mem_peak; $group/$gridname; $group/$gridname/$casename"
+        close $file_csv
+    }
+
+    lappend summary "CASE $group $gridname $casename: $status"
+
     set summary [join $summary "\n"]
     if {$errors} {
         foreach error $errors_log {
@@ -1628,6 +1692,10 @@ proc _log_and_puts {logvar message} {
 # Auxiliary procedure to log result on single test case
 proc _log_test_case {output logdir dir group grid casename logvar} {
     upvar $logvar log
+    upvar nbtests_done nbtests_done
+    upvar nbtests_total nbtests_total
+    upvar csvfile csvfile
+
     set show_errors 0
 
     # check result and make HTML log
@@ -1720,6 +1788,23 @@ proc _log_html {file log {title {}}} {
 
     close $fd
     return
+}
+
+# Choose a color for printing status into console using dput
+proc _dputs_color {status} {
+    if { $status == "OK" } {
+        return -green
+    } elseif { [regexp -nocase {^FAIL} $status] } {
+        return -red
+    } elseif { [regexp -nocase {^BAD} $status] } {
+        return -yellow
+    } elseif { [regexp -nocase {^IMP} $status] } {
+        return -magenta
+    } elseif { [regexp -nocase {^SKIP} $status] } {
+        return -cyan
+    } else {
+        return ""
+    }
 }
 
 # Auxiliary method to make text with HTML highlighting according to status
@@ -2110,12 +2195,30 @@ proc _diff_img_name {dir1 dir2 casepath imgfile} {
     return [file join $dir1 $casepath "diff-[file tail $dir2]-$imgfile"]
 }
 
+# auxiliary procedure to format values for CSV export
+proc _diff_csv_float {value} {
+    if { "$value" != "N/A" } {
+        return [format "%5.2f" $value]
+    }
+    return $value
+}
+
+# auxiliary procedure to produce string comparing two values
+proc _diff_compute_ratio {value1 value2} {
+    if { "$value2" == "N/A" || [expr double ($value2)] == 0. } {
+        return "N/A"
+    } else {
+        return [format "%+5.2f" [expr 100 * ($value1 - $value2) / double($value2)]]
+    }
+}
+
 # auxiliary procedure to produce string comparing two values
 proc _diff_show_ratio {value1 value2} {
-    if {[expr double ($value2)] == 0.} {
-        return "$value1 / $value2"
+    set ratio_val [_diff_compute_ratio $value1 $value2]
+    if { "$ratio_val" != "N/A" } {
+        return "$value1 / $value2 \[$ratio_val\%]"
     } else {
-        return "$value1 / $value2 \[[format "%+5.2f%%" [expr 100 * ($value1 - $value2) / double($value2)]]\]"
+        return "$value1 / $value2"
     }
 }
 
@@ -2178,6 +2281,8 @@ proc _test_diff {dir1 dir2 basename image cpu memory status verbose _logvar _log
     upvar $_logimage log_image
     upvar $_logcpu log_cpu
     upvar $_logmemory log_memory
+    upvar nbtests_done nbtests_done
+    upvar csvfile csvfile
 
     # make sure to load diffimage command
     uplevel pload VISUALIZATION
@@ -2233,7 +2338,71 @@ proc _test_diff {dir1 dir2 basename image cpu memory status verbose _logvar _log
             set log1 [_read_file [file join $dir1 $basename $logfile]]
             set log2 [_read_file [file join $dir2 $basename $logfile]]
             set casename [file rootname $logfile]
-            
+
+            if { "$csvfile" != "" } {
+                set tail1 [file tail $dir1]
+                set tail2 [file tail $dir2]
+                set group    [lindex [split $basename /] 0]
+                set gridname [lindex [split $basename /] 1]
+
+                set status1        "N/A"
+                set status2        "N/A"
+                set elapsed_time1  "N/A"
+                set elapsed_time2  "N/A"
+                set elapsed_diff   "N/A"
+                set cpu_time1      "N/A"
+                set cpu_time2      "N/A"
+                set cpu_time_diff  "N/A"
+                set sys_time1      "N/A"
+                set sys_time2      "N/A"
+                set sys_time_diff  "N/A"
+                set mem_peak1      "N/A"
+                set mem_peak2      "N/A"
+                set mem_peak_diff  "N/A"
+                set mem_delta1     "N/A"
+                set mem_delta2     "N/A"
+                set mem_delta_diff "N/A"
+                regexp {CASE [^:]*:\s*([\w]+)} $log1 tmp status1
+                regexp {CASE [^:]*:\s*([\w]+)} $log2 tmp status2
+                regexp {ELAPSED TIME:\s*([\d.]+)} $log1 tmp elapsed_time1
+                regexp {ELAPSED TIME:\s*([\d.]+)} $log2 tmp elapsed_time2
+                regexp {TOTAL CPU TIME:\s*([\d.]+)} $log1 tmp cpu_time1
+                regexp {TOTAL CPU TIME:\s*([\d.]+)} $log2 tmp cpu_time2
+                regexp {SYSTEM CPU TIME:\s*([\d.]+)} $log1 tmp sys_time1
+                regexp {SYSTEM CPU TIME:\s*([\d.]+)} $log2 tmp sys_time2
+                regexp {MEMORY PEAK:\s*([\d.]+)} $log1 tmp mem_peak1
+                regexp {MEMORY PEAK:\s*([\d.]+)} $log2 tmp mem_peak2
+                regexp {MEMORY DELTA:\s*([\d.]+)} $log1 tmp mem_delta1
+                regexp {MEMORY DELTA:\s*([\d.]+)} $log2 tmp mem_delta2
+
+                incr nbtests_done
+                if { $nbtests_done == 1 } {
+                    set file_csv [open "$csvfile" w]
+                    puts $file_csv "Group; Grid; Case; \
+                                    REF (B); NEW (A); \
+                                    Status (B); Status (A); \
+                                    Elapsed, sec (B); Elapsed, sec (A); Elapsed, diff%; \
+                                    Total CPU Time, sec (B); Total CPU Time, sec (A); Total CPU Time, diff%; \
+                                    System CPU Time, sec (B); System CPU Time, sec (A); System CPU Time, diff%; \
+                                    Memory Delta, MiB (B); Memory Delta, MiB (A); Memory Delta, diff%; \
+                                    Memory Peak, MiB (B); Memory Peak, MiB (A); Memory Peak, diff%; \
+                                    Group/Grid; Group/Grid/Case"
+                } else {
+                    set file_csv [open "$csvfile" a]
+                }
+
+                puts $file_csv "$group; $gridname; $casename; \
+                                $tail2; $tail1; \
+                                $status2; $status1; \
+                                [_diff_csv_float $elapsed_time2]; [_diff_csv_float $elapsed_time1]; [_diff_compute_ratio $elapsed_time1 $elapsed_time2]; \
+                                [_diff_csv_float $cpu_time2]; [_diff_csv_float $cpu_time1]; [_diff_compute_ratio $cpu_time1 $cpu_time2]; \
+                                [_diff_csv_float $sys_time2]; [_diff_csv_float $sys_time1]; [_diff_compute_ratio $sys_time1 $sys_time2]; \
+                                [_diff_csv_float $mem_delta2]; [_diff_csv_float $mem_delta1]; [_diff_compute_ratio $mem_delta1 $mem_delta2]; \
+                                [_diff_csv_float $mem_peak2]; [_diff_csv_float $mem_peak1]; [_diff_compute_ratio $mem_peak1 $mem_peak2]; \
+                                $group/$gridname; $group/$gridname/$casename"
+                close $file_csv
+            }
+
             # check execution statuses
             if {$image == false && $cpu == false && $memory == false} {
                 set status1 UNDEFINED
@@ -2261,7 +2430,7 @@ proc _test_diff {dir1 dir2 basename image cpu memory status verbose _logvar _log
                   _check_time "${checkCPURegexp}"
                 }
             }
-            
+
             # check CPU times
             if {$cpu != false || ($image == false && $cpu == false && $memory == false)} {
                 set cpu1 UNDEFINED
@@ -2695,6 +2864,9 @@ proc _testgrid_process_jobs {worker {nb_ok 0}} {
     upvar log log
     upvar logdir logdir
     upvar job_def job_def
+    upvar nbtests_done nbtests_done
+    upvar nbtests_total nbtests_total
+    upvar csvfile csvfile
     upvar nbpooled nbpooled
     upvar userbreak userbreak
     upvar refresh refresh
