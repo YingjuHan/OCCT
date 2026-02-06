@@ -126,6 +126,9 @@ void Draw_ProgressIndicator::Show (const Message_ProgressScope& theScope, const 
   if ( ! force && (1. - aPosition) > Precision::Confusion() && Abs (aPosition - myLastPosition) < myUpdateThreshold)
     return; // return if update interval has not elapsed
 
+  if (myGraphMode && myGuiThreadId != OSD_Thread::Current())
+    return;
+
   myLastPosition = aPosition;
   
   // Prepare textual progress info
@@ -163,7 +166,7 @@ void Draw_ProgressIndicator::Show (const Message_ProgressScope& theScope, const 
 
   // Show graphic progress bar.
   // It will be updated only within GUI thread.
-  if (myGraphMode && myGuiThreadId == OSD_Thread::Current())
+  if (myGraphMode)
   {
     // In addition, write elapsed/estimated/remaining time
     if ( GetPosition() > 0.01 ) { 
