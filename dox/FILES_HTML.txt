@@ -34,6 +34,7 @@ build/build_documentation/building_documentation.md
 
 debug/debug.md
 upgrade/upgrade.md
+changelog/changelog.md
 
 user_guides/user_guides.md
 user_guides/foundation_classes/foundation_classes.md

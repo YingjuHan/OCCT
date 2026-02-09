@@ -33,3 +33,5 @@ contribution/tests/tests.md
 specification/boolean_operations/boolean_operations.md
 specification/brep_format.md
 specification/pbr_math.md
+
+changelog/changelog.md
