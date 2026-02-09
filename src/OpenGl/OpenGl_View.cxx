@@ -290,6 +290,7 @@ void OpenGl_View::Remove()
   }
 
   myDriver->RemoveView (this);
+  myWorkspace->RemoveView();
   myWindow.Nullify();
 
   Graphic3d_CView::Remove();

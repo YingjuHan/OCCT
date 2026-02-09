@@ -41,7 +41,10 @@ public:
   Standard_EXPORT OpenGl_Workspace (OpenGl_View* theView, const Handle(OpenGl_Window)& theWindow);
 
   //! Destructor
-  virtual ~OpenGl_Workspace() {}
+  Standard_EXPORT virtual ~OpenGl_Workspace();
+
+  //! Release window and OpenGL context.
+  Standard_EXPORT void RemoveView();
 
   //! Activate rendering context.
   Standard_EXPORT Standard_Boolean Activate();

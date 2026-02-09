@@ -150,6 +150,25 @@ OpenGl_Workspace::OpenGl_Workspace (OpenGl_View* theView, const Handle(OpenGl_Wi
 }
 
 // =======================================================================
+// function : ~OpenGl_Workspace
+// purpose  :
+// =======================================================================
+OpenGl_Workspace::~OpenGl_Workspace()
+{
+  //
+}
+
+// =======================================================================
+// function : RemoveView
+// purpose  :
+// =======================================================================
+void OpenGl_Workspace::RemoveView()
+{
+  myGlContext.Nullify();
+  myWindow.Nullify();
+}
+
+// =======================================================================
 // function : Activate
 // purpose  :
 // =======================================================================
