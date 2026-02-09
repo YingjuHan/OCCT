@@ -3,7 +3,7 @@ puts "0032867: Data Exchange - Implement Draco compression for writing glTF"
 puts "Test case exporting model into glb (binary glTF) file."
 puts "========"
 
-restore [locate_data_file bearing.brep] b
+testreadiges [locate_data_file bearing.iges] b
 incmesh b 0.1
 
 set aGltfFile1 "${imagedir}/${casename}_tmp1.glb"
