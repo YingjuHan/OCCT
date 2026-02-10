@@ -249,24 +249,24 @@ static void PolyTest(const TColStd_Array1OfReal&         Herm,
             mark=1;
           }
           if (mark==0){
-            Standard_Real Pole0,Pole3;
-            Pole0=Polesinit(0).Y();
-            Pole3=Polesinit(3).Y();
-            if (Pole0<3){                         
+            const Standard_Real Pole0 = Polesinit(0).Y();
+            const Standard_Real Pole3 = Polesinit(3).Y();
+            if (Pole0 < Pole3)
+            {
               a=Log10(Pole3/Pole0);
               if (boucle==2)
               {
                 for (i=0;i<=3;i++)                                                    
                   Polesinit(i).SetCoord(0.0, Polesinit(i).Y()-(Pole3*(Pow(10.0,(-0.5*Log10(TolPoles)-a/2.0))))); 
               }
-              if (boucle==1)
+              else if (boucle==1)
               {
                 for (i=0;i<=3;i++)                                                    
                   Polesinit(i).SetCoord(0.0, Polesinit(i).Y()-(Pole0*(Pow(10.0,(a/2.0+0.5*Log10(TolPoles)))))); 
                 dercas=1;
               }
             }
-            if (Pole0>Pole3)
+            else if (Pole0 > Pole3)
             {
               a=Log10(Pole0/Pole3);                           
               if (boucle==2)
@@ -274,7 +274,7 @@ static void PolyTest(const TColStd_Array1OfReal&         Herm,
                 for (i=0;i<=3;i++)                                                    
                   Polesinit(i).SetCoord(0.0, Polesinit(i).Y()-(Pole0*(Pow(10.0,(-0.5*Log10(TolPoles)-a/2.0)))));
               }
-              if (boucle==1)
+              else if (boucle==1)
               {
                 for (i=0;i<=3;i++)                                                    
                   Polesinit(i).SetCoord(0.0, Polesinit(i).Y()-(Pole3*(Pow(10.0,(a/2.0+0.5*Log10(TolPoles)))))); 
@@ -481,10 +481,9 @@ static void PolyTest(const TColStd_Array1OfReal&        Herm,
           }
           if (mark==0)
           {
-            Standard_Real Pole0,Pole3;
-            Pole0=Polesinit(0).Y();
-            Pole3=Polesinit(3).Y();
-            if (Pole0<3)
+            const Standard_Real Pole0 = Polesinit(0).Y();
+            const Standard_Real Pole3 = Polesinit(3).Y();
+            if (Pole0 < Pole3)
             {
               a=Log10(Pole3/Pole0);
               if (boucle==2)
@@ -492,14 +491,14 @@ static void PolyTest(const TColStd_Array1OfReal&        Herm,
                 for (i=0;i<=3;i++)
                   Polesinit(i).SetCoord(0.0, Polesinit(i).Y()-(Pole3*(Pow(10.0,(-0.5*Log10(TolPoles)-a/2.0)))));
               }
-              if (boucle==1)
+              else if (boucle==1)
               {
                 for (i=0;i<=3;i++)
                   Polesinit(i).SetCoord(0.0, Polesinit(i).Y()-(Pole0*(Pow(10.0,(a/2.0+0.5*Log10(TolPoles)))))); 
                 dercas=1;
               }
             }
-            if (Pole0>Pole3)
+            else if (Pole0 > Pole3)
             {
               a=Log10(Pole0/Pole3);                           
               if (boucle==2)
