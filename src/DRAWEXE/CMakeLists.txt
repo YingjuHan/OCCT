@@ -27,7 +27,9 @@ OCCT_INCLUDE_CMAKE_FILE (adm/cmake/occt_toolkit)
 unset (EXECUTABLE_PROJECT)
 unset (CUSTOM_EXTERNLIB)
 
-if (EMSCRIPTEN)
+if (WIN32)
+  target_sources (${PROJECT_NAME} PRIVATE "dpiaware.manifest" "dpiaware.rc")
+elseif (EMSCRIPTEN)
   # Look for Tcl version string from file tcl.h
   set (TCL_MAJOR_VERSION  8)
   set (TCL_MINOR_VERSION  0)

@@ -1,0 +1,6 @@
+#include <windows.h>
+
+#if defined(__GNUC__)
+// legacy syntax for MinGW
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "dpiaware.manifest"
+#endif
