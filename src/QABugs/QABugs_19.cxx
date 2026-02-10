@@ -18,6 +18,7 @@
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_Shape.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepOffsetAPI_MakePipe.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
@@ -3183,6 +3184,10 @@ static Standard_Integer OCC25547(
   return 0;
 }
 
+// Performance test case that creates AIS_Shape with a large number of simple subshapes.
+// The intention is to check performance of creating
+// SelectMgr_SensitiveEntitySet with large number of elements
+// (which has poor performance before the patch for 0026139).
 static Standard_Integer OCC26139 (Draw_Interpretor& theDI,
                                   Standard_Integer  argc,
                                   const char **     argv)
@@ -3220,6 +3225,13 @@ static Standard_Integer OCC26139 (Draw_Interpretor& theDI,
     }
   }
 
+  TopoDS_Shape aBox = BRepPrimAPI_MakeBox(aBoxSize, aBoxSize, aBoxSize);
+  {
+    BRepMesh_IncrementalMesh aMesh;
+    aMesh.SetShape(aBox);
+    aMesh.Perform();
+  }
+
   NCollection_List<Handle(AIS_Shape)> aCompounds;
   for (Standard_Integer aCompGridX = 0; aCompGridX < aCompGridSize; ++aCompGridX)
   {
@@ -3232,9 +3244,9 @@ static Standard_Integer OCC26139 (Draw_Interpretor& theDI,
       {
         for (Standard_Integer aBoxGridY = 0; aBoxGridY < aBoxGridSize; ++aBoxGridY)
         {
-          BRepPrimAPI_MakeBox aBox (gp_Pnt (aBoxGridX * aBoxSize, aBoxGridY * aBoxSize, 0.0),
-                                    aBoxSize, aBoxSize, aBoxSize);
-          aBuilder.Add (aComp, aBox.Shape());
+          gp_Trsf aTrsfLoc;
+          aTrsfLoc.SetTranslation(gp_Vec(aBoxGridX * aBoxSize, aBoxGridY * aBoxSize, 0.0));
+          aBuilder.Add (aComp, aBox.Moved(aTrsfLoc));
         }
       }
       gp_Trsf aTrsf;
@@ -3261,6 +3273,7 @@ static Standard_Integer OCC26139 (Draw_Interpretor& theDI,
   aTimer.Start();
   for (NCollection_List<Handle(AIS_Shape)>::Iterator aCompIter (aCompounds); aCompIter.More(); aCompIter.Next())
   {
+    aCompIter.Value()->Attributes()->SetAutoTriangulation(false);
     aCtx->Remove (aCompIter.Value(), Standard_False);
   }
   aTimer.Stop();
