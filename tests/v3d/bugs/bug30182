@@ -4,7 +4,7 @@ puts "============"
 puts ""
 
 set anImg1 [locate_data_file hatch_1.png]
-set anImg2 [locate_data_file OCC1188.gif]
+set anImg2 [locate_data_file carrelage1.gif]
 set anImgTmp "$imagedir/${casename}_img.bin"
 
 set aTmpOut [open "$anImgTmp" w]
