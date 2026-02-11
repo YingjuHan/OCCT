@@ -2,3 +2,4 @@ FAILED /\bFaulty\b/ error
 SKIPPED /Could not open: TKIVtkDraw/ OCCT is built without VTK
 SKIPPED /Tcl Exception: Skipping test/ unsupported driver
 SKIPPED /OCCT is built without Open GL ES/ OCCT is built without Open GL ES
+IGNORE /libEGL warning: DRI3 error/ message from runner without GPU
