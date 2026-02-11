@@ -4,4 +4,26 @@ pload VISUALIZATION
 vdriver -load OPENGL
 vgldebug -glslWarn 1
 
+# clamp number of frames in Path-Tracing tests in case of software rendering
+# (too slow to perform such rendering on CPU)
+rename vfps _vfps
+set _vfpsMaxNbFrames 10000
+proc vfps {{framesNb 100}} {
+  if { $framesNb > $::_vfpsMaxNbFrames } {
+    puts "Warning: 'vfps $framesNb' clamped to 'vfps $::_vfpsMaxNbFrames'"
+    _vfps $::_vfpsMaxNbFrames
+  } else {
+    _vfps $framesNb
+  }
+}
+
+rename vinit _vinit
+proc vinit {args} {
+  _vinit {*}$args
+  set renderer [vglinfo GL_RENDERER]
+  if { [string match "llvmpipe*" $renderer] } {
+    set ::_vfpsMaxNbFrames 5
+  }
+}
+
 if { [info exists imagedir] == 0 } { set imagedir . }
