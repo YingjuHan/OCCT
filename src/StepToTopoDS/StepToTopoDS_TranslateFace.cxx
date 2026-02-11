@@ -244,11 +244,11 @@ namespace {
     thePnIndNb = theFace->NbPnindex();
     theNormNb = theFace->NbNormals();
     theTriNb = theFace->NbTriangles();
-    thePnindices = new TColStd_HArray1OfInteger(1, thePnIndNb);
+    if (thePnIndNb > 0)
+      thePnindices = new TColStd_HArray1OfInteger(1, thePnIndNb);
+
     for (Standard_Integer anIndx = 1; anIndx <= thePnIndNb; ++anIndx)
-    {
       thePnindices->SetValue(anIndx, theFace->PnindexValue(anIndx));
-    }
   }
 
   // ============================================================================
@@ -275,11 +275,11 @@ namespace {
     theNormNb = theFace->NbNormals();
     theTriStripsNb = theFace->NbTriangleStrips();
     theTriFansNb = theFace->NbTriangleFans();
-    thePnindices = new TColStd_HArray1OfInteger(1, thePnIndNb);
+    if (thePnIndNb > 0)
+      thePnindices = new TColStd_HArray1OfInteger(1, thePnIndNb);
+
     for (Standard_Integer anIndx = 1; anIndx <= thePnIndNb; ++anIndx)
-    {
       thePnindices->SetValue(anIndx, theFace->PnindexValue(anIndx));
-    }
   }
 
   // ============================================================================
