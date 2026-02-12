@@ -1,14 +1,8 @@
-puts "TODO OCC12345 ALL: Error: Number of triangles"
-puts "TODO OCC12345 ALL: Error: Number of nodes"
-
 puts "================"
 puts "BUC61057"
-puts "OCC109"
+puts "OCC109: Visualization of the attached shape is wrong in the shading mode."
 puts "================"
 puts ""
-##########################################################
-## Visualisation of the attached shape is wrong in the shading mode.
-##########################################################
 
 restore [locate_data_file OCC109.brep] result
 
@@ -20,6 +14,6 @@ vdisplay result
 vsetdispmode result 1
 vfit
 
-checktrinfo result -tri 294 -nod 300
+checktrinfo result -tri 312 -nod 320
 checkprops result -s 33.8757 
 checkview -screenshot -3d -path ${imagedir}/${test_image}.png
