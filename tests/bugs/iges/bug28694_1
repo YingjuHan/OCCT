@@ -9,7 +9,11 @@ puts ""
 igesbrep [locate_data_file bug26671.igs] r *
 
 foreach e [explode r e] {
-  if {[lsearch [dump $e] degenerated] == -1 && [validrange $e] == "edge has no valid range"} {
+  set save_decho [decho status]
+  decho off
+  set e_dump [dump $e]
+  decho $save_decho
+  if {[lsearch $e_dump degenerated] == -1 && [validrange $e] == "edge has no valid range"} {
     regexp {Mass : *([0-9\-+.eE]+)} [lprops $e] dummy len
     regexp {Tolerance MAX=([0-9\-+.eE]+)} [tolerance $e] dummy tol
     puts "ERROR: OCC28694 is reproduced. Edge $e (length=$len, tolerance=$tol) is too small"
