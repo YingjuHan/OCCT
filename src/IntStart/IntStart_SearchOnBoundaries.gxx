@@ -639,7 +639,7 @@ void BoundedArc (const TheArc& A,
               parap1 = (Abs(parap1) < 1.e9) ? parap1 : ((parap1 >= 0.) ? 1.e9 : -1.e9);
               para   = (Abs(para) < 1.e9) ? para : ((para >= 0.) ? 1.e9 : -1.e9);
 
-              Standard_Integer aNbNodes = RealToInt(Ceiling((parap1 - para)/aTol));
+              const Standard_Integer aNbNodes = RealToInt(Ceiling((parap1 - para)/aTol));
 
               Standard_Real    aVal     = RealLast();
               Standard_Real aValMax = 0.;
@@ -649,7 +649,8 @@ void BoundedArc (const TheArc& A,
               Standard_Real    aCurPar;
               Standard_Real    aCurVal;
 
-              for (ii = 0; ii <= aNbNodes + 1; ii++) {
+              // skip the loop in case of an infinite range (aNbNodes == IntegerLast())
+              for (ii = 0; aNbNodes != IntegerLast() && ii <= aNbNodes + 1; ii++) {
                 aCurPar = (ii < aNbNodes + 1) ? para + ii*aDelta : parap1;
 
                 if (Func.Value(aCurPar, aCurVal)) {
