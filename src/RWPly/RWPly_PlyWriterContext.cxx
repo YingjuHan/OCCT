@@ -74,6 +74,7 @@ RWPly_PlyWriterContext::RWPly_PlyWriterContext()
   myVertOffset (0),
   myIsDoublePrec (false),
   myHasNormals   (false),
+  myHasSurfCurv  (false),
   myHasColors    (false),
   myHasTexCoords (false),
   myHasSurfId    (false)
@@ -216,6 +217,13 @@ bool RWPly_PlyWriterContext::WriteHeader (const Standard_Integer theNbNodes,
                  "property uchar green\n"
                  "property uchar blue\n";
   }
+  if (myHasSurfCurv)
+  {
+    *myStream << "property float gaussian\n"
+                 "property float mean\n"
+                 "property float min\n"
+                 "property float max\n";
+  }
 
   if (theNbElems > 0)
   {
@@ -238,7 +246,8 @@ bool RWPly_PlyWriterContext::WriteHeader (const Standard_Integer theNbNodes,
 bool RWPly_PlyWriterContext::WriteVertex (const gp_Pnt& thePoint,
                                           const Graphic3d_Vec3& theNorm,
                                           const Graphic3d_Vec2& theUV,
-                                          const Graphic3d_Vec4ub& theColor)
+                                          const Graphic3d_Vec4ub& theColor,
+                                          const Graphic3d_Vec4d* theCurv)
 {
   if (myStream.get() == nullptr)
   {
@@ -264,6 +273,14 @@ bool RWPly_PlyWriterContext::WriteVertex (const gp_Pnt& thePoint,
   if (myHasColors)
   {
     *myStream << " " << (int )theColor.r() << " " << (int )theColor.g() << " " << (int )theColor.b();
+  }
+  if (myHasSurfCurv)
+  {
+    if (theCurv == nullptr)
+      throw Standard_NoSuchObject("RWPly_PlyWriterContext::WriteVertex() called with NULL curvature vector");
+
+    *myStream << " " << (float)theCurv->x() << " " << (float)theCurv->y()
+                     << " " << theCurv->z() << " " << theCurv->w();
   }
   *myStream << "\n";
   if (++myNbVerts > myNbHeaderVerts)

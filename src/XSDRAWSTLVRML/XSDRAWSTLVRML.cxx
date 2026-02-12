@@ -2168,6 +2168,7 @@ static Standard_Integer WritePly (Draw_Interpretor& theDI,
   Standard_Real aDens = Precision::Infinite();
   Standard_Real aTol  = Precision::Confusion();
   bool hasColors = true, hasNormals = true, hasTexCoords = false, hasPartId = true, hasFaceId = false;
+  bool hasSurfCurv = false;
   bool isPntSet = false, isDensityPoints = false;
   TColStd_IndexedDataMapOfStringString aFileInfo;
   for (Standard_Integer anArgIter = 1; anArgIter < theNbArgs; ++anArgIter)
@@ -2181,6 +2182,15 @@ static Standard_Integer WritePly (Draw_Interpretor& theDI,
     else if (anArg == "-nonormal")
     {
       hasNormals = !Draw::ParseOnOffIterator (theNbArgs, theArgVec, anArgIter);
+    }
+    else if (anArg == "-curvature"
+          || anArg == "-nocurvature"
+          || anArg == "-surfcurvature"
+          || anArg == "-nosurfcurvature"
+          || anArg == "-surfacecurvature"
+          || anArg == "-nosurfacecurvature")
+    {
+      hasSurfCurv = Draw::ParseOnOffNoIterator (theNbArgs, theArgVec, anArgIter);
     }
     else if (anArg == "-color"
           || anArg == "-nocolor"
@@ -2412,6 +2422,7 @@ static Standard_Integer WritePly (Draw_Interpretor& theDI,
     Handle(Draw_ProgressIndicator) aProgress = new Draw_ProgressIndicator (theDI, 1);
     RWPly_CafWriter aPlyCtx (aFileName);
     aPlyCtx.SetNormals (hasNormals);
+    aPlyCtx.SetSurfCurvature (hasSurfCurv);
     aPlyCtx.SetColors (hasColors);
     aPlyCtx.SetTexCoords (hasTexCoords);
     aPlyCtx.SetPartId (hasPartId);
@@ -2543,6 +2554,7 @@ void  XSDRAWSTLVRML::InitCommands (Draw_Interpretor& theCommands)
   theCommands.Add ("meshinfo",        "displays the number of nodes and triangles",   __FILE__, meshinfo,        g );
   theCommands.Add ("WritePly", R"(
 WritePly Doc file [-normals {0|1}]=1 [-colors {0|1}]=1 [-uv {0|1}]=0 [-partId {0|1}]=1 [-faceId {0|1}]=0
+                  [-surfCurvature {0|1}]=0
                   [-pointCloud {0|1}]=0 [-distance Value]=0.0 [-density Value] [-tolerance Value]
 Write document or triangulated shape into PLY file.
  -normals write per-vertex normals
@@ -2550,6 +2562,7 @@ Write document or triangulated shape into PLY file.
  -uv      write per-vertex UV coordinates
  -partId  write per-element part index (alternative to -faceId)
  -faceId  write per-element face index (alternative to -partId)
+ -surfCurvature write per-vertex surface curvature (Gaussian, Mean, Min, Max)
 
 Generate point cloud out of the shape and write it into PLY file.
  -pointCloud write point cloud instead without triangulation indices

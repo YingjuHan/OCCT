@@ -72,6 +72,12 @@ public:
   //! Set if normals are defined.
   void SetNormals (const bool theHasNormals) { myHasNormals = theHasNormals; }
 
+  //! Return TRUE if surface curvarture properties should be written; FALSE by default.
+  bool HasSurfCurvature() const { return myHasSurfCurv; }
+
+  //! Set if surface curvarture properties should be written.
+  void SetSurfCurvature(bool theToWrite) { myHasSurfCurv = theToWrite; }
+
   //! Return TRUE if UV / texture coordinates should be written; FALSE by default.
   bool HasTexCoords() const { return myHasTexCoords; }
 
@@ -188,6 +194,7 @@ protected:
   XCAFPrs_Style                    myDefaultStyle; //!< default material definition to be used for nodes with only color defined
   Standard_Boolean                 myIsDoublePrec;
   Standard_Boolean                 myHasNormals;
+  Standard_Boolean                 myHasSurfCurv;
   Standard_Boolean                 myHasColors;
   Standard_Boolean                 myHasTexCoords;
   Standard_Boolean                 myHasPartId;

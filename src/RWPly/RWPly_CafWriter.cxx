@@ -15,6 +15,7 @@
 
 #include <Message.hxx>
 #include <Message_LazyProgressScope.hxx>
+#include <BRep_Tool.hxx>
 #include <OSD_Path.hxx>
 #include <RWMesh_FaceIterator.hxx>
 #include <RWMesh_MaterialMap.hxx>
@@ -22,9 +23,12 @@
 #include <Standard_CLocaleSentry.hxx>
 #include <TDocStd_Document.hxx>
 #include <TDataStd_Name.hxx>
+#include <TopoDS.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFPrs_DocumentExplorer.hxx>
+
+#include <limits>
 
 IMPLEMENT_STANDARD_RTTIEXT(RWPly_CafWriter, Standard_Transient)
 
@@ -36,6 +40,7 @@ RWPly_CafWriter::RWPly_CafWriter (const TCollection_AsciiString& theFile)
 : myFile (theFile),
   myIsDoublePrec (false),
   myHasNormals (true),
+  myHasSurfCurv (false),
   myHasColors (true),
   myHasTexCoords (false),
   myHasPartId (true),
@@ -137,6 +142,7 @@ bool RWPly_CafWriter::Perform (const Handle(TDocStd_Document)& theDocument,
   aPlyCtx.SetDoublePrecision (myIsDoublePrec);
   aPlyCtx.SetNormals (myHasNormals);
   aPlyCtx.SetColors (myHasColors);
+  aPlyCtx.SetSurfCurvature (myHasSurfCurv);
   aPlyCtx.SetTexCoords (myHasTexCoords);
   aPlyCtx.SetSurfaceId (myHasPartId || myHasFaceId);
   if (!aPlyCtx.Open (myFile)
@@ -240,6 +246,7 @@ bool RWPly_CafWriter::writeNodes (RWPly_PlyWriterContext&    theWriter,
   Graphic3d_Vec3 aNormVec;
   Graphic3d_Vec2 aTexVec;
   Graphic3d_Vec4ub aColorVec (255);
+  Graphic3d_Vec4d aCurv(std::numeric_limits<double>::quiet_NaN());
   if (theFace.HasFaceColor())
   {
     //Graphic3d_Vec4 aColorF = Quantity_ColorRGBA::Convert_LinearRGB_To_sRGB (theFace.FaceColor());
@@ -248,6 +255,23 @@ bool RWPly_CafWriter::writeNodes (RWPly_PlyWriterContext&    theWriter,
                          (unsigned char )int(aColorF.g() * 255.0f),
                          (unsigned char )int(aColorF.b() * 255.0f),
                          (unsigned char )int(aColorF.a() * 255.0f));
+  }
+
+  std::shared_ptr<BRepLProp_SLProps> aSurfProps;
+  Handle(BRepAdaptor_Surface) aFaceAdaptor;
+  if (myHasSurfCurv && theFace.HasTexCoords())
+  {
+    TopoDS_Face aFaceFwd = TopoDS::Face(theFace.Face().Oriented(TopAbs_FORWARD));
+    aFaceFwd.Location(TopLoc_Location());
+    TopLoc_Location aLoc;
+    if (!BRep_Tool::Surface(aFaceFwd, aLoc).IsNull())
+    {
+      aFaceAdaptor = new BRepAdaptor_Surface();
+      aFaceAdaptor->Initialize(aFaceFwd, false);
+
+      aSurfProps.reset(new BRepLProp_SLProps(2, gp::Resolution()));
+      aSurfProps->SetSurface(*aFaceAdaptor);
+    }
   }
   for (Standard_Integer aNodeIter = theFace.NodeLower(); aNodeIter <= aNodeUpper && thePSentry.More(); ++aNodeIter, thePSentry.Next())
   {
@@ -262,10 +286,21 @@ bool RWPly_CafWriter::writeNodes (RWPly_PlyWriterContext&    theWriter,
     if (theFace.HasTexCoords())
     {
       const gp_Pnt2d aUV = theFace.NodeTexCoord (aNodeIter);
+      if (aSurfProps.get() != nullptr)
+        aSurfProps->SetParameters(aUV.X(), aUV.Y());
+
       aTexVec.SetValues ((float )aUV.X(), (float )aUV.Y());
     }
+    if (aSurfProps.get() != nullptr)
+    {
+      if (aSurfProps->IsCurvatureDefined())
+        aCurv.SetValues(aSurfProps->GaussianCurvature(), aSurfProps->MeanCurvature(),
+                        aSurfProps->MinCurvature(), aSurfProps->MaxCurvature());
+      else
+        aCurv = Graphic3d_Vec4d(std::numeric_limits<double>::quiet_NaN());
+    }
 
-    if (!theWriter.WriteVertex (aNode, aNormVec, aTexVec, aColorVec))
+    if (!theWriter.WriteVertex (aNode, aNormVec, aTexVec, aColorVec, &aCurv))
     {
       return false;
     }

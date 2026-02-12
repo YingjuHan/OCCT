@@ -46,6 +46,12 @@ public: //! @name vertex attributes parameters
   //! Set if normals should be written.
   void SetNormals (const bool theHasNormals) { myHasNormals = theHasNormals; }
 
+  //! Return TRUE if surface curvarture properties should be written; FALSE by default.
+  bool HasSurfCurvature() const { return myHasSurfCurv; }
+
+  //! Set if surface curvarture properties should be written.
+  void SetSurfCurvature(bool theToWrite) { myHasSurfCurv = theToWrite; }
+
   //! Return TRUE if UV / texture coordinates should be written as vertex attribute; FALSE by default.
   bool HasTexCoords() const { return myHasTexCoords; }
 
@@ -88,10 +94,12 @@ public: //! @name writing into file
   //! @param[in] theNorm  surface normal direction at the point
   //! @param[in] theUV    surface/texture UV coordinates
   //! @param[in] theColor RGB color values
+  //! @param[in] theCurv  surface curvature properties (gaussian, mean, min, max)
   Standard_EXPORT bool WriteVertex (const gp_Pnt& thePoint,
                                     const Graphic3d_Vec3& theNorm,
                                     const Graphic3d_Vec2& theUV,
-                                    const Graphic3d_Vec4ub& theColor);
+                                    const Graphic3d_Vec4ub& theColor,
+                                    const Graphic3d_Vec4d* theCurv = nullptr);
 
   //! Return number of written vertices.
   Standard_Integer NbWrittenVertices() const { return myNbVerts; }
@@ -133,6 +141,7 @@ private:
   Standard_Integer myVertOffset;
   bool myIsDoublePrec;
   bool myHasNormals;
+  bool myHasSurfCurv;
   bool myHasColors;
   bool myHasTexCoords;
   bool myHasSurfId;
