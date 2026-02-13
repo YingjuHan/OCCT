@@ -331,25 +331,35 @@ void OSD_MemInfo::Update()
 #define HAS_GETATTR_NP
 #endif
 #endif
-
-#ifdef __APPLE__
-    myCounters[MemStackSize] = pthread_get_stacksize_np(pthread_self());
-#else
-    pthread_attr_t aPAttr;
-#ifdef HAS_GETATTR_NP
-    if (pthread_getattr_np(pthread_self(), &aPAttr) == 0)
-#else
-    if (pthread_attr_init(&aPAttr) == 0)
-#endif
+    // assume that stack size is not changed dynamically
+    // and keep it in thread-local cache
+    static thread_local Standard_Size aThreadStackSize = 0;
+    if (aThreadStackSize != 0)
     {
-      size_t aStackSize = 0;
-      if (pthread_attr_getstacksize(&aPAttr, &aStackSize) == 0)
-      {
-        myCounters[MemStackSize] = aStackSize;
-      }
-      pthread_attr_destroy(&aPAttr);
+      myCounters[MemStackSize] = aThreadStackSize;
     }
-#endif
+    else
+    {
+  #ifdef __APPLE__
+      myCounters[MemStackSize] = pthread_get_stacksize_np(pthread_self());
+  #else
+      pthread_attr_t aPAttr;
+    #ifdef HAS_GETATTR_NP
+      if (pthread_getattr_np(pthread_self(), &aPAttr) == 0)
+    #else
+      if (pthread_attr_init(&aPAttr) == 0)
+    #endif
+      {
+        size_t aStackSize = 0;
+        if (pthread_attr_getstacksize(&aPAttr, &aStackSize) == 0)
+        {
+          myCounters[MemStackSize] = aStackSize;
+          aThreadStackSize = aStackSize;
+        }
+        pthread_attr_destroy(&aPAttr);
+      }
+    }
+  #endif
   }
 #endif
 }

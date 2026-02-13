@@ -2808,7 +2808,10 @@ template<typename T> void AllocDummyArr (Draw_Interpretor& theDI, int theN1, int
 {
   NCollection_Array1<T> aMapArr1(0, theN1), aMapArr2(0, theN2);
 
-  OSD_MemInfo aMemTool;
+  OSD_MemInfo aMemTool(false);
+  aMemTool.SetActive (false);
+  aMemTool.SetActive (OSD_MemInfo::MemHeapUsage, true);
+  aMemTool.Update();
   Standard_Size aMem0 = aMemTool.Value (OSD_MemInfo::MemHeapUsage);
 
   for (int i = 1; i < theN1; i++)
