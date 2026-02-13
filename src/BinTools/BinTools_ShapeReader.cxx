@@ -185,8 +185,8 @@ TopoDS_Shape BinTools_ShapeReader::ReadShape (BinTools_IStream& theStream)
             if (!aCurve.IsNull())
             {
               aBuilder.UpdateEdge (aE, aCurve, *aLoc, aTol);
-              aBuilder.Range (aE, aFirst, aLast, Standard_True);
             }
+            aBuilder.Range(aE, aFirst, aLast, Standard_True);
             break;
           }
           case 2: // -2- Curve on surf

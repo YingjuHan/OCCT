@@ -148,15 +148,12 @@ void BinTools_ShapeWriter::WriteShape (BinTools_OStream& theStream, const TopoDS
         const Handle(BRep_CurveRepresentation)& aCR = anIter.Value();
         if (aCR->IsCurve3D())
         {
-          if (!aCR->Curve3D().IsNull())
-          {
-            Handle(BRep_GCurve) aGC = Handle(BRep_GCurve)::DownCast (aCR);
-            aGC->Range (aFirst, aLast);
-            theStream << (Standard_Byte)1; // -1- CURVE_3D;
-            WriteCurve (theStream, aCR->Curve3D());
-            WriteLocation (theStream, aCR->Location());
-            theStream << aFirst << aLast;
-          }
+          Handle(BRep_GCurve) aGC = Handle(BRep_GCurve)::DownCast (aCR);
+          aGC->Range (aFirst, aLast);
+          theStream << (Standard_Byte)1; // -1- CURVE_3D;
+          WriteCurve (theStream, aCR->Curve3D());
+          WriteLocation (theStream, aCR->Location());
+          theStream << aFirst << aLast;
         }
         else if (aCR->IsCurveOnSurface()) {
           Handle(BRep_GCurve) GC = Handle(BRep_GCurve)::DownCast (aCR);

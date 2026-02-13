@@ -566,15 +566,13 @@ void  BRepTools_ShapeSet::WriteGeometry (const TopoDS_Shape& S, Standard_OStream
     while (itrc.More()) {
       const Handle(BRep_CurveRepresentation)& CR = itrc.Value();
       if (CR->IsCurve3D()) {
-        if (!CR->Curve3D().IsNull()) {
-          Handle(BRep_GCurve) GC = Handle(BRep_GCurve)::DownCast(itrc.Value());
-          GC->Range(first, last);
-          OS << "1 ";                               // -1- Curve 3D
-          OS << " "<<myCurves.Index(CR->Curve3D());
-          OS << " "<<Locations().Index(CR->Location());
-          OS << " "<<first<<" "<<last;
-          OS << "\n";
-        }
+        Handle(BRep_GCurve) GC = Handle(BRep_GCurve)::DownCast(itrc.Value());
+        GC->Range(first, last);
+        OS << "1 ";                               // -1- Curve 3D
+        OS << " "<<myCurves.Index(CR->Curve3D());
+        OS << " "<<Locations().Index(CR->Location());
+        OS << " "<<first<<" "<<last;
+        OS << "\n";
       }
       else if (CR->IsCurveOnSurface()) {
         Handle(BRep_GCurve) GC = Handle(BRep_GCurve)::DownCast(itrc.Value());
@@ -880,10 +878,7 @@ void  BRepTools_ShapeSet::ReadGeometry (const TopAbs_ShapeEnum T,
 	    }
             GeomTools::GetReal(IS, first);
             GeomTools::GetReal(IS, last);
-	    if (!myCurves.Curve(c).IsNull()) {
-	      Standard_Boolean Only3d = Standard_True;
-	      myBuilder.Range(E,first,last,Only3d);
-	    }
+            myBuilder.Range(E, first, last, true);
             break;
             
             

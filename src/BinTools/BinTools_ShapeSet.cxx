@@ -637,15 +637,13 @@ void BinTools_ShapeSet::WriteShape (const TopoDS_Shape& S,
       while (itrc.More()) {
 	const Handle(BRep_CurveRepresentation)& CR = itrc.Value();
 	if (CR->IsCurve3D()) {
-	  if (!CR->Curve3D().IsNull()) {
-	    Handle(BRep_GCurve) GC = Handle(BRep_GCurve)::DownCast(itrc.Value());
-	    GC->Range(first, last);
-	    OS << (Standard_Byte)1;//CURVE_3D;
-	    BinTools::PutInteger(OS, myCurves.Index(CR->Curve3D()));
-	    BinTools::PutInteger(OS, Locations().Index(CR->Location()));
-	    BinTools::PutReal(OS, first);
-	    BinTools::PutReal(OS, last);
-	  }
+	  Handle(BRep_GCurve) GC = Handle(BRep_GCurve)::DownCast(itrc.Value());
+	  GC->Range(first, last);
+	  OS << (Standard_Byte)1;//CURVE_3D;
+	  BinTools::PutInteger(OS, myCurves.Index(CR->Curve3D()));
+	  BinTools::PutInteger(OS, Locations().Index(CR->Location()));
+	  BinTools::PutReal(OS, first);
+	  BinTools::PutReal(OS, last);
 	}
 	else if (CR->IsCurveOnSurface()) {
 	  Handle(BRep_GCurve) GC = Handle(BRep_GCurve)::DownCast(itrc.Value());
@@ -946,10 +944,7 @@ void  BinTools_ShapeSet::ReadShape (const TopAbs_ShapeEnum T,
             }
             BinTools::GetReal(IS, first);
             BinTools::GetReal(IS, last);
-            if (!myCurves.Curve(c).IsNull()) {
-              Standard_Boolean Only3d = Standard_True;
-              myBuilder.Range(E, first, last, Only3d);
-            }
+            myBuilder.Range(E, first, last, Standard_True);
             break;
 
 
