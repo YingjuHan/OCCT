@@ -1291,6 +1291,10 @@ static Standard_Integer QAOsdPathPart (Draw_Interpretor& theDI, Standard_Integer
     PathPart_NONE,
     PathPart_Folder,
     PathPart_FileName,
+    PathPart_Parent,
+    PathPart_SysName,
+    PathPart_Trek,
+    PathPart_UpTrek,
   };
   PathPart aPart = PathPart_NONE;
   for (Standard_Integer anArgIter = 1; anArgIter < theNbArgs; ++anArgIter)
@@ -1307,25 +1311,46 @@ static Standard_Integer QAOsdPathPart (Draw_Interpretor& theDI, Standard_Integer
     {
       aPart = PathPart_FileName;
     }
+    else if (aPart == PathPart_NONE
+          && anArgCase == "-sysname")
+    {
+      aPart = PathPart_SysName;
+    }
+    else if (aPart == PathPart_NONE
+          && anArgCase == "-parent")
+    {
+      aPart = PathPart_Parent;
+    }
+    else if (aPart == PathPart_NONE
+          && anArgCase == "-trek")
+    {
+      aPart = PathPart_Trek;
+    }
+    else if (aPart == PathPart_NONE
+          && anArgCase == "-uptrek")
+    {
+      aPart = PathPart_UpTrek;
+    }
     else if (aPath.IsEmpty())
     {
       aPath = theArgVec[anArgIter];
     }
     else
     {
-      std::cout << "Syntax error at '" << theArgVec[anArgIter] << "'\n";
+      theDI << "Syntax error at '" << theArgVec[anArgIter] << "'";
       return 1;
     }
   }
   if (aPath.IsEmpty()
    || aPart == PathPart_NONE)
   {
-    std::cout << "Syntax error: wrong number of arguments\n";
+    theDI << "Syntax error: wrong number of arguments";
     return 1;
   }
 
   TCollection_AsciiString aFolder, aFileName;
   OSD_Path::FolderAndFileFromPath (aPath, aFolder, aFileName);
+  OSD_Path anOsdPath (aPath);
   switch (aPart)
   {
     case PathPart_Folder:
@@ -1333,6 +1358,22 @@ static Standard_Integer QAOsdPathPart (Draw_Interpretor& theDI, Standard_Integer
       return 0;
     case PathPart_FileName:
       theDI << aFileName;
+      return 0;
+    case PathPart_SysName:
+      anOsdPath.SystemName (aFolder);
+      theDI << aFolder;
+      return 0;
+    case PathPart_Parent:
+      anOsdPath.UpTrek();
+      anOsdPath.SystemName (aFolder);
+      theDI << aFolder;
+      return 0;
+    case PathPart_Trek:
+      theDI << anOsdPath.Trek();
+      return 0;
+    case PathPart_UpTrek:
+      anOsdPath.UpTrek();
+      theDI << anOsdPath.Trek();
       return 0;
     case PathPart_NONE:
     default:
@@ -1360,5 +1401,7 @@ void QANCollection::CommandsTest(Draw_Interpretor& theCommands) {
   theCommands.Add("QANColTestVec4",           "QANColTestVec4 test Vec4 implementation", __FILE__, QANColTestVec4, group);
   theCommands.Add("QATestAtof", "QATestAtof [nbvalues [nbdigits [min [max]]]]", __FILE__, QATestAtof, group);
   theCommands.Add("QAOsdPathType",  "QAOsdPathType path : Print file path flags deduced from path string", __FILE__, QAOsdPathType, group);
-  theCommands.Add("QAOsdPathPart",  "QAOsdPathPart path [-folder][-fileName] : Print file path part", __FILE__, QAOsdPathPart, group);
+  theCommands.Add("QAOsdPathPart",
+    "QAOsdPathPart path [-folder|-fileName|-sysname|-parent|-trek|-uptrek] : Print file path part",
+    __FILE__, QAOsdPathPart, group);
 }
