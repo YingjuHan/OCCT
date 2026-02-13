@@ -185,8 +185,8 @@ math_FunctionAllRoots::math_FunctionAllRoots (
 			      (S.GetParameter(Nbp)-S.GetParameter(1)))*Nbp);
         math_FunctionRoots Res(F,pfin.Value(k-1),pdeb.Value(k),
 			       Max(Nbrpt, NbpMin), EpsX,EpsF,0.0);
-	Standard_NumericError_Raise_if((!Res.IsDone()) ||
-				  (Res.IsAllNull()), " ");
+	// allow all sample points to be nulls (Res.IsAllNull()) for handling tangential cases
+	Standard_NumericError_Raise_if((!Res.IsDone()), " ");
 
 	for (Standard_Integer j=1; j<=Res.NbSolutions(); j++) {
 	  piso.Append(Res.Value(j));
