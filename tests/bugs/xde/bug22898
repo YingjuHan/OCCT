@@ -5,7 +5,7 @@ puts "TODO OCC24156 MacOS: Error: unsupported locale specification"
 # check that the result is good shape with expected area
 
 if { [checkplatform -linux] } {
-  dlocale LC_ALL fr_FR
+  dlocale LC_ALL fr_FR.UTF-8
 } else {
   dlocale LC_ALL French
 }
