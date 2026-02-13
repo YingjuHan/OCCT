@@ -127,7 +127,9 @@ void BinTools_ShapeWriter::WriteShape (BinTools_OStream& theStream, const TopoDS
         else if (aPR->IsPointOnSurface())
         {
           theStream << (Standard_Byte)3;// 3
-          theStream << aPR->Parameter2() << aPR->Parameter();
+          // Note that there was a regressive bug in this place that swapped the order of parameters,
+          // so that all files written by OCCT 6.3+ and before the fix will be restored incorrectly.
+          theStream << aPR->Parameter() << aPR->Parameter2();
           WriteSurface (theStream, aPR->Surface());
         }
         WriteLocation (theStream, aPR->Location());
