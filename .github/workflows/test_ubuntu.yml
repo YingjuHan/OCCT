@@ -293,6 +293,109 @@ jobs:
           !occt-results/**/*.wrl
           !occt-results/**/*.vrml
         if-no-files-found: error
+    - name: Fetch reference test results location
+      id: ref_run
+      env:
+        # github.event.pull_request.base.ref could be used for MR
+        REF_BRANCH: 'v7_7_x'
+        # should match root workflow name
+        WORK_NAME: 'Test (All)'
+      run: |
+        response=$(curl -s \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${{ github.repository }}/actions/runs?branch=${{ env.REF_BRANCH }}&status=success")
+        runid=$(echo "$response" | jq -r \
+          --arg wfname "${{ env.WORK_NAME }}" \
+          --arg wfrepo "${{ github.repository }}" \
+          '.workflow_runs[] | select(.name==$wfname and .head_repository.full_name==$wfrepo) | .id' | head -n 1)
+        created_at=$(echo "$response" | jq -r \
+          --arg wfname "${{ env.WORK_NAME }}" \
+          --arg wfrepo "${{ github.repository }}" \
+          '.workflow_runs[] | select(.name==$wfname and .head_repository.full_name==$wfrepo) | .created_at' | head -n 1)
+        echo "Found run id: $runid; created_at: $created_at"
+        echo "runid=$runid" >> $GITHUB_ENV
+        echo "created_at=$created_at" >> $GITHUB_ENV
+        if [[ $runid == '' ]]; then
+          echo "::warning::No run id found with reference test results"
+        fi
+    - name: Download reference results
+      if: steps.ref_run.outputs.runid != ''
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        pushd ./occt.git
+        gh run download ${{ steps.ref_run.outputs.runid }} -n "occt-ubuntu-gcc-tests-${{ matrix.group }}-all" -D "../occt-results-ref"
+        popd
+        ls -la ./occt-results-ref
+    #- name: Download reference results
+    #  if: (steps.ref_run.outputs.runid != '')
+    #  uses: actions/download-artifact@v5
+    #  with:
+    #    name: occt-ubuntu-gcc-tests-${{ matrix.group }}-all
+    #    path: occt-results-ref
+    #    github-token: ${{ github.token }}
+    #    run-id: ${{ steps.ref_run.outputs.runid }}
+    - name: Run testdiff with reference
+      id: testdiff
+      if: steps.ref_run.outputs.runid != ''
+      run: |
+        res_ref=$PWD/occt-results-ref
+        res_new=$PWD/occt-results
+        export LD_LIBRARY_PATH=$PWD/occt-install/lib
+        export PATH=$PWD/occt-install/bin:$PATH
+        export CASROOT=$PWD/occt.git
+        export CSF_OCCTResourcePath=$CASROOT/src
+        export DRAWDEFAULT=$CSF_OCCTResourcePath/DrawResources/DrawDefault
+        export DRAWHOME=$CSF_OCCTResourcePath/DrawResources
+        export CSF_DrawPluginDefaults=$DRAWHOME
+        DRAWEXE -c "testdiff {${res_new}} {${res_ref}}" | awk '{print "[INFO] " $0}'
+        diff_log=`find $results_new -name "diff*.log"`
+        diff_html=`find $results_new -name "diff*.html"`
+        if [ ! -f $diff_log ] && [ ! -f $diff_html ]
+        then
+          echo "::error::testdiff results not found"
+          echo "status=false" >> $GITHUB_OUTPUT
+          #exit 1
+        else
+          echo "status=true" >> $GITHUB_OUTPUT
+        fi
+    - name: Extract testdiff results
+      if: |
+        (steps.ref_run.outputs.runid != '') &&
+        (steps.testdiff.outputs.status == 'true')
+      run: |
+        out_dir=$PWD/occt-results-diff
+        res_ref=$PWD/occt-results-ref
+        res_new=$PWD/occt-results
+        res_ref_base=`basename $res_ref`
+        res_new_base=`basename $res_new`
+        mkdir -p $out_dir
+        mkdir -p $out_dir/$res_ref_base
+        mkdir -p $out_dir/$res_new_base
+        while IFS= read -r line
+        do
+          if [[ -n "$line" && "$line" == IMAGE* ]]; then
+            case_fullname=`echo "$line" | sed 's/IMAGE \([^:]*\) \([^:]*\) \([^:]*\):.*/\1 \2 \3/'`
+            while read subline; do
+              read -r group grid case <<< $subline
+              mkdir -p $out_dir/$res_ref_base/$group/$grid
+              mkdir -p $out_dir/$res_new_base/$group/$grid
+              cp $res_ref/$group/$grid/$case* $out_dir/$res_ref_base/$group/$grid
+              cp $res_new/$group/$grid/$case* $out_dir/$res_new_base/$group/$grid
+              cp $res_new/$group/$grid/diff-*$case*.png $out_dir/$res_new_base/$group/$grid
+            done <<< $case_fullname
+          fi
+        done < "$diff_log"
+        cp $res_new/diff-* $out_dir/$res_new_base
+    - name: Upload report differences from reference results
+      if: |
+        (steps.ref_run.outputs.runid != '') &&
+        (steps.testdiff.outputs.status == 'true')
+      uses: actions/upload-artifact@v4
+      with:
+        name: occt-ubuntu-gcc-tests-${{ matrix.group }}-diff
+        path: occt-results-diff
+        if-no-files-found: error
     - name: Set final job status
       if: |
         (steps.results.outputs.nb_failed != '') ||
