@@ -43,6 +43,7 @@ extern Draw_Viewer dout;
 #include <OSD_Environment.hxx>
 #include <OSD_FileSystem.hxx>
 #include <OSD_OpenFile.hxx>
+#include <OSD_Path.hxx>
 
 Standard_Boolean Draw_ParseFailed = Standard_True;
 
@@ -70,16 +71,15 @@ static Standard_Integer p_b = 0;
 static const char* p_Name = "";
 
 //=======================================================================
-// save
+// bsave
 //=======================================================================
-static Standard_Integer save (Draw_Interpretor& theDI,
-                              Standard_Integer theNbArgs,
-                              const char** theArgVec)
+static Standard_Integer bsave (Draw_Interpretor& theDI,
+                               Standard_Integer theNbArgs,
+                               const char** theArgVec)
 {
-  if (theNbArgs != 3)
+  if (theNbArgs != 2 && theNbArgs != 3)
   {
     theDI << "Syntax error: wrong number of arguments!\n";
-    theDI.PrintHelp (theArgVec[0]);
     return 1;
   }
 
@@ -90,13 +90,36 @@ static Standard_Integer save (Draw_Interpretor& theDI,
     return 1;
   }
 
-  const char* aName = theArgVec[2];
-  const Handle(OSD_FileSystem)& aFileSystem = OSD_FileSystem::DefaultFileSystem();
-  std::shared_ptr<std::ostream> aStream = aFileSystem->OpenOStream (aName, std::ios::out | std::ios::binary);
-  if (aStream.get() == NULL)
+  TCollection_AsciiString aFileName (theNbArgs >= 3 ? theArgVec[2] : "");
+  if (strcmp (theArgVec[0], "save") == 0)
   {
-    theDI << "Error: cannot open file for writing " << aName;
-    return 1;
+    // generate file name from drawable name
+    if (theNbArgs < 3)
+      aFileName = aDrawable->Name();
+
+    // put file into the folder returned by 'datadir' Tcl command
+    const TCollection_AsciiString aCmd = TCollection_AsciiString("file join [datadir] {") + aFileName + "}";
+    theDI.Eval (aCmd.ToCString());
+    aFileName = theDI.Result();
+    theDI.Reset();
+  }
+
+  std::shared_ptr<std::ostream> aStream;
+  std::shared_ptr<std::stringstream> aStrStream;
+  if (!aFileName.IsEmpty())
+  {
+    const Handle(OSD_FileSystem)& aFileSystem = OSD_FileSystem::DefaultFileSystem();
+    aStream = aFileSystem->OpenOStream (aFileName, std::ios::out | std::ios::binary);
+    if (aStream.get() == NULL)
+    {
+      theDI << "Error: cannot open file for writing '" << aFileName << "'";
+      return 1;
+    }
+  }
+  else
+  {
+    aStrStream.reset(new std::stringstream());
+    aStream = aStrStream;
   }
   aStream->precision (15);
 
@@ -125,44 +148,73 @@ static Standard_Integer save (Draw_Interpretor& theDI,
     return 1;
   }
 
-  theDI << theArgVec[1];
+  if (!aFileName.IsEmpty())
+    theDI << theArgVec[1];
+  else
+    theDI << aStrStream->str().c_str();
+
   return 0;
 }
 
 //=======================================================================
-// read
+// brestore
 //=======================================================================
-static Standard_Integer restore (Draw_Interpretor& theDI,
-                                 Standard_Integer theNbArgs,
-                                 const char** theArgVec)
+static Standard_Integer brestore (Draw_Interpretor& theDI,
+                                  Standard_Integer theNbArgs,
+                                  const char** theArgVec)
 {
-  if (theNbArgs != 3)
+  if (theNbArgs != 2 && theNbArgs != 3)
   {
+    theDI << "Syntax error: wrong number of arguments";
     return 1;
   }
 
-  const char* aFileName = theArgVec[1];
-  const char* aVarName  = theArgVec[2];
+  TCollection_AsciiString aFileName(theArgVec[1]);
+  TCollection_AsciiString aVarName(theNbArgs >= 3 ? theArgVec[2] : "");
+  if (aVarName.IsEmpty())
+  {
+    // generate drawable name from file name without extension
+    const TCollection_AsciiString aCmd = TCollection_AsciiString("file rootname [file tail {") + aFileName + "}]";
+    theDI.Eval(aCmd.ToCString());
+    aVarName = theDI.Result();
+    theDI.Reset();
+  }
+  if (strcmp (theArgVec[0], "restore") == 0)
+  {
+    // find file in the folder returned by 'datadir' command
+    const TCollection_AsciiString aCmd = TCollection_AsciiString("file join [datadir] {") + aFileName + "}";
+    theDI.Eval(aCmd.ToCString());
+    aFileName = theDI.Result();
+    theDI.Reset();
+  }
 
   const Handle(OSD_FileSystem)& aFileSystem = OSD_FileSystem::DefaultFileSystem();
   std::shared_ptr<std::istream> aStream = aFileSystem->OpenIStream (aFileName, std::ios::in);
+  bool isFile = true;
   if (aStream.get() == NULL)
   {
-    theDI << "Error: cannot open file for reading: '" << aFileName << "'";
-    return 1;
+    // try parsing as a file content
+    aStream.reset (new std::istringstream (aFileName.ToCString()));
+    isFile = false;
   }
-  char aType[255] = {};
+
+  std::string aType;
   *aStream >> aType;
   if (aStream->fail())
   {
     theDI << "Error: cannot read file: '" << aFileName << "'";
     return 1;
   }
+  else if (!isFile && !Draw_Drawable3D::HasFactory (aType.c_str()))
+  {
+    theDI << "Error: cannot open file for reading: '" << aFileName << "'";
+    return 1;
+  }
 
   {
     Handle(Draw_ProgressIndicator) aProgress = new Draw_ProgressIndicator (theDI, 1);
     Draw::SetProgressBar (aProgress);
-    Handle(Draw_Drawable3D) aDrawable = Draw_Drawable3D::Restore (aType, *aStream);
+    Handle(Draw_Drawable3D) aDrawable = Draw_Drawable3D::Restore (aType.c_str(), *aStream);
     if (aDrawable.IsNull())
     {
       // assume that this file stores a DBRep_DrawableShape variable
@@ -171,11 +223,11 @@ static Standard_Integer restore (Draw_Interpretor& theDI,
     }
     if (aDrawable.IsNull())
     {
-      theDI << "Error: cannot restore a " << aType;
+      theDI << "Error: cannot restore a " << aType.c_str();
       return 1;
     }
 
-    Draw::Set (aVarName, aDrawable, aDrawable->IsDisplayable() && autodisp);
+    Draw::Set (aVarName.ToCString(), aDrawable, aDrawable->IsDisplayable() && autodisp);
     Draw::SetProgressBar (Handle(Draw_ProgressIndicator)());
   }
 
@@ -1325,8 +1377,23 @@ void  Draw::VariableCommands(Draw_Interpretor& theCommandsArg)
   theCommandsArg.Add("protect","protect name ...",__FILE__,protect,g);
   theCommandsArg.Add("unprotect","unprotect name ...",__FILE__,protect,g);
 
-  theCommandsArg.Add("bsave","bsave name filename",__FILE__,save,g);
-  theCommandsArg.Add("brestore","brestore filename name",__FILE__,restore,g);
+  theCommandsArg.Add("bsave",
+                     "bsave name [filename]"
+                     "\nStores Draw variable 'name' into file or into output (when 'filename' is not given).",
+                     __FILE__, bsave, g);
+  theCommandsArg.Add("save",
+                     "save name [filename]"
+                     "\nStores Draw variable 'name' into file located in [datadir] folder."
+                     "\nWhen 'filename' is not given, it will be generated from 'name'",
+                     __FILE__, bsave, g);
+  theCommandsArg.Add("brestore",
+                     "brestore filename [name]"
+                     "\nRestores Draw variable 'name' from file or string 'filename'",
+                     __FILE__, brestore, g);
+  theCommandsArg.Add("restore",
+                     "restore filename [name]"
+                     "\nRestores Draw variable 'name' from file 'filename' located in [datadir] folder",
+                     __FILE__, brestore, g);
 
   theCommandsArg.Add("isdraw","isdraw var, return 1 if Draw value",__FILE__,isdraw,g);
   theCommandsArg.Add("isprot","isprot var, return 1 if Draw var is protected",__FILE__,isprot,g);

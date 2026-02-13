@@ -281,30 +281,6 @@ proc datadir {{dir ""}} {
     return $Draw_DataDir
 }
 
-help save {save variable [filename]} "DRAW Variables management"
-
-proc save {name {file ""}} {
-    if {$file == ""} {set file $name}
-    upvar $name n
-    if {![isdraw n]} {error "save : $name is not a Draw variable"}
-    global Draw_DataDir
-    bsave n [file join $Draw_DataDir $file]
-    return [file join $Draw_DataDir $file]
-}
-
-help restore {restore filename [variablename]} "DRAW Variables management"
-
-proc restore {file {name ""}} {
-    if {$name == ""} {
-        # if name is not given explicitly, use name of the file w/o extension
-        set name [file rootname [file tail $file]]
-    }
-    global Draw_DataDir
-    upvar $name n
-    brestore [file join $Draw_DataDir $file ] n
-    return $name
-}
-
 #################################################
 # misc...
 #################################################

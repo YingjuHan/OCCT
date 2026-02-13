@@ -42,6 +42,9 @@ public:
   Standard_EXPORT static void RegisterFactory (const Standard_CString theType,
                                                const FactoryFunction_t& theFactory);
 
+  //! Return TRUE if drawable type is known.
+  Standard_EXPORT static bool HasFactory (const Standard_CString theType);
+
   //! Restore drawable from stream (opposite to Draw_Drawable3D::Save()).
   //! @param[in] theType  class name
   //! @param[in] theStream  input stream

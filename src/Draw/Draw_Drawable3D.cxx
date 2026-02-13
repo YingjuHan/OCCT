@@ -41,6 +41,15 @@ void Draw_Drawable3D::RegisterFactory (const Standard_CString theType,
 }
 
 //=======================================================================
+//function : HasFactory
+//purpose  :
+//=======================================================================
+bool Draw_Drawable3D::HasFactory (const Standard_CString theType)
+{
+  return getFactoryMap().IsBound(theType);
+}
+
+//=======================================================================
 //function : Restore
 //purpose  :
 //=======================================================================
