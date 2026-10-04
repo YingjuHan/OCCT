@@ -1,11 +1,21 @@
 cpulimit 300
-if { ![checkplatform -windows] } {
+
+# OpenGL ES 2.0 can be reliably pinned to a specific version only through the
+# ANGLE library. Instead of hard-coding a platform list, probe at run time
+# whether TKOpenGles is available and really provides an OpenGL ES context
+# (on macOS the GLES driver is backed by ANGLE/EGL).
+set isValid 0
+if { [catch {pload VISUALIZATION}] == 0 && [catch {vdriver -load GLES}] == 0 } {
+  if { [catch {vinit __gles_check -virtual 1 -width 32 -height 32}] == 0 } {
+    set isValid [regexp {OpenGL ES} [vglinfo]]
+  }
+}
+catch { vclose __gles_check }
+if { !${isValid} } {
   puts "TEST COMPLETED"
   return -code 1 "Skipping testgrid 'opengles2': OpenGL ES can be reliably fixed to 2.0 only by ANGLE library"
 }
 
-pload VISUALIZATION
-vdriver -load GLES
 vcaps -maxVersion 2 0
 vcaps -useWinBuffer 0
 vgldebug -glslWarn 1

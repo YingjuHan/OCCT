@@ -1,12 +1,21 @@
 cpulimit 300
 
-if { $::tcl_platform(os) == "Darwin" } {
+# OpenGL ES 3.0 is provided by the ANGLE library. Instead of hard-coding a
+# platform list, probe at run time whether TKOpenGles is available and really
+# provides an OpenGL ES 3.x context (on macOS the GLES driver is backed by
+# ANGLE/EGL).
+set isValid 0
+if { [catch {pload VISUALIZATION}] == 0 && [catch {vdriver -load GLES}] == 0 } {
+  if { [catch {vinit __gles_check -virtual 1 -width 32 -height 32}] == 0 } {
+    set isValid [regexp {OpenGL ES 3} [vglinfo]]
+  }
+}
+catch { vclose __gles_check }
+if { !${isValid} } {
   puts "TEST COMPLETED"
-  return -code 1 "Skipping testgrid 'opengles3': not configured for macOS"
+  return -code 1 "Skipping testgrid 'opengles3': OpenGL ES 3.x is not available (ANGLE library is required)"
 }
 
-pload VISUALIZATION
-vdriver -load GLES
 vgldebug -glslWarn 1
 vcaps -useWinBuffer 0
 
