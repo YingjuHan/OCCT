@@ -15,7 +15,11 @@ vdisplay b
 vfit
 vrotate 0.2 0.0 0.0
 
-set aGlslVer "#version 110"
+# Desktop OpenGL: leave the GLSL version to OCCT, which knows whether the active context
+# is a legacy profile (implicit GLSL 1.10) or a core profile (GLSL 4.x).
+# Hardcoding "#version 110" breaks on drivers that require an explicit version,
+# such as the OpenGL 4.1 core profile available on macOS.
+set aGlslVer ""
 if { [vdriver -default] == "TKOpenGles" } { set aGlslVer "#version 300 es" }
 
 # vertex shader applying a mat4 uniform transform and passing a vec4 color to fragment
