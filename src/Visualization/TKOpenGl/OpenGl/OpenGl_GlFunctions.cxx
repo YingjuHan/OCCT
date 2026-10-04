@@ -24,6 +24,10 @@
 #include <OpenGl_ArbTexBindless.hxx>
 #include <OpenGl_GlCore46.hxx>
 
+// HAVE_EGL is deduced once in OpenGl_HasEGL.hxx - do not duplicate the
+// deduction here.
+#include <OpenGl_HasEGL.hxx>
+
 #if !defined(HAVE_EGL) && defined(HAVE_XLIB)
   #include <GL/glx.h>
 #endif

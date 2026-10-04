@@ -49,17 +49,11 @@ IMPLEMENT_STANDARD_RTTIEXT(OpenGl_GraphicDriver, Graphic3d_GraphicDriver)
   #endif
 #endif
 
-#if !defined(HAVE_EGL)
-  #if defined(__ANDROID__) || defined(__QNX__) || defined(__EMSCRIPTEN__) || defined(HAVE_GLES2)   \
-    || defined(OCCT_UWP)
-    // 注意：这里原本排除了 Apple（#if !defined(__APPLE__)），因为历史上 macOS 只走
-    // CGL。现在 macOS 启用 GLES2 时通过 EGL/ANGLE 提供 OpenGL ES，
-    // 因此不再排除 Apple —— 否则 EGL 上下文路径在 macOS 上永远不可达。
-    #define HAVE_EGL // EAGL is used instead of EGL
-  #elif !defined(_WIN32) && !defined(__APPLE__) && !defined(HAVE_XLIB)
-    #define HAVE_EGL
-  #endif
-#endif
+// HAVE_EGL is deduced once in OpenGl_HasEGL.hxx - do not duplicate the
+// deduction here. Note that the deduction intentionally does not exclude Apple:
+// with USE_GLES2 on macOS the OpenGL ES implementation is provided through
+// EGL / ANGLE, so excluding __APPLE__ made the EGL path unreachable.
+#include <OpenGl_HasEGL.hxx>
 
 #if defined(HAVE_EGL)
   #include <EGL/egl.h>

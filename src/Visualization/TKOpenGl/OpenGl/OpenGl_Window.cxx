@@ -34,6 +34,13 @@
 
 IMPLEMENT_STANDARD_RTTIEXT(OpenGl_Window, Standard_Transient)
 
+// HAVE_EGL is deduced once in OpenGl_HasEGL.hxx - do not duplicate the
+// deduction here. Without it, macOS + GLES2 would fall back to the CGL /
+// NSOpenGL implementation in OpenGl_Window_1.mm and the EGL / ANGLE path
+// would become dead code (symptom: "glGetString (GL_EXTENSIONS) has returned
+// NULL! No GL context?").
+#include <OpenGl_HasEGL.hxx>
+
 #if defined(HAVE_EGL)
   #include <EGL/egl.h>
 #elif defined(HAVE_XLIB)
@@ -861,7 +868,9 @@ bool OpenGl_Window::Activate()
   return myGlContext->MakeCurrent();
 }
 
-#if !defined(__APPLE__) || defined(HAVE_XLIB)
+// macOS + GLES2 走 EGL/ANGLE 时该分支同样必须生效，
+// 否则 Resize()/init()/SetSwapInterval() 会落回 OpenGl_Window_1.mm 的 CGL 实现。
+#if (!defined(__APPLE__) || defined(HAVE_XLIB)) || defined(HAVE_EGL)
 
 //=================================================================================================
 

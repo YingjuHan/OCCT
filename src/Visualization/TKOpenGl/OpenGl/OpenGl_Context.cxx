@@ -53,25 +53,17 @@
 
 IMPLEMENT_STANDARD_RTTIEXT(OpenGl_Context, Standard_Transient)
 
-// 与 OpenGl_GraphicDriver.cxx 保持一致的 HAVE_EGL 推导。
-// HAVE_EGL 不由构建系统提供（整个 adm/cmake 中没有对它的 add_definitions），
-// 而是各 TU 自行按平台推导；此处必须复现同一套规则，否则本文件会因
-// HAVE_EGL 未定义而走到 __APPLE__ 的 CGL 分支，引用 CGL* 符号。
-//
-// TargetConditionals.h 原先由 OpenGl_GlNative.hxx 间接引入；该头在 GLES2 下
-// 走 GLES3 分支不再引入 Apple 头，故此处显式包含（GLES 宏推导需要它）。
-// TargetConditionals.h 是纯 C 头文件（带 include guard），使用标准 #include
+// HAVE_EGL is deduced once in OpenGl_HasEGL.hxx - do not duplicate the
+// deduction here. Without it this file would take the __APPLE__ CGL branch
+// and reference CGL* symbols.
+#include <OpenGl_HasEGL.hxx>
+
+// TargetConditionals.h used to be pulled in indirectly by OpenGl_GlNative.hxx;
+// that header takes the GLES3 branch under GLES2 and no longer includes Apple
+// headers, so include it explicitly here (deduction below needs it).
+// TargetConditionals.h is a plain C header (with include guard) - use #include.
 #if defined(__APPLE__)
   #include <TargetConditionals.h>
-#endif
-
-#if !defined(HAVE_EGL)
-  #if defined(__ANDROID__) || defined(__QNX__) || defined(__EMSCRIPTEN__) || defined(HAVE_GLES2) \
-    || defined(OCCT_UWP)
-    #define HAVE_EGL // EAGL is used instead of EGL
-  #elif !defined(_WIN32) && !defined(__APPLE__) && !defined(HAVE_XLIB)
-    #define HAVE_EGL
-  #endif
 #endif
 
 #if defined(HAVE_EGL)
@@ -637,7 +629,10 @@ void OpenGl_Context::Share(const occ::handle<OpenGl_Context>& theShareCtx)
   }
 }
 
-#if !defined(__APPLE__) || defined(HAVE_XLIB)
+// macOS + GLES2 走 EGL/ANGLE 时必须编译本分支，否则
+// IsCurrent/MakeCurrent/SwapBuffers 会落到 OpenGl_Context_1.mm 的
+// CGL/NSOpenGL 实现（把 EGL 句柄当 ObjC 对象发消息 → SIGSEGV）。
+#if (!defined(__APPLE__) || defined(HAVE_XLIB)) || defined(HAVE_EGL)
 
 //=================================================================================================
 
@@ -950,7 +945,8 @@ bool OpenGl_Context::CheckExtension(const char* theExtString, const char* theExt
   return false;
 }
 
-#if !defined(__APPLE__) || defined(HAVE_XLIB)
+// 同上：EGL 路径下 Init(bool) 需从当前 EGL 上下文推导 myDisplay/myGContext/myWindow。
+#if (!defined(__APPLE__) || defined(HAVE_XLIB)) || defined(HAVE_EGL)
 
 //=================================================================================================
 

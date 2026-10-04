@@ -93,6 +93,7 @@ set(OCCT_OpenGl_FILES
   OpenGl_GlFunctions.hxx
   OpenGl_GlNative.hxx
   OpenGl_GlTypes.hxx
+  OpenGl_HasEGL.hxx
   OpenGl_Flipper.cxx
   OpenGl_Flipper.hxx
   OpenGl_GlCore11.hxx
