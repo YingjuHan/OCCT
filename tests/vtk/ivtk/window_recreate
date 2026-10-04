@@ -1,0 +1,38 @@
+puts "==============="
+puts "window_recreate: Tests closing and re-creating the IVtk window"
+puts "==============="
+puts ""
+puts "The Vtk window is closed and then created again; as rendering is"
+puts "deterministic, both dumps must be byte-identical. This also checks"
+puts "that releasing the window does not corrupt the state of the viewer."
+puts ""
+
+pload MODELING VIS
+box b 1 1 1
+
+ivtkinit
+ivtkdisplay b
+ivtkfit
+ivtkaxo
+ivtkdump $imagedir/${casename}_first.png
+
+ivtkclose
+
+ivtkinit
+ivtkdisplay b
+ivtkfit
+ivtkaxo
+ivtkdump $imagedir/${casename}_second.png
+
+set anFp1 [open $imagedir/${casename}_first.png rb]
+set aData1 [read $anFp1]
+close $anFp1
+set anFp2 [open $imagedir/${casename}_second.png rb]
+set aData2 [read $anFp2]
+close $anFp2
+
+if { ![string equal $aData1 $aData2] } {
+  puts "Error: the re-created IVtk window renders differently from the original one"
+}
+
+ivtkclose

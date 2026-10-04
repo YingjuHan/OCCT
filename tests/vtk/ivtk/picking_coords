@@ -1,0 +1,34 @@
+puts "==============="
+puts "picking_coords: Tests that picking is sensitive to both X and Y"
+puts "==============="
+puts ""
+puts "The picked 3D point must depend on the pixel location: moving the"
+puts "pixel along X or along Y must change the picked point. This catches"
+puts "a wrong axis orientation, or a double flip of the Y coordinate."
+puts ""
+
+pload MODELING VIS
+box b 1 1 1
+
+ivtkinit
+ivtkdisplay b
+ivtkfit
+ivtkaxo
+
+set aPickCenter [string trim [ivtkmoveto 200 200]]
+set aPickLower  [string trim [ivtkmoveto 200 350]]
+set aPickLeft   [string trim [ivtkmoveto 100 200]]
+set aPickRight  [string trim [ivtkmoveto 300 200]]
+
+if { [string equal $aPickCenter $aPickLower] } {
+  puts "Error: picking is insensitive to the Y coordinate"
+}
+if { [string equal $aPickLeft $aPickRight] } {
+  puts "Error: picking is insensitive to the X coordinate"
+}
+
+# selection must be available on the same pixel
+ivtkselect 200 200
+ivtkdump $imagedir/${casename}.png
+
+ivtkclose

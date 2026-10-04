@@ -17,6 +17,8 @@
   #include <windows.h>
   #include <WNT_WClass.hxx>
   #include <WNT_Window.hxx>
+#elif defined(__APPLE__)
+  #include <Cocoa_Window.hxx>
 #endif
 
 #include <Draw.hxx>
@@ -75,7 +77,9 @@
 #include <vtkSmartPointer.h>
 #include <vtkTIFFWriter.h>
 #include <vtkWindowToImageFilter.h>
-#ifndef _WIN32
+#if defined(__APPLE__)
+  #include <vtkCocoaRenderWindow.h>
+#elif !defined(_WIN32)
   #include <X11/X.h>
   #include <X11/Xlib.h>
   #include <X11/Xutil.h>
@@ -208,6 +212,16 @@ static occ::handle<WNT_Window>& GetWindow()
   return aWindow;
 }
 
+#elif defined(__APPLE__)
+
+//! Apple: the window is a Cocoa_Window wrapping the NSView owned by Vtk,
+//! so only the generic Aspect_Window interface is required here.
+static occ::handle<Aspect_Window>& GetWindow()
+{
+  static occ::handle<Aspect_Window> aWindow;
+  return aWindow;
+}
+
 #else
 
 static occ::handle<Xw_Window>& GetWindow()
@@ -282,7 +296,7 @@ void IVtkDraw::ViewerInit(const IVtkWinParams& theParams)
   if (!GetRenderer())
   {
     SetDisplayConnection(new Aspect_DisplayConnection());
-#ifdef _WIN32
+#if defined(_WIN32)
     if (GetWindow().IsNull())
     {
       GetWindow() = new WNT_Window("IVtkTest",
@@ -295,8 +309,7 @@ void IVtkDraw::ViewerInit(const IVtkWinParams& theParams)
                                    Quantity_NOC_BLACK);
       GetWindow()->SetVirtual(Draw_VirtualWindows);
     }
-#else
-
+#elif !defined(__APPLE__)
     if (GetWindow().IsNull())
     {
       GetWindow() =
@@ -304,10 +317,23 @@ void IVtkDraw::ViewerInit(const IVtkWinParams& theParams)
       GetWindow()->SetVirtual(Draw_VirtualWindows);
     }
 #endif
+    // Apple: the window is created below (once Vtk has started) by wrapping
+    // the NSView/Vtk view owned by Vtk itself - see the aCocoaRenWin handling.
     // Init pipeline
     GetRenderer() = vtkSmartPointer<vtkRenderer>::New();
 
+#if defined(__APPLE__)
+    // Apple: create the Cocoa render window explicitly.
+    // vtkRenderWindow::New() cannot be relied upon here: OCCT does not pull in
+    // the Vtk module auto-initialization (vtkAutoInit), without which the
+    // object factory falls back to the abstract vtkRenderWindow base class and
+    // any SafeDownCast() towards a platform window would fail.
+    vtkSmartPointer<vtkCocoaRenderWindow> aCocoaRenWin =
+      vtkSmartPointer<vtkCocoaRenderWindow>::New();
+    vtkSmartPointer<vtkRenderWindow> aRenWin = aCocoaRenWin;
+#else
     vtkSmartPointer<vtkRenderWindow> aRenWin = vtkSmartPointer<vtkRenderWindow>::New();
+#endif
     aRenWin->AddRenderer(GetRenderer());
     GetRenderer()->GetActiveCamera()->ParallelProjectionOn();
     aRenWin->SetSize(aPxWidth, aPxHeight);
@@ -323,8 +349,31 @@ void IVtkDraw::ViewerInit(const IVtkWinParams& theParams)
     }
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32)
     aRenWin->SetWindowId((void*)GetWindow()->HWindow());
+#elif defined(__APPLE__)
+    // Apple: the NSWindow and its vtkCocoaGLView are created by Vtk itself.
+    // The Cocoa event handling of Vtk requires that view to be a
+    // vtkCocoaGLView instance, so an externally created NSView cannot be
+    // substituted here (events would never be delivered).
+    // Starting the render window first, then wrapping the resulting view into
+    // a Cocoa_Window keeps the ivtk* commands working through the regular
+    // Aspect_Window interface (Map/Unmap/size queries).
+    aRenWin->SetPosition(aPxLeft, aPxTop);
+    aCocoaRenWin->Start();
+    if (NSView* aView = (NSView*)aCocoaRenWin->GetWindowId())
+    {
+      if (GetWindow().IsNull())
+      {
+        GetWindow() = new Cocoa_Window(aView);
+        GetWindow()->SetVirtual(Draw_VirtualWindows);
+      }
+    }
+    else
+    {
+      Message::SendFail() << "Error: Vtk failed to create the Cocoa window";
+      return;
+    }
 #else
     Window aWindowId = GetWindow()->XWindow();
     aRenWin->SetWindowId((void*)aWindowId);
@@ -374,7 +423,10 @@ void IVtkDraw::ViewerInit(const IVtkWinParams& theParams)
     aRenWin->Render();
   }
 
-  GetWindow()->Map();
+  if (!GetWindow().IsNull())
+  {
+    GetWindow()->Map();
+  }
 }
 
 //=================================================================================================

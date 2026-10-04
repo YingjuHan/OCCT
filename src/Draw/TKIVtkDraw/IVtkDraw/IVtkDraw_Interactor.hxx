@@ -22,6 +22,9 @@
 
 #ifdef _WIN32
   #include <windows.h>
+#elif defined(__APPLE__)
+  #include <vtkCallbackCommand.h>
+  #include <vtkCocoaRenderWindowInteractor.h>
 #else
   #include <X11/X.h>
   #include <X11/Xlib.h>
@@ -39,15 +42,25 @@
 #include <IVtkDraw_HighlightAndSelectionPipeline.hxx>
 #include <Aspect_Window.hxx>
 
+//! Base Vtk interactor class.
+//! On Apple platforms the Cocoa flavor is used, so that native events coming
+//! from the vtkCocoaGLView are reused instead of being re-implemented;
+//! other platforms keep using the generic base class.
+#if defined(__APPLE__)
+typedef vtkCocoaRenderWindowInteractor IVtkDraw_InteractorBase;
+#else
+typedef vtkRenderWindowInteractor IVtkDraw_InteractorBase;
+#endif
+
 class vtkWin32RenderWindowInteractor;
 typedef vtkSmartPointer<IVtkTools_ShapePicker> PSelector;
 
-class IVtkDraw_Interactor : public vtkRenderWindowInteractor
+class IVtkDraw_Interactor : public IVtkDraw_InteractorBase
 {
 public:
   static IVtkDraw_Interactor* New();
 
-  vtkTypeMacro(IVtkDraw_Interactor, vtkRenderWindowInteractor)
+  vtkTypeMacro(IVtkDraw_Interactor, IVtkDraw_InteractorBase)
 
     void Initialize() override;
   void Enable() override;
@@ -69,7 +82,10 @@ public:
 
   bool IsEnabled() const;
 
-#ifndef _WIN32
+//! ViewerMainLoop() and the X11 display handle only exist on platforms
+//! driving the event loop from an X display; the Cocoa flavor gets its
+//! events from the vtkCocoaGLView instead.
+#if !defined(_WIN32) && !defined(__APPLE__)
   Display* GetDisplayId() const;
   int      ViewerMainLoop(int theArgNum, const char** theArgs);
 #endif
@@ -97,6 +113,17 @@ protected:
   void OnTimer(HWND wnd, UINT nIDEvent);
   void OnMouseWheelForward(HWND wnd, UINT nFlags, int X, int Y);
   void OnMouseWheelBackward(HWND wnd, UINT nFlags, int X, int Y);
+#elif defined(__APPLE__)
+  //! Observer callback used to inject IVtk highlighting/selection into the
+  //! events dispatched by VTK.
+  //! Note that the Cocoa backend of VTK invokes vtkRenderWindowInteractor::
+  //! InvokeEvent() directly from vtkCocoaGLView (without going through the
+  //! virtual LeftButtonPressEvent()/MouseMoveEvent() helpers), so overriding
+  //! those helpers would have no effect - an observer is required instead.
+  static void OnVtkCocoaEvent(vtkObject*    theCaller,
+                              unsigned long theEventId,
+                              void*         theClientData,
+                              void*         theCallData);
 #else
   static void ProcessEvents(ClientData theData, int);
   void        GetMousePosition(int* theX, int* theY) override;
@@ -108,9 +135,14 @@ private:
   void operator=(const IVtkDraw_Interactor&)      = delete;
 
 private:
-#ifdef _WIN32
+#if defined(_WIN32)
   HWND myWindowId;
   int  myMouseInWindow;
+#elif defined(__APPLE__)
+  bool myIsLeftButtonPressed;
+
+  //! Command object forwarding Vtk events to OnVtkCocoaEvent().
+  vtkSmartPointer<vtkCallbackCommand> myEventCommand;
 #else
   Window   myWindowId;
   Display* myDisplayId;

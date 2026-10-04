@@ -15,9 +15,11 @@
 
 // prevent disabling some MSVC warning messages by VTK headers
 #include <Standard_WarningsDisable.hxx>
-#ifdef _WIN32
+#if defined(_WIN32)
   #include <vtkWin32RenderWindowInteractor.h>
   #include <vtkWin32OpenGLRenderWindow.h>
+#elif defined(__APPLE__)
+  #include <vtkCocoaRenderWindow.h>
 #else
   #include <GL/glx.h>
 
@@ -158,13 +160,19 @@ void IVtkDraw_Interactor::Initialize()
 
   // Get the info we need from the RenderingWindow
   int* aSize;
-#ifdef _WIN32
+#if defined(_WIN32)
   vtkWin32OpenGLRenderWindow* aRenWin;
   aRenWin = (vtkWin32OpenGLRenderWindow*)(this->RenderWindow);
   aRenWin->Start();
   aSize = aRenWin->GetSize();
   aRenWin->GetPosition();
   this->myWindowId = aRenWin->GetWindowId();
+#elif defined(__APPLE__)
+  // Apple: the NSWindow and its vtkCocoaGLView are owned by Vtk itself,
+  // so there is no native handle to remember here.
+  vtkCocoaRenderWindow* aRenWin = static_cast<vtkCocoaRenderWindow*>(this->RenderWindow);
+  aSize                         = aRenWin->GetSize();
+  aRenWin->Start();
 #else
   vtkXOpenGLRenderWindow* aRenWin;
   aRenWin           = static_cast<vtkXOpenGLRenderWindow*>(this->RenderWindow);
@@ -193,9 +201,25 @@ void IVtkDraw_Interactor::Enable()
   }
 
   // Add event handlers
-#ifdef _WIN32
+#if defined(_WIN32)
   SetWindowLongPtr(this->myWindowId, GWLP_USERDATA, (LONG_PTR)this);
   SetWindowLongPtr(this->myWindowId, GWLP_WNDPROC, (LONG_PTR)WndProc);
+#elif defined(__APPLE__)
+  // Apple: local events are delivered to the vtkCocoaGLView owned by Vtk and
+  // dispatched through InvokeEvent(), therefore IVtk logic is hooked up with
+  // observers instead of a native event handler.
+  if (myEventCommand.GetPointer() == nullptr)
+  {
+    myEventCommand = vtkSmartPointer<vtkCallbackCommand>::New();
+    myEventCommand->SetCallback(OnVtkCocoaEvent);
+    myEventCommand->SetClientData(this);
+  }
+  // A negative priority makes IVtk react before the InteractorStyle
+  // (TrackballCamera), matching the Win32/X11 implementations where
+  // OnSelection() is processed before InvokeEvent().
+  this->AddObserver(vtkCommand::LeftButtonPressEvent, myEventCommand, -1.0f);
+  this->AddObserver(vtkCommand::LeftButtonReleaseEvent, myEventCommand, -1.0f);
+  this->AddObserver(vtkCommand::MouseMoveEvent, myEventCommand, -1.0f);
 #else
   Tcl_CreateFileHandler(ConnectionNumber(this->myDisplayId),
                         TCL_READABLE,
@@ -681,6 +705,56 @@ LRESULT CALLBACK ViewerWindowProc(HWND                 theHWnd,
       break;
   }
   return DefWindowProcW(theHWnd, theMsg, theWParam, theLParam);
+}
+
+#elif defined(__APPLE__)
+
+//=================================================================================================
+
+//! Observer callback mapping Vtk events, dispatched by the Cocoa backend,
+//! onto the IVtk highlighting/selection logic.
+//! Position notes: the vtkCocoaGLView fills event information through
+//! SetEventInformation() (without flipping Y), so GetEventPosition() is
+//! already expressed from the bottom-left corner of the window and can be
+//! passed to MoveTo() as-is (that method performs picking with the same
+//! origin) - no extra flipping is needed, unlike the X11 implementation.
+void IVtkDraw_Interactor::OnVtkCocoaEvent(vtkObject*,
+                                          unsigned long theEventId,
+                                          void* theClientData,
+                                          void*)
+{
+  IVtkDraw_Interactor* anInteractor = static_cast<IVtkDraw_Interactor*>(theClientData);
+  if (anInteractor == nullptr || !anInteractor->Enabled)
+  {
+    return;
+  }
+
+  const int* anEventPos = anInteractor->GetEventPosition();
+  switch (theEventId)
+  {
+    case vtkCommand::LeftButtonPressEvent: {
+      // same order as the Win32/X11 implementations
+      anInteractor->OnSelection();
+      anInteractor->myIsLeftButtonPressed = true;
+      break;
+    }
+    case vtkCommand::LeftButtonReleaseEvent: {
+      anInteractor->myIsLeftButtonPressed = false;
+      break;
+    }
+    case vtkCommand::MouseMoveEvent: {
+      // highlighting is updated only while the left button is not pressed,
+      // with the button being reserved for camera manipulation (same as
+      // the Win32/X11 implementations)
+      if (!anInteractor->myIsLeftButtonPressed)
+      {
+        anInteractor->MoveTo(anEventPos[0], anEventPos[1]);
+      }
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 #else
