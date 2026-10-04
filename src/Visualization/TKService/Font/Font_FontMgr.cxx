@@ -500,6 +500,22 @@ Font_FontMgr::Font_FontMgr()
 #endif
 
   // default CJK (Chinese/Japanese/Korean) fonts
+  // Platform-specific fonts come first, so that the native one is preferred
+  // when several of them happen to be installed.
+#if defined(_WIN32)
+  aCJK->Append(Font_FontAlias("simsun"));
+#elif defined(__APPLE__)
+  // macOS ships no Noto/Droid/SimSun font by default; without these aliases
+  // Font_FontMgr::FindFallbackFont() reports
+  // "unable to find CJK fallback font!" and CJK text is not rendered at all.
+  aCJK->Append(Font_FontAlias("songti sc"));
+  aCJK->Append(Font_FontAlias("songti tc"));
+  aCJK->Append(Font_FontAlias("hiragino sans gb"));
+  aCJK->Append(Font_FontAlias("hiragino sans"));
+  aCJK->Append(Font_FontAlias("pingfang sc"));
+  aCJK->Append(Font_FontAlias("stheiti"));
+  aCJK->Append(Font_FontAlias("apple sd gothic neo"));
+#endif
   aCJK->Append(Font_FontAlias("simsun"));              // Windows
   aCJK->Append(Font_FontAlias("droid sans fallback")); // Android, Linux
   aCJK->Append(Font_FontAlias("noto sans sc"));        // Android
