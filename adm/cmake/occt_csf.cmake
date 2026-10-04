@@ -209,4 +209,18 @@ function(occt_set_apple_csf_vars)
     endif()
     OCCT_CHECK_AND_UNSET (OpenGlLibs_LIB)
   endif()
+
+  # QuartzCore 提供 CAMetalLayer —— macOS 上 ANGLE 的 EGL window surface
+  # 必须绑定到 CAMetalLayer（裸 NSView 会返回 EGL_BAD_NATIVE_WINDOW）。
+  # 仅在 GLES2 路径下需要；未设置时 occt_toolkit.cmake 会跳过空的 CSF_* 项，
+  # 因此不会改变桌面 GL(TKOpenGl) 的链接行为。
+  if (USE_GLES2 AND NOT USE_XLIB)
+    find_library (QuartzCore_LIB NAMES QuartzCore)
+    if (QuartzCore_LIB)
+      set (CSF_QuartzCore ${QuartzCore_LIB} PARENT_SCOPE)
+    else()
+      set (CSF_QuartzCore "QuartzCore" PARENT_SCOPE)
+    endif()
+    OCCT_CHECK_AND_UNSET (QuartzCore_LIB)
+  endif()
 endfunction()

@@ -13,7 +13,11 @@
 // Alternatively, this file may be used under the terms of Open CASCADE
 // commercial license or contractual agreement.
 
-#if defined(__APPLE__) && !defined(HAVE_XLIB)
+// macOS 桌面默认走 NSOpenGL/CGL；启用 GLES2(HAVE_GLES2) 时上下文由
+// EGL/ANGLE 提供，IsCurrent/MakeCurrent/SwapBuffers/Init 的实现位于
+// OpenGl_Context.cxx，本文件必须整体排除（否则 EGL 句柄会被当作
+// NSOpenGLContext* 发消息，导致 EXC_BAD_ACCESS）。
+#if defined(__APPLE__) && !defined(HAVE_XLIB) && !defined(HAVE_GLES2)
 
 #ifndef GL_GLEXT_LEGACY
 #define GL_GLEXT_LEGACY // To prevent inclusion of system glext.h on Mac OS X 10.6.8

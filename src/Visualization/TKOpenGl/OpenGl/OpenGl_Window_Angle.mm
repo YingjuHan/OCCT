@@ -12,6 +12,11 @@
 // Alternatively, this file may be used under the terms of GNU General
 // Public License version 2 (GPL) as published by the Free Software Foundation.
 
+// HAVE_EGL is deduced once in OpenGl_HasEGL.hxx - do not duplicate the
+// deduction here. Without it this file compiles to nothing and
+// OpenGl_Window_CreateAngleSurface ends up as an undefined symbol at link time.
+#include <OpenGl_HasEGL.hxx>
+
 #if defined(HAVE_EGL) && defined(__APPLE__) && !defined(HAVE_XLIB)
 
 #include <TargetConditionals.h>
@@ -93,13 +98,12 @@ extern "C" void* OpenGl_Window_CreateAngleSurface (void* theNativeView,
     return (void*)EGL_NO_SURFACE;
   }
 
-  // explicitly request the OpenGLES ANGLE platform, consistent with InitContext()
-  EGLint aSurfAttribs[] =
-  {
-    EGL_PLATFORM_ANGLE_TYPE_OPENGLES, EGL_PLATFORM_ANGLE_TYPE_OPENGLES,
-    EGL_NONE
-  };
-  return (void*)aProc ((EGLDisplay)theEglDisplay, (EGLConfig)theEglConfig, (void*)aLayer, aSurfAttribs);
+  // Note: eglCreatePlatformWindowSurfaceEXT() takes *surface* attributes
+  // (EGL_GL_COLORSPACE_KHR / EGL_NONE), NOT the platform attributes used by
+  // eglGetPlatformDisplayEXT(). Passing the ANGLE platform token here makes
+  // ANGLE reject the request and return EGL_NO_SURFACE — the display was
+  // already pinned to EGL_PLATFORM_ANGLE_TYPE_OPENGLES in InitContext().
+  return (void*)aProc ((EGLDisplay)theEglDisplay, (EGLConfig)theEglConfig, (void*)aLayer, nullptr);
 }
 
 //! Resize the CAMetalLayer of the native view to match its current frame.
