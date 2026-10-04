@@ -42,14 +42,22 @@
   #define GLX_GLXEXT_LEGACY
 #endif
 
+// TargetConditionals.h must be included BEFORE any test of TARGET_OS_* macros.
+// Testing an undefined macro silently yields 0, which would wrongly select the
+// desktop macOS branch when targeting iOS / visionOS.
+// Note that TARGET_OS_MAC must not be used to mean "desktop macOS" - it is 1 on
+// iOS too (TARGET_OS_IPHONE is a subset of TARGET_OS_MAC); use TARGET_OS_OSX.
+// TargetConditionals.h is a plain C header (with include guard) - use #include.
+#if defined(__APPLE__)
+  #include <TargetConditionals.h>
+#endif
+
 // include main OpenGL header provided with system
 // Apple 桌面平台(macOS)在启用 GLES2 时走 GLES 分支：此时 OpenGL ES 由
 // EGL/ANGLE 提供，系统不自带 OpenGLES.framework，必须用 GLES3 头，
 // 否则会误引入桌面 <OpenGL/gl.h> 而与 ANGLE 提供的 GLES2 运行时冲突。
 #if defined(__APPLE__) && !defined(HAVE_GLES2) && !defined(OCCT_UWP)                        \
   && !(defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)
-  // TargetConditionals.h 是纯 C 头文件（带 include guard），使用标准 #include
-  #include <TargetConditionals.h>
   // macOS 10.4 deprecated OpenGL framework - suppress useless warnings
   #define GL_SILENCE_DEPRECATION
   #include <OpenGL/gl.h>
@@ -62,7 +70,6 @@
     #define GL_GLEXT_PROTOTYPES
   #endif
   #if defined(__APPLE__)
-    #include <TargetConditionals.h>
     #define GL_SILENCE_DEPRECATION
     #if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
       #include <OpenGLES/ES3/gl.h>
