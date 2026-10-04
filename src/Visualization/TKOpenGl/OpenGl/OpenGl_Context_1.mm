@@ -43,6 +43,7 @@
 #include <OpenGl_GlCore11.hxx>
 #include <OpenGl_Context.hxx>
 #include <OpenGl_FrameBuffer.hxx>
+#include <OpenGl_ShaderManager.hxx>
 
 #include <Standard_ProgramError.hxx>
 
@@ -70,11 +71,23 @@ bool OpenGl_Context::MakeCurrent()
   }
 
 #if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
-  return [EAGLContext setCurrentContext: myGContext] == YES;
+  if ([EAGLContext setCurrentContext: myGContext] != YES)
+  {
+    return false;
+  }
 #else
   [myGContext makeCurrentContext];
-  return true;
 #endif
+
+  // The shader manager is shared between contexts and is detached from its
+  // context (SetContext(NULL)) when a context is destroyed while the shared
+  // resource set is still referenced by another one. It must therefore be
+  // re-attached on every successful MakeCurrent, as done by the EGL, WGL and
+  // GLX implementations in OpenGl_Context.cxx. Without this line a later
+  // Redraw() reaches OpenGl_ShaderManager with a null context and crashes on
+  // the first state query (OpenGl_Context::HasSRGB()).
+  myShaderManager->SetContext(this);
+  return true;
 }
 
 //=================================================================================================
