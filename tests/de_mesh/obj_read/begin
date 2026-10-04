@@ -1,4 +1,7 @@
 pload VISUALIZATION XDE OCAF MODELING
 Close D -silent
-# PBR requires OpenGL 3.0+ on macOS
-if { $::tcl_platform(os) == "Darwin" } { vcaps -core }
+# PBR requires OpenGL 3.0+ on macOS.
+# "vcaps" is provided by TKOpenGlTest (plugin "GL"), which is NOT part of
+# the plugins loaded above - load it explicitly, otherwise this line raises
+# "invalid command name \"vcaps\"" and the whole grid fails on macOS only.
+if { $::tcl_platform(os) == "Darwin" } { pload GL; vcaps -core }
