@@ -52,9 +52,10 @@ IMPLEMENT_STANDARD_RTTIEXT(OpenGl_GraphicDriver, Graphic3d_GraphicDriver)
 #if !defined(HAVE_EGL)
   #if defined(__ANDROID__) || defined(__QNX__) || defined(__EMSCRIPTEN__) || defined(HAVE_GLES2)   \
     || defined(OCCT_UWP)
-    #if !defined(__APPLE__)
-      #define HAVE_EGL // EAGL is used instead of EGL
-    #endif
+    // 注意：这里原本排除了 Apple（#if !defined(__APPLE__)），因为历史上 macOS 只走
+    // CGL。现在 macOS 启用 GLES2 时通过 EGL/ANGLE 提供 OpenGL ES，
+    // 因此不再排除 Apple —— 否则 EGL 上下文路径在 macOS 上永远不可达。
+    #define HAVE_EGL // EAGL is used instead of EGL
   #elif !defined(_WIN32) && !defined(__APPLE__) && !defined(HAVE_XLIB)
     #define HAVE_EGL
   #endif
@@ -64,6 +65,14 @@ IMPLEMENT_STANDARD_RTTIEXT(OpenGl_GraphicDriver, Graphic3d_GraphicDriver)
   #include <EGL/egl.h>
   #ifndef EGL_OPENGL_ES3_BIT
     #define EGL_OPENGL_ES3_BIT 0x00000040
+  #endif
+  // ANGLE 平台类型：macOS 上获取 EGLDisplay 时需要。
+  // ANGLE 未在 eglext.h 中声明该 token（仅在运行时通过 eglGetProcAddress
+  // 暴露入口），故此处按 ANGLE 规范定义。实测该 token 在
+  // EGL_PLATFORM_ANGLE_TYPE_ANGLE(0x3203) / METAL(0x3204) 均不可用，
+  // 只有 OPENGLES(0x3202) 能成功创建 display。
+  #ifndef EGL_PLATFORM_ANGLE_TYPE_OPENGLES
+    #define EGL_PLATFORM_ANGLE_TYPE_OPENGLES 0x3202
   #endif
 #endif
 
@@ -324,6 +333,30 @@ bool OpenGl_GraphicDriver::InitContext()
   }
   Display* aDisplay = (Display*)myDisplayConnection->GetDisplayAspect();
   myEglDisplay      = (Aspect_Display)eglGetDisplay(aDisplay);
+  #elif defined(__APPLE__)
+  // macOS 不提供 EGL 原生 display，需通过 ANGLE 平台扩展获取。
+  // 实测（ANGLE 2.1.x / macOS arm64）：只有 EGL_PLATFORM_ANGLE_TYPE_OPENGLES
+  // 可用；EGL_PLATFORM_ANGLE_TYPE_ANGLE / METAL / SURFACELESS_MESA 均返回
+  // EGL_NO_DISPLAY。若平台扩展不可用则回退到 eglGetDisplay 以保持兼容。
+  {
+    typedef EGLDisplay (*TOpenGl_Proc_eglGetPlatformDisplay)(EGLenum, void*, const EGLint*);
+    TOpenGl_Proc_eglGetPlatformDisplay aProc =
+      (TOpenGl_Proc_eglGetPlatformDisplay)eglGetProcAddress("eglGetPlatformDisplayEXT");
+    if (aProc == nullptr)
+    {
+      aProc = (TOpenGl_Proc_eglGetPlatformDisplay)eglGetProcAddress("eglGetPlatformDisplay");
+    }
+    EGLDisplay aDpy = EGL_NO_DISPLAY;
+    if (aProc != nullptr)
+    {
+      aDpy = aProc(EGL_PLATFORM_ANGLE_TYPE_OPENGLES, nullptr, nullptr);
+    }
+    if (aDpy == EGL_NO_DISPLAY)
+    {
+      aDpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    }
+    myEglDisplay = (Aspect_Display)aDpy;
+  }
   #else
   myEglDisplay = (Aspect_Display)eglGetDisplay(EGL_DEFAULT_DISPLAY);
   #endif

@@ -56,6 +56,7 @@ set(OCCT_OpenGl_FILES
   OpenGl_Window.hxx
   OpenGl_Window.cxx
   OpenGl_Window_1.mm
+  OpenGl_Window_Angle.mm
   OpenGl_FrameBuffer.hxx
   OpenGl_FrameBuffer.cxx
   OpenGl_Texture.cxx

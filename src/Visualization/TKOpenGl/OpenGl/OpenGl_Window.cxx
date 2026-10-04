@@ -40,7 +40,19 @@ IMPLEMENT_STANDARD_RTTIEXT(OpenGl_Window, Standard_Transient)
   #include <GL/glx.h>
 #endif
 
-#if !defined(__APPLE__) || defined(HAVE_XLIB)
+#if defined(HAVE_EGL) && defined(__APPLE__) && !defined(HAVE_XLIB)
+  // macOS + ANGLE：创建绑定 CAMetalLayer 的 EGL window surface 需要
+  // Objective-C 运行时，故实现在 OpenGl_Window_Angle.mm 中，
+  // 此处仅声明接口（该文件是纯 C++，不可直接用 ObjC 语法）。
+  extern "C" void* OpenGl_Window_CreateAngleSurface (void* theNativeView,
+                                                     void* theEglDisplay,
+                                                     void* theEglConfig);
+  extern "C" void  OpenGl_Window_SyncAngleLayer   (void* theNativeView);
+#endif
+
+// GLX/WGL 像素格式辅助代码仅在对应平台编译；macOS 走 GLES2/ANGLE 时需要
+// 下面的 EGL 路径，故不能被 Apple 排除。
+#if (!defined(__APPLE__) || defined(HAVE_XLIB)) || defined(HAVE_EGL)
 
 namespace
 {
@@ -212,10 +224,27 @@ void OpenGl_Window::Init(const occ::handle<OpenGl_GraphicDriver>& theDriver,
     //};
 
     // create new surface
+  #if defined(HAVE_EGL) && defined(__APPLE__) && !defined(HAVE_XLIB)
+    // macOS + ANGLE：标准 eglCreateWindowSurface 只接受 NSView，实测返回
+    // EGL_BAD_NATIVE_WINDOW(0x300b)。ANGLE 要求把 surface 绑到承载 drawable
+    // 的 CAMetalLayer，故由 OpenGl_Window_Angle.mm 完成（需 ObjC 运行时）。
+    anEglSurf = (EGLSurface)OpenGl_Window_CreateAngleSurface ((void*)myPlatformWindow->NativeHandle(),
+                                                             (void*)anEglDisplay,
+                                                             (void*)anEglConfig);
+    if (anEglSurf == EGL_NO_SURFACE)
+    {
+      // 回退：部分 ANGLE 构建可能支持标准路径
+      anEglSurf = eglCreateWindowSurface(anEglDisplay,
+                                         anEglConfig,
+                                         (EGLNativeWindowType)myPlatformWindow->NativeHandle(),
+                                         nullptr);
+    }
+  #else
     anEglSurf = eglCreateWindowSurface(anEglDisplay,
                                        anEglConfig,
                                        (EGLNativeWindowType)myPlatformWindow->NativeHandle(),
                                        nullptr);
+  #endif
     if (anEglSurf == EGL_NO_SURFACE && myPlatformWindow->NativeHandle() != 0)
     {
       throw Aspect_GraphicDeviceDefinitionError(

@@ -177,6 +177,26 @@ function(occt_set_apple_csf_vars)
       set (CSF_OpenGlesLibs "OpenGLES" PARENT_SCOPE)
     endif()
     OCCT_CHECK_AND_UNSET (OpenGlesLibs_LIB)
+  elseif (USE_GLES2 AND NOT USE_XLIB)
+    # macOS 桌面平台走 GLES2 时，OpenGL ES 由 EGL/ANGLE 提供（系统不自带
+    # OpenGLES.framework）。这里登记 CSF_OpenGlesLibs，使 adm/cmake/egl.cmake 与
+    # gles2.cmake 能定位它们，并由 occt_toolkit.cmake 注入 -DHAVE_GLES2 与链接项。
+    #
+    # 注意：这里必须给「库名」而非完整路径 —— 3rdparty_macro.cmake 的
+    # THIRDPARTY_PRODUCT 会把 CSF 值逐项当作库名去拼 3RDPARTY_<PRODUCT>_LIBRARY_<NAME>
+    # 并 find_library；若填路径会生成形如
+    # 3RDPARTY_EGL_LIBRARY_DIR_/path/to/lib 的畸形变量名并报
+    # "Could not find libraries of used third-party products"。
+    # ANGLE 的实际库文件路径由 occt-prelude.cmake / THIRDPARTY_PRODUCT 负责解析。
+    set (CSF_OpenGlesLibs "EGL GLESv2" PARENT_SCOPE)
+    # 桌面 GL 仍然保留：TKOpenGl 与 TKOpenGles 可并存
+    find_library (OpenGlLibs_LIB NAMES OpenGL)
+    if (OpenGlLibs_LIB)
+      set (CSF_OpenGlLibs ${OpenGlLibs_LIB} PARENT_SCOPE)
+    else()
+      set (CSF_OpenGlLibs "OpenGL" PARENT_SCOPE)
+    endif()
+    OCCT_CHECK_AND_UNSET (OpenGlLibs_LIB)
   elseif (USE_XLIB)
     set (CSF_OpenGlLibs "GL" PARENT_SCOPE)
     set (CSF_XwLibs     "X11" PARENT_SCOPE)

@@ -43,15 +43,16 @@
 #endif
 
 // include main OpenGL header provided with system
-#if defined(__APPLE__)
-  #import <TargetConditionals.h>
+// Apple 桌面平台(macOS)在启用 GLES2 时走 GLES 分支：此时 OpenGL ES 由
+// EGL/ANGLE 提供，系统不自带 OpenGLES.framework，必须用 GLES3 头，
+// 否则会误引入桌面 <OpenGL/gl.h> 而与 ANGLE 提供的 GLES2 运行时冲突。
+#if defined(__APPLE__) && !defined(HAVE_GLES2) && !defined(OCCT_UWP)                        \
+  && !(defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)
+  // TargetConditionals.h 是纯 C 头文件（带 include guard），使用标准 #include
+  #include <TargetConditionals.h>
   // macOS 10.4 deprecated OpenGL framework - suppress useless warnings
   #define GL_SILENCE_DEPRECATION
-  #if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
-    #include <OpenGLES/ES3/gl.h>
-  #else
-    #include <OpenGL/gl.h>
-  #endif
+  #include <OpenGL/gl.h>
   #define __X_GL_H // prevent chaotic gl.h inclusions to avoid compile errors
 #elif defined(HAVE_GLES2) || defined(OCCT_UWP) || defined(__ANDROID__) || defined(__QNX__)         \
   || defined(__EMSCRIPTEN__)
@@ -60,7 +61,20 @@
     // however OCCT is expected to be linked against libGLESv2
     #define GL_GLEXT_PROTOTYPES
   #endif
-  #include <GLES3/gl3.h>
+  #if defined(__APPLE__)
+    #include <TargetConditionals.h>
+    #define GL_SILENCE_DEPRECATION
+    #if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
+      #include <OpenGLES/ES3/gl.h>
+    #else
+      // macOS 桌面 + GLES2：GLES 头由 EGL/ANGLE 提供（如 vcpkg 的
+      // libGLESv2_angle 附带 GLES3/gl3.h），不是系统 framework。
+      #include <GLES3/gl3.h>
+    #endif
+    #define __X_GL_H // prevent chaotic gl.h inclusions to avoid compile errors
+  #else
+    #include <GLES3/gl3.h>
+  #endif
 #else
   #include <GL/gl.h>
 #endif

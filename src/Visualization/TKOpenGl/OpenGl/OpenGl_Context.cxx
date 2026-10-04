@@ -53,6 +53,27 @@
 
 IMPLEMENT_STANDARD_RTTIEXT(OpenGl_Context, Standard_Transient)
 
+// 与 OpenGl_GraphicDriver.cxx 保持一致的 HAVE_EGL 推导。
+// HAVE_EGL 不由构建系统提供（整个 adm/cmake 中没有对它的 add_definitions），
+// 而是各 TU 自行按平台推导；此处必须复现同一套规则，否则本文件会因
+// HAVE_EGL 未定义而走到 __APPLE__ 的 CGL 分支，引用 CGL* 符号。
+//
+// TargetConditionals.h 原先由 OpenGl_GlNative.hxx 间接引入；该头在 GLES2 下
+// 走 GLES3 分支不再引入 Apple 头，故此处显式包含（GLES 宏推导需要它）。
+// TargetConditionals.h 是纯 C 头文件（带 include guard），使用标准 #include
+#if defined(__APPLE__)
+  #include <TargetConditionals.h>
+#endif
+
+#if !defined(HAVE_EGL)
+  #if defined(__ANDROID__) || defined(__QNX__) || defined(__EMSCRIPTEN__) || defined(HAVE_GLES2) \
+    || defined(OCCT_UWP)
+    #define HAVE_EGL // EAGL is used instead of EGL
+  #elif !defined(_WIN32) && !defined(__APPLE__) && !defined(HAVE_XLIB)
+    #define HAVE_EGL
+  #endif
+#endif
+
 #if defined(HAVE_EGL)
   #include <EGL/egl.h>
   #ifdef _MSC_VER
@@ -1710,7 +1731,10 @@ void OpenGl_Context::MemoryInfo(
 {
 #if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
   (void)theDict;
-#elif defined(__APPLE__) && !defined(HAVE_XLIB)
+#elif defined(__APPLE__) && !defined(HAVE_XLIB) && !defined(HAVE_EGL)
+  // macOS 桌面 + GLES2/ANGLE 时不能用 CGL 查询显存 —— 此时上下文由 EGL 创建，
+  // CGLGetCurrentContext() 恒为空且链接期无 CGL 符号。GLES2 无等价的
+  // CGLRendererInfo 接口，故不提供该信息。
   GLint aGlRendId = 0;
   CGLGetParameter(CGLGetCurrentContext(), kCGLCPCurrentRendererID, &aGlRendId);
 
@@ -1753,6 +1777,9 @@ void OpenGl_Context::MemoryInfo(
     }
   #endif
   }
+#elif defined(HAVE_EGL)
+  // EGL/ANGLE 路径：GLES2 无 CGLRendererInfo 等价接口，跳过 CGL 专有的显存统计。
+  (void)theDict;
 #endif
 
   if (atiMem)
