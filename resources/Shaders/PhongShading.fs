@@ -13,10 +13,12 @@
 // Alternatively, this file may be used under the terms of Open CASCADE
 // commercial license or contractual agreement.
 
-varying vec3 View;          //!< Direction to the viewer
-varying vec3 Normal;        //!< Vertex normal in view space
-varying vec4 Position;      //!< Vertex position in view space.
-varying vec4 PositionWorld; //!< Vertex position in world space
+// OCCT compatibility macros are used instead of the legacy 'varying' keyword,
+// which has been removed in GLSL 1.30+ core profile (resolves to 'in' there).
+THE_SHADER_IN vec3 View;          //!< Direction to the viewer
+THE_SHADER_IN vec3 Normal;        //!< Vertex normal in view space
+THE_SHADER_IN vec4 Position;      //!< Vertex position in view space.
+THE_SHADER_IN vec4 PositionWorld; //!< Vertex position in world space
 
 vec3 Ambient;  //!< Ambient  contribution of light sources
 vec3 Diffuse;  //!< Diffuse  contribution of light sources

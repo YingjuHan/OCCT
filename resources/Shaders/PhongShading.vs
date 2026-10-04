@@ -13,10 +13,12 @@
 // Alternatively, this file may be used under the terms of Open CASCADE
 // commercial license or contractual agreement.
 
-varying vec3 View;          //!< Direction to the viewer
-varying vec3 Normal;        //!< Vertex normal in view space
-varying vec4 Position;      //!< Vertex position in view space
-varying vec4 PositionWorld; //!< Vertex position in world space
+// OCCT compatibility macros are used instead of the legacy 'varying' keyword,
+// which has been removed in GLSL 1.30+ core profile (resolves to 'out' there).
+THE_SHADER_OUT vec3 View;          //!< Direction to the viewer
+THE_SHADER_OUT vec3 Normal;        //!< Vertex normal in view space
+THE_SHADER_OUT vec4 Position;      //!< Vertex position in view space
+THE_SHADER_OUT vec4 PositionWorld; //!< Vertex position in world space
 
 //! Computes the normal in view space
 vec3 TransformNormal (in vec3 theNormal)
