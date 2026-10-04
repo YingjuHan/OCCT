@@ -208,6 +208,27 @@ set_target_properties (${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${PRECOMPILED_D
                                                   SOVERSION     "${OCC_SOVERSION}"
                                                   VERSION       "${OCC_VERSION_MAJOR}.${OCC_VERSION_MINOR}.${OCC_VERSION_MAINTENANCE}")
 
+# TKOpenGl (desktop OpenGL) and TKOpenGles (OpenGL ES) are compiled from the
+# very same sources, so their inline and template members are emitted under
+# identical mangled names. Such symbols have weak linkage, and the dynamic
+# linker of some platforms (Mach-O) keeps a single copy for the whole process
+# as soon as two such toolkits are loaded side by side - which the Draw Harness
+# does when the driver is switched, e.g. "vdriver -load GLES" after the desktop
+# driver has been loaded.
+#
+# The shared copy binds to the type_info and to the entry points of the toolkit
+# that happened to be loaded first, which makes the other one inconsistent with
+# itself: dynamic_cast() between the duplicated classes fails (each toolkit
+# defines its own type_info and vtable), and an OpenGL ES context resolves its
+# functions through the desktop backend of TKOpenGl, where findProc() has a NULL
+# library handle and reports every single function as missing.
+#
+# Hiding inline functions keeps one instantiation per toolkit, so each of them
+# uses its own type_info and its own function lookup.
+if (BUILD_SHARED_LIBS AND PROJECT_NAME MATCHES "^TKOpenGl")
+  set_target_properties (${PROJECT_NAME} PROPERTIES VISIBILITY_INLINES_HIDDEN ON)
+endif()
+
 set (USED_TOOLKITS_BY_CURRENT_PROJECT)
 set (USED_EXTERNLIB_AND_TOOLKITS)
 
