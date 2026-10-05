@@ -30,8 +30,8 @@ static const char Shaders_PhongShading_vs[] =
   "// Alternatively, this file may be used under the terms of Open CASCADE\n"
   "// commercial license or contractual agreement.\n"
   "\n"
-  // use OCCT compatibility macros instead of the legacy 'varying' keyword,
-  // which has been removed in GLSL 1.30+ core profile
+  "// OCCT compatibility macros are used instead of the legacy 'varying' keyword,\n"
+  "// which has been removed in GLSL 1.30+ core profile (resolves to 'out' there).\n"
   "THE_SHADER_OUT vec3 View;          //!< Direction to the viewer\n"
   "THE_SHADER_OUT vec3 Normal;        //!< Vertex normal in view space\n"
   "THE_SHADER_OUT vec4 Position;      //!< Vertex position in view space\n"

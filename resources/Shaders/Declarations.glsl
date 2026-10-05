@@ -257,6 +257,7 @@ uniform sampler2D occSamplerMetallicRoughness; //!< BG metallic-roughness textur
 #endif
 
 uniform               vec4      occColor;              //!< color value (in case of disabled lighting)
+uniform               vec4      occBackColor;          //!< back color value (in case of disabled lighting)
 uniform THE_PREC_ENUM int       occDistinguishingMode; //!< Are front and back faces distinguished?
 uniform THE_PREC_ENUM int       occTextureEnable;      //!< Is texture enabled?
 uniform               vec4      occTexTrsf2d[2];       //!< 2D texture transformation parameters
