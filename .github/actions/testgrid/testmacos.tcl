@@ -34,9 +34,20 @@
 # "opengles3 raytrace" (whole grid): OpenGL ES on macOS is provided by ANGLE,
 #   which caps at GLES 3.0. OCCT ray tracing requires ES >= 3.2 and
 #   GL_EXT_texture_buffer (absent), so 21 of the 22 cases cannot pass at all.
-# "opengl raytrace ...": desktop OpenGL on macOS is capped at 4.1 by Apple,
-#   while these cases need 4.2+ features; they fail with
-#   "Unhandled GL error: GL_INVALID_OPERATION" while setting up FBOs.
+# "opengl raytrace ...": desktop OpenGL on macOS reports 4.1, where texture
+#   buffer objects have been a core feature since 4.0 - but Apple does not
+#   implement them: glTexBuffer() resolves (the stub library exports the whole
+#   API) and returns without producing a usable texture, and neither
+#   GL_ARB_texture_buffer_object nor GL_EXT_texture_buffer is advertised.
+#   OCCT therefore cannot detect the absence and the cases end up rendering
+#   with a zero texture - "GLD_TEXTURE_INDEX_2D is unloadable and bound to
+#   sampler type (Float) - using zero texture". Verified with a standalone
+#   probe against a 4.1 Core context.
+# "bugs fclasses bug28829": the case asserts that sqrt(-1) raises
+#   Standard_NumericError once FPE reporting is enabled. arm64 follows IEEE
+#   754 and returns NaN instead of trapping, so no exception is raised. Not
+#   excluded on any other platform - drop this entry once it is recorded
+#   upstream.
 # "bugs modalg_5 bug25199", "lowalgos intss bug567_1": already excluded on Linux
 #   for numeric differences in intersection / modelling algorithms.
 # "bugs modalg_7 bug83", "opengl background srgb": already excluded on Windows.
@@ -47,6 +58,7 @@ set exclude_list [list \
     "opengl raytrace bug26617" \
     "opengl raytrace bug27083" \
     "opengl raytrace sample_ball" \
+    "bugs fclasses bug28829" \
     "bugs modalg_5 bug25199" \
     "lowalgos intss bug567_1" \
     "bugs modalg_7 bug83" \
