@@ -62,3 +62,10 @@ foreach (CurrentResource ${RESOURCES})
     OCCT_GENERATE_CONTENT_ONLY ("${CurrentResource}")
   endif()
 endforeach()
+
+# GLSL resources are consumed from two places at run time - the resource
+# directory and the generated C++ arrays - so a one-sided edit stays invisible
+# until the embedded copy is actually used. Verify that the committed .pxx
+# files still match the resources they were generated from.
+include ("${CMAKE_CURRENT_LIST_DIR}/occt_shaders_check.cmake")
+OCCT_CHECK_SHADER_RESOURCE_SYNC ("resources/Shaders" "src/Visualization/TKService/Shaders")
