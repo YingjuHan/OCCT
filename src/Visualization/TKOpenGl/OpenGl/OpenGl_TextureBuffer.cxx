@@ -23,6 +23,43 @@ IMPLEMENT_STANDARD_RTTIEXT(OpenGl_TextureBuffer, OpenGl_Buffer)
 
 //=================================================================================================
 
+bool OpenGl_TextureBuffer::bindTexBuffer(const occ::handle<OpenGl_Context>& theGlCtx) const
+{
+  if (theGlCtx->arbTBO == nullptr)
+  {
+    return false;
+  }
+
+  // Drain the error queue in advance, so that only an error caused by glTexBuffer() itself
+  // is taken into account.
+  while (theGlCtx->core11fwd->glGetError() != GL_NO_ERROR)
+  {
+  }
+
+  theGlCtx->arbTBO->glTexBuffer(GetTarget(), myTexFormat, myBufferId);
+
+  const GLenum anErr = theGlCtx->core11fwd->glGetError();
+  if (anErr == GL_NO_ERROR)
+  {
+    return true;
+  }
+
+  // Consume the error instead of leaving it in the queue: OpenGl_Buffer::Data() checks the
+  // queue right after its own glBufferData() and would report an unrelated buffer as failed.
+  while (theGlCtx->core11fwd->glGetError() != GL_NO_ERROR)
+  {
+  }
+  theGlCtx->PushMessage(GL_DEBUG_SOURCE_APPLICATION,
+                        GL_DEBUG_TYPE_ERROR,
+                        0,
+                        GL_DEBUG_SEVERITY_LOW,
+                        "Error: glTexBuffer() is not functional; "
+                        "texture buffer objects are disabled");
+  return false;
+}
+
+//=================================================================================================
+
 OpenGl_TextureBuffer::OpenGl_TextureBuffer()
     : myTextureId(NO_TEXTURE),
       myTexFormat(GL_RGBA32F)
@@ -123,9 +160,14 @@ bool OpenGl_TextureBuffer::Init(const occ::handle<OpenGl_Context>& theGlCtx,
 
   Bind(theGlCtx);
   BindTexture(theGlCtx, Graphic3d_TextureUnit_0);
-  theGlCtx->arbTBO->glTexBuffer(GetTarget(), myTexFormat, myBufferId);
+  const bool isOk = bindTexBuffer(theGlCtx);
   UnbindTexture(theGlCtx, Graphic3d_TextureUnit_0);
   Unbind(theGlCtx);
+  if (!isOk)
+  {
+    Release(theGlCtx.operator->());
+    return false;
+  }
   return true;
 }
 
@@ -172,9 +214,14 @@ bool OpenGl_TextureBuffer::Init(const occ::handle<OpenGl_Context>& theGlCtx,
 
   Bind(theGlCtx);
   BindTexture(theGlCtx, Graphic3d_TextureUnit_0);
-  theGlCtx->arbTBO->glTexBuffer(GetTarget(), myTexFormat, myBufferId);
+  const bool isOk = bindTexBuffer(theGlCtx);
   UnbindTexture(theGlCtx, Graphic3d_TextureUnit_0);
   Unbind(theGlCtx);
+  if (!isOk)
+  {
+    Release(theGlCtx.operator->());
+    return false;
+  }
   return true;
 }
 
@@ -217,9 +264,14 @@ bool OpenGl_TextureBuffer::Init(const occ::handle<OpenGl_Context>& theGlCtx,
 
   Bind(theGlCtx);
   BindTexture(theGlCtx, Graphic3d_TextureUnit_0);
-  theGlCtx->arbTBO->glTexBuffer(GetTarget(), myTexFormat, myBufferId);
+  const bool isOk = bindTexBuffer(theGlCtx);
   UnbindTexture(theGlCtx, Graphic3d_TextureUnit_0);
   Unbind(theGlCtx);
+  if (!isOk)
+  {
+    Release(theGlCtx.operator->());
+    return false;
+  }
   return true;
 }
 
@@ -262,9 +314,14 @@ bool OpenGl_TextureBuffer::Init(const occ::handle<OpenGl_Context>& theGlCtx,
 
   Bind(theGlCtx);
   BindTexture(theGlCtx, Graphic3d_TextureUnit_0);
-  theGlCtx->arbTBO->glTexBuffer(GetTarget(), myTexFormat, myBufferId);
+  const bool isOk = bindTexBuffer(theGlCtx);
   UnbindTexture(theGlCtx, Graphic3d_TextureUnit_0);
   Unbind(theGlCtx);
+  if (!isOk)
+  {
+    Release(theGlCtx.operator->());
+    return false;
+  }
   return true;
 }
 

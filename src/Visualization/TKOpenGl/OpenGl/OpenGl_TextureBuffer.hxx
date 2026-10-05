@@ -99,6 +99,17 @@ public:
   unsigned int TextureFormat() const { return myTexFormat; }
 
 protected:
+  //! Attach this buffer to the currently bound texture unit as a texture buffer object.
+  //! Returns FALSE when glTexBuffer() reports an error - some drivers export the whole
+  //! OpenGL API from a stub library, so a resolvable glTexBuffer() symbol does not imply
+  //! a working implementation (Apple OpenGL is such a driver: it reports OpenGL 4.1, where
+  //! TBO is a core feature since 4.0, but the call always fails with GL_INVALID_ENUM).
+  //! The error is consumed here so that it does not leak into unrelated GL commands.
+  //! @param[in] theGlCtx  handle to bound GL context
+  //! @return TRUE on success
+  Standard_EXPORT bool bindTexBuffer(const occ::handle<OpenGl_Context>& theGlCtx) const;
+
+protected:
   unsigned int myTextureId; //!< texture id
   unsigned int myTexFormat; //!< internal texture format
 };
