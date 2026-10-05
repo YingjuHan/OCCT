@@ -8,7 +8,7 @@ uniform sampler2D occDepthPeelingFrontColor;
 int IsFrontPeelLayer = -1;
 bool occFragEarlyReturn()
 {
-  #define THE_DEPTH_CLEAR_VALUE -1e15f
+  #define THE_DEPTH_CLEAR_VALUE -1e15
   ivec2  aFragCoord = ivec2 (gl_FragCoord.xy);
   vec2   aLastDepth = texelFetch (occDepthPeelingDepth, aFragCoord, 0).rg;
   occPeelFrontColor = texelFetch (occDepthPeelingFrontColor, aFragCoord, 0);

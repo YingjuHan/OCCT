@@ -55,6 +55,24 @@ static int roundUpMaxLightSources(int theNbLights)
 
 #define EOL "\n"
 
+//! GLSL macro emulating the texelFetch() entry point, which became core only in GLSL 1.30,
+//! but is exposed as texelFetch2D() by the GL_EXT_gpu_shader4 extension available on
+//! OpenGL 2.1 hardware. Depth Peeling OIT reads its peeling layers with texelFetch(),
+//! and would otherwise fail to compile its GLSL programs on an OpenGL 2.1 context
+//! (e.g. the compatibility profile implicitly requested by macOS).
+const char THE_GLSL_DEFINE_TEXELFETCH_EMU[] =
+  "#define texelFetch(theSampler, theCoord, theLod) texelFetch2D(theSampler, theCoord, theLod)";
+
+//! Declare GL_EXT_gpu_shader4 in the GLSL program header, unless already declared there.
+static void appendGlslExtGpuShader4(const occ::handle<Graphic3d_ShaderProgram>& theProgram)
+{
+  if (theProgram->Header().Search("GL_EXT_gpu_shader4") != -1)
+  {
+    return; // already declared
+  }
+  theProgram->AppendToHeader("#extension GL_EXT_gpu_shader4 : enable");
+}
+
 //! Compute TexCoord value in Vertex Shader
 const char THE_VARY_TexCoord_Trsf[] =
   EOL "  float aRotSin = occTextureTrsf_RotationSin();" EOL
@@ -286,6 +304,19 @@ int Graphic3d_ShaderManager::defaultGlslVersion(
                                   "#define uint unsigned int");
           }
         }
+        if ((theBits & Graphic3d_ShaderFlags_OitDepthPeeling) != 0)
+        {
+          // GLSL 1.30 is the first version providing texelFetch() as a core function
+          if (IsGapiGreaterEqual(3, 0))
+          {
+            theProgram->SetHeader("#version 130");
+          }
+          else if (myGlslExtensions[Graphic3d_GlslExtension_GL_EXT_gpu_shader4])
+          {
+            appendGlslExtGpuShader4(theProgram);
+            theProgram->AppendToHeader(THE_GLSL_DEFINE_TEXELFETCH_EMU);
+          }
+        }
       }
       (void)toUseDerivates;
       break;
@@ -395,6 +426,16 @@ void Graphic3d_ShaderManager::defaultOitGlslVersion(
         if (IsGapiGreaterEqual(3, 2))
         {
           theProgram->SetHeader("#version 150");
+        }
+        else if (IsGapiGreaterEqual(3, 0))
+        {
+          // GLSL 1.30 is the first version providing texelFetch() as a core function
+          theProgram->SetHeader("#version 130");
+        }
+        else if (myGlslExtensions[Graphic3d_GlslExtension_GL_EXT_gpu_shader4])
+        {
+          appendGlslExtGpuShader4(theProgram);
+          theProgram->AppendToHeader(THE_GLSL_DEFINE_TEXELFETCH_EMU);
         }
       }
       break;

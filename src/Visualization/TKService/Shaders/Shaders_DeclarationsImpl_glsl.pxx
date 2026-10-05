@@ -25,7 +25,7 @@ static const char Shaders_DeclarationsImpl_glsl[] =
   "int IsFrontPeelLayer = -1;\n"
   "bool occFragEarlyReturn()\n"
   "{\n"
-  "  #define THE_DEPTH_CLEAR_VALUE -1e15f\n"
+  "  #define THE_DEPTH_CLEAR_VALUE -1e15\n"
   "  ivec2  aFragCoord = ivec2 (gl_FragCoord.xy);\n"
   "  vec2   aLastDepth = texelFetch (occDepthPeelingDepth, aFragCoord, 0).rg;\n"
   "  occPeelFrontColor = texelFetch (occDepthPeelingFrontColor, aFragCoord, 0);\n"
